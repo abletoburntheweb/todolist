@@ -12,12 +12,12 @@ def removeTask():
         print("Список дел:")
         for index, task in enumerate(list):
             print(f"{index + 1}. {task}")
-        taskInd = int(input("Введите номер задачи для удаления: ")) - 1
-        if taskInd < 0 or taskInd >= len(list):
+        task_index = int(input("Введите номер задачи для удаления: ")) - 1
+        if task_index < 0 or task_index >= len(list):
             print("Неверный номер задачи.")
         else:
-           deletedTask = list.pop(taskInd)
-           print(f"Задача '{deletedTask}' успешно удалена.")
+           deleted_task = list.pop(task_index)
+           print(f"Задача '{deleted_task}' успешно удалена.")
 
 def viewTasks():
     if len(list) == 0:
@@ -27,7 +27,7 @@ def viewTasks():
         for index, task in enumerate(list):
             print(f"{index + 1}. {task}")
 
-def clear_list():
+def clearList():
     list.clear()
     print("Список дел успешно очищен.")
 
@@ -50,10 +50,11 @@ def main():
         elif choice == "3":
             viewTasks()
         elif choice == "4":
-            clear_list()
+            clearList()
         elif choice == "5":
             break
         else:
             print("Неверный номер операции.")
+
 
 main()
