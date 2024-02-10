@@ -1,6 +1,9 @@
 #добавить проверку на введенность приоритета
-#добавить удаление определенной задачи
 #выводить время, когда была добавлена задача
+#добавить возможность сохранения списка дел
+import Store
+Store.loadTasks(), Store.saveTasks()
+
 list = []
 
 def addTask():
@@ -35,7 +38,9 @@ def clearList():
     list.clear()
     print("Список дел успешно очищен.")
 
+
 def main():
+    Store.loadTasks()
     while True:
         print("===============================")
         print("Меню:")
@@ -59,6 +64,7 @@ def main():
             break
         else:
             print("Неверный номер операции.")
+        Store.saveTasks()
 
 
 main()
