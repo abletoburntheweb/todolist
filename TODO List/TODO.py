@@ -1,6 +1,4 @@
-#добавить проверку на введенность приоритета
 #выводить время, когда была добавлена задача
-#добавить возможность сохранения списка дел
 import Store
 Store.loadTasks(), Store.saveTasks()
 
@@ -8,7 +6,10 @@ list = []
 
 def addTask():
     task = input("Введите новую задачу: ")
-    priority = input("Введите приоритет задачи (важный/обычный): ")
+    priority = input("Введите приоритет задачи (важный/обычный): ").lower()
+    while priority.lower() not in ["важный", "обычный"]:
+        print("Неверный приоритет. Попробуйте еще раз.")
+        priority = input("Введите приоритет задачи (важный/обычный): ").lower()
     list.append((task, priority))
     print("Задача успешно добавлена!")
 
@@ -37,7 +38,6 @@ def viewTasks():
 def clearList():
     list.clear()
     print("Список дел успешно очищен.")
-
 
 def main():
     Store.loadTasks()

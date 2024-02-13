@@ -2,11 +2,9 @@ import json
 
 list = []
 
-
 def saveTasks():
     with open("tasks.json", "w") as f:
         json.dump(list, f)
-
 
 def loadTasks():
     try:
