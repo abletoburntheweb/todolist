@@ -32,8 +32,21 @@ def viewTasks():
         print("Список дел пуст.")
     else:
         print("Список дел:")
-        for index, task in enumerate(list):
-            print(f"{index + 1}. {task}")
+        important_tasks = []
+        ordinary_tasks = []
+        for task in list:
+            if task[1] == "важный":
+                important_tasks.append(task[0])
+            else:
+                ordinary_tasks.append(task[0])
+        if important_tasks:
+            print("HIGH:")
+            for index, task in enumerate(important_tasks):
+                print(f"{index + 1}. {task}")
+        if ordinary_tasks:
+            print("LOW:")
+            for index, task in enumerate(ordinary_tasks):
+                print(f"{index + 1}. {task}")
 
 def clearList():
     list.clear()
