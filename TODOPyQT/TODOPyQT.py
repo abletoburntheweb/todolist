@@ -2,6 +2,7 @@ from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QLineEdit
 
 
+
 class MainWin(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -52,6 +53,14 @@ class MainWin(QMainWindow):
         for i, task in enumerate(tasks):
             btn = QtWidgets.QPushButton(task, self)
             btn.setGeometry(25, y_start + i * 50, 450, 40)
+
+            checkbox = QtWidgets.QCheckBox(self)
+            checkbox.setGeometry(40, y_start + i * 50 + 10, 30, 30)
+
+            delete_btn = QtWidgets.QPushButton("☓", self)
+            delete_btn.setGeometry(430, y_start + i * 50 + 10, 25, 25)
+            delete_btn.setStyleSheet("background-color: #FF0000; color: white;")
+
             if task in ["Добавить важных дел", "Добавить дел"]:
                 btn.setStyleSheet(
                     "QPushButton { border-radius: 15px; background-color: white; color: #BBBBBB; border: 1px solid; "
@@ -64,7 +73,14 @@ class MainWin(QMainWindow):
                 btn.setStyleSheet(
                     "QPushButton { border-radius: 15px; background-color: white; color: black; border: 1px solid; "
                     "border-color: #989898; font-size: 20px}")
+
+
             btn.show()
+            checkbox.show()
+            delete_btn.show()
+
+
+
 
     def add_important_task_input(self):
         text, ok = QtWidgets.QInputDialog.getText(self, 'Добавить важных дел', 'Добавить задачу:')
