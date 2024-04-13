@@ -67,13 +67,13 @@ class MainWin(QMainWindow):
             btn.show()
 
     def add_important_task_input(self):
-        text, ok = QtWidgets.QInputDialog.getText(self, 'Add Important Task', 'Enter your important task:')
+        text, ok = QtWidgets.QInputDialog.getText(self, 'Добавить важных дел', 'Добавить задачу:')
         if ok and text:
             self.important_tasks.append(text)
             self.main_screen()
 
     def add_additional_task_input(self):
-        text, ok = QtWidgets.QInputDialog.getText(self, 'Add Additional Task', 'Enter your additional task:')
+        text, ok = QtWidgets.QInputDialog.getText(self, 'Добавить дел', 'Добавить задачу:')
         if ok and text:
             self.additional_tasks.append(text)
             self.main_screen()
