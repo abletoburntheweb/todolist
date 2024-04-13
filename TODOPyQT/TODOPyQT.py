@@ -1,6 +1,6 @@
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QLineEdit
-
+import json
 
 
 class MainWin(QMainWindow):
@@ -9,20 +9,41 @@ class MainWin(QMainWindow):
         self.setWindowTitle('TODO List')
         self.setGeometry(750, 250, 500, 700)
 
-        self.important_tasks = ["Добавить важных дел"]
-        self.additional_tasks = ["Добавить дел"]
-
-        self.tasks_high_priority = [
-            "Помыть посуду",
-            "Сверстать этот TODO list",
-            "Начать делать задачу"
-        ]
-
-        self.tasks_low_priority = [
-            "Записаться к стоматологу"
-        ]
+        with open("tasks.json", "r", encoding="utf-8") as file:
+            tasks_data = json.load(file)
+            self.important_tasks = tasks_data.get("important_tasks", [])
+            self.additional_tasks = tasks_data.get("additional_tasks", [])
+            self.tasks_high_priority = tasks_data.get("tasks_high_priority", [])
+            self.tasks_low_priority = tasks_data.get("tasks_low_priority", [])
 
         self.main_screen()
+
+    def save_tasks_to_file(self):
+        tasks_data = {
+            "important_tasks": self.important_tasks,
+            "additional_tasks": self.additional_tasks,
+            "tasks_high_priority": self.tasks_high_priority,
+            "tasks_low_priority": self.tasks_low_priority
+        }
+        with open("tasks.json", "w", encoding="utf-8") as file:
+            json.dump(tasks_data, file, ensure_ascii=False, indent=4)
+
+    def add_important_task_input(self):
+        text, ok = QtWidgets.QInputDialog.getText(self, 'Добавить важных дел', 'Добавить задачу:')
+        if ok and text:
+            self.important_tasks.append(text)
+            self.save_tasks_to_file()  # Сохранение задач в файл
+            self.main_screen()
+
+    def add_additional_task_input(self):
+        text, ok = QtWidgets.QInputDialog.getText(self, 'Добавить дел', 'Добавить задачу:')
+        if ok and text:
+            self.additional_tasks.append(text)
+            self.save_tasks_to_file()  # Сохранение задач в файл
+            self.main_screen()
+
+        self.main_screen()
+
 
     def main_screen(self):
         self.clear_tasks()
@@ -60,6 +81,8 @@ class MainWin(QMainWindow):
             delete_btn = QtWidgets.QPushButton("☓", self)
             delete_btn.setGeometry(430, y_start + i * 50 + 10, 25, 25)
             delete_btn.setStyleSheet("background-color: #FF0000; color: white;")
+
+
 
             if task in ["Добавить важных дел", "Добавить дел"]:
                 btn.setStyleSheet(
