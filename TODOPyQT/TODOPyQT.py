@@ -1,24 +1,5 @@
-from random import randint
-from PyQt5 import QtWidgets, QtGui, Qt
-from PyQt5.QtWidgets import QApplication, QMainWindow, QGraphicsView, QGraphicsScene, QPushButton, QCheckBox, QLabel, \
-    QLineEdit
-from PyQt5.QtGui import QPainter, QColor
-from PyQt5.QtCore import Qt
-
-
-# class Rect(QGraphicsView):
-#     def __init__(self):
-#         super().__init__()
-#
-#         self.scene = QGraphicsScene()
-#         self.setScene(self.scene)
-#         self.rect = self.scene.addRect(0, 600, 500, 50)
-#         self.rect.setBrush(QColor("#F2FAFD"))
-#
-#         self.setFixedSize(500, 50)
-#
-#         self.setHorizontalScrollBarPolicy(1)  # Горизонтальный скроллбар
-#         self.setVerticalScrollBarPolicy(1)  # Вертикальный скроллбар
+from PyQt5 import QtWidgets
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QLineEdit
 
 
 class MainWin(QMainWindow):
@@ -27,10 +8,23 @@ class MainWin(QMainWindow):
         self.setWindowTitle('TODO List')
         self.setGeometry(750, 250, 500, 700)
 
+        self.important_tasks = ["Добавить важных дел"]
+        self.additional_tasks = ["Добавить дел"]
+
+        self.tasks_high_priority = [
+            "Помыть посуду",
+            "Сверстать этот TODO list",
+            "Начать делать задачу"
+        ]
+
+        self.tasks_low_priority = [
+            "Записаться к стоматологу"
+        ]
+
         self.main_screen()
 
     def main_screen(self):
-        self.clear_window()
+        self.clear_tasks()
         self.setFixedSize(500, 700)
 
         rect_view = QLabel(self)
@@ -38,84 +32,54 @@ class MainWin(QMainWindow):
         rect_view.setStyleSheet('background-color: #F2FAFD;')
         rect_view.show()
 
-        # self.btnTs4 = QtWidgets.QPushButton('⚙', self)
-        # self.btnTs4.setGeometry(470, 10, 20, 21)
-        # self.btnTs4.show()
-
         self.text1 = QtWidgets.QLabel("HIGH", self)
-        self.text1.move(220, 25)
+        self.text1.move(220, 50)
         self.text1.setStyleSheet("font-size: 15pt; color: f7dfea;")
         self.text1.adjustSize()
 
-        self.btnTs1 = QtWidgets.QPushButton('Добавить важных дел', self)
-        self.btnTs1.setGeometry(25, 100, 450, 40)
-        self.btnTs1.setStyleSheet(
-            "QPushButton { border-radius: 15px; background-color: white; color: #BBBBBB;border :1px solid; "
-            "border-color: #989898; font-size: 20px}")
-        self.btnTs1.show()
+        self.add_task_group(self.important_tasks, 100, True)
+        self.add_task_group(self.tasks_high_priority, 150, False)
 
-        checkbox1 = QCheckBox(self)
-        checkbox1.setGeometry(5, 105, 20, 20)
+        self.text2 = QtWidgets.QLabel("LOW", self)
+        self.text2.move(220, 300)
+        self.text2.setStyleSheet("font-size: 15pt; color: f7dfea;")
+        self.text2.adjustSize()
 
-        delete_btn1 = QPushButton('❌', self)
-        delete_btn1.setGeometry(470, 105, 20, 20)
+        self.add_task_group(self.additional_tasks, 350, True)
+        self.add_task_group(self.tasks_low_priority, 400, False)
 
-        self.btnTs1 = QtWidgets.QPushButton('Помыть посуду', self)
-        self.btnTs1.setGeometry(25, 150, 450, 40)
-        self.btnTs1.setStyleSheet(
-            "QPushButton { border-radius: 15px; background-color: white; color: #202020;border :1px solid; "
-            "border-color: #989898; font-size: 20px}")
-        self.btnTs1.show()
+    def add_task_group(self, tasks, y_start, is_important):
+        for i, task in enumerate(tasks):
+            btn = QtWidgets.QPushButton(task, self)
+            btn.setGeometry(25, y_start + i * 50, 450, 40)
+            if task in ["Добавить важных дел", "Добавить дел"]:
+                btn.setStyleSheet(
+                    "QPushButton { border-radius: 15px; background-color: white; color: #BBBBBB; border: 1px solid; "
+                    "border-color: #989898; font-size: 20px}")
+                if task == "Добавить важных дел":
+                    btn.clicked.connect(self.add_important_task_input)
+                elif task == "Добавить дел":
+                    btn.clicked.connect(self.add_additional_task_input)
+            else:
+                btn.setStyleSheet(
+                    "QPushButton { border-radius: 15px; background-color: white; color: black; border: 1px solid; "
+                    "border-color: #989898; font-size: 20px}")
+            btn.show()
 
-        checkbox2 = QCheckBox(self)
-        checkbox2.setGeometry(5, 155, 20, 20)
+    def add_important_task_input(self):
+        text, ok = QtWidgets.QInputDialog.getText(self, 'Add Important Task', 'Enter your important task:')
+        if ok and text:
+            self.important_tasks.append(text)
+            self.main_screen()
 
-        delete_btn2 = QPushButton('❌', self)
-        delete_btn2.setGeometry(470, 155, 20, 20)
+    def add_additional_task_input(self):
+        text, ok = QtWidgets.QInputDialog.getText(self, 'Add Additional Task', 'Enter your additional task:')
+        if ok and text:
+            self.additional_tasks.append(text)
+            self.main_screen()
 
-        self.btnTs2 = QtWidgets.QPushButton('Сверстать этот TODO list', self)
-        self.btnTs2.setGeometry(25, 200, 450, 40)
-        self.btnTs2.setStyleSheet(
-            "QPushButton { border-radius: 15px; background-color: white; color: #202020;border :1px solid; "
-            "border-color: #989898; font-size: 20px}")
-        self.btnTs2.show()
-
-        checkbox3 = QCheckBox(self)
-        checkbox3.setGeometry(5, 205, 20, 20)
-
-        delete_btn3 = QPushButton('❌', self)
-        delete_btn3.setGeometry(470, 205, 20, 20)
-
-        self.btnTs3 = QtWidgets.QPushButton('Начать делать задачу', self)
-        self.btnTs3.setGeometry(25, 250, 450, 40)
-        self.btnTs3.setStyleSheet(
-            "QPushButton { border-radius: 15px; background-color: white; color: #202020; border :1px solid; "
-            "border-color: #989898; font-size: 20px}")
-
-        self.text1 = QtWidgets.QLabel("LOW", self)
-        self.text1.move(220, 350)
-        self.text1.setStyleSheet("font-size: 15pt; color: f7dfea;")
-        self.text1.adjustSize()
-        self.text1.show()
-
-        self.btnTs4 = QtWidgets.QPushButton('Добавить дел', self)
-        self.btnTs4.setGeometry(25, 400, 450, 40)
-        self.btnTs4.setStyleSheet(
-            "QPushButton { border-radius: 15px; background-color: white; color: #BBBBBB; border :1px solid; "
-            "border-color: #989898; font-size: 20px}")
-
-        self.btnTs5 = QtWidgets.QPushButton('Записаться к стоматологу', self)
-        self.btnTs5.setGeometry(25, 450, 450, 40)
-        self.btnTs5.setStyleSheet(
-            "QPushButton { border-radius: 15px; background-color: white; color: #202020; border :1px solid; "
-            "border-color: #989898; font-size: 20px}")
-
-    def second_screen(self):
-        print('Settings menu opened')
-        self.clear_window()
-
-    def clear_window(self):
-        for widget in self.findChildren(QtWidgets.QWidget):
+    def clear_tasks(self):
+        for widget in self.findChildren(QtWidgets.QPushButton):
             widget.deleteLater()
 
 
