@@ -1,5 +1,5 @@
 from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QLineEdit, QStackedWidget
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QLineEdit, QStackedWidget, QMessageBox
 from PyQt5.QtGui import QPixmap, QIcon
 import json
 
@@ -9,33 +9,6 @@ class MainWin(QMainWindow):
         super().__init__()
         self.setWindowTitle('TODO List')
         self.setGeometry(750, 250, 500, 700)
-
-        '''def display_settings_window(self):
-            self.clear_window()
-            self.setFixedSize(500, 700)
-
-            rect_view = QLabel(self)
-            rect_view.setGeometry(0, 630, 500, 70)
-            rect_view.setStyleSheet('background-color: #F2FAFD;')
-            rect_view.show()
-
-            button1 = QPushButton(self)
-            button1.setGeometry(100, 640, 50, 50)
-            button1.setStyleSheet("background-color: #F2FAFD; border-image: url('listcheck.png');")
-            button1.clicked.connect(self.button1_clicked)
-
-            button2 = QPushButton(self)
-            button2.setGeometry(350, 640, 50, 50)
-            button2.setStyleSheet("background-color: #F2FAFD; border-image: url('settings.png');")
-            button2.clicked.connect(self.button2_clicked)
-
-            button1.show()
-            button2.show()
-
-            settings_window = QMainWindow()
-            settings_window.setWindowTitle('Settings')
-            settings_window.setGeometry(750, 250, 500, 700)
-            settings_window.show()'''
 
         with open("tasks.json", "r", encoding="utf-8") as file:
             tasks_data = json.load(file)
@@ -57,20 +30,18 @@ class MainWin(QMainWindow):
             json.dump(tasks_data, file, ensure_ascii=False, indent=4)
 
     def add_important_task_input(self):
-        text, ok = QtWidgets.QInputDialog.getText(self, 'Добавить важных дел', 'Добавить задачу:')
+        text, ok = QtWidgets.QInputDialog.getText(self, 'Add Important Task', 'Enter task:')
         if ok and text:
-            self.important_tasks.append(text)
-            self.save_tasks_to_file()  # Сохранение задач в файл
+            self.tasks_high_priority.append(text)
+            self.save_tasks_to_file()
             self.main_screen()
 
     def add_additional_task_input(self):
-        text, ok = QtWidgets.QInputDialog.getText(self, 'Добавить дел', 'Добавить задачу:')
+        text, ok = QtWidgets.QInputDialog.getText(self, 'Add Additional Task', 'Enter task:')
         if ok and text:
-            self.additional_tasks.append(text)
-            self.save_tasks_to_file()  # Сохранение задач в файл
+            self.tasks_low_priority.append(text)
+            self.save_tasks_to_file()
             self.main_screen()
-
-        self.main_screen()
 
     def main_screen(self):
         self.clear_window()
@@ -97,29 +68,26 @@ class MainWin(QMainWindow):
         self.add_task_group(self.additional_tasks, 350, True)
         self.add_task_group(self.tasks_low_priority, 400, False)
 
-
         button1 = QPushButton(self)
         button1.setGeometry(100, 640, 50, 50)
         button1.setStyleSheet("background-color: #F2FAFD; border-image: url('listcheck.png');")
-        button1.clicked.connect(self.button1_clicked)
+        button1.clicked.connect(self.main_page)
 
         button2 = QPushButton(self)
         button2.setGeometry(350, 640, 50, 50)
         button2.setStyleSheet("background-color: #F2FAFD; border-image: url('settings.png');")
-        button2.clicked.connect(self.button2_clicked)
+        button2.clicked.connect(self.settings_page)
 
         button1.show()
         button2.show()
 
-    def button1_clicked(self):
+    def main_page(self):
         print("Button 1 clicked")
         self.clear_window()
         self.setFixedSize(500, 700)
         self.main_screen()
 
-
-
-    def button2_clicked(self):
+    def settings_page(self):
         print("Button 2 clicked")
         self.clear_window()
         self.setFixedSize(500, 700)
@@ -132,12 +100,12 @@ class MainWin(QMainWindow):
         button1 = QPushButton(self)
         button1.setGeometry(100, 640, 50, 50)
         button1.setStyleSheet("background-color: #F2FAFD; border-image: url('listcheck.png');")
-        button1.clicked.connect(self.button1_clicked)
+        button1.clicked.connect(self.main_page)
 
         button2 = QPushButton(self)
         button2.setGeometry(350, 640, 50, 50)
         button2.setStyleSheet("background-color: #F2FAFD; border-image: url('settings.png');")
-        button2.clicked.connect(self.button2_clicked)
+        button2.clicked.connect(self.settings_page)
 
         button1.show()
         button2.show()
@@ -145,7 +113,6 @@ class MainWin(QMainWindow):
         settings_window.setWindowTitle('Settings')
         settings_window.setGeometry(750, 250, 500, 700)
         settings_window.show()
-
 
     def add_task_group(self, tasks, y_start, is_important):
         for i, task in enumerate(tasks):
@@ -182,7 +149,7 @@ class MainWin(QMainWindow):
             if len(self.tasks_high_priority) < 3:
                 self.tasks_high_priority.append(text)
             else:
-                self.tasks_low_priority.append(text)
+                QMessageBox.information(self, 'Сообщение', 'Вы уже добавили три задачи!')
 
             self.save_tasks_to_file()
             self.main_screen()
@@ -190,10 +157,10 @@ class MainWin(QMainWindow):
     def add_additional_task_input(self):
         text, ok = QtWidgets.QInputDialog.getText(self, 'Добавить дел', 'Добавить задачу:')
         if ok and text:
-            if len(self.tasks_high_priority) < 3:
-                self.tasks_high_priority.append(text)
-            else:
+            if len(self.tasks_low_priority) < 3:
                 self.tasks_low_priority.append(text)
+            else:
+                QMessageBox.information(self, 'Сообщение', 'Вы уже добавили три задачи!')
 
             self.save_tasks_to_file()
             self.main_screen()
