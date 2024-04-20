@@ -46,7 +46,7 @@ class MainWin(QMainWindow):
         self.main_screen()
 
     def main_screen(self):
-        self.clear_tasks()
+        self.clear_window()
         self.setFixedSize(500, 700)
 
         rect_view = QLabel(self)
@@ -70,17 +70,54 @@ class MainWin(QMainWindow):
         self.add_task_group(self.additional_tasks, 350, True)
         self.add_task_group(self.tasks_low_priority, 400, False)
 
-        # Add images on the blue rectangle buttons with specific pixel size
-        label1 = QLabel(self)
-        label1.setGeometry(100, 640, 50, 50)
-        label1.setPixmap(QPixmap('listcheck.png').scaled(50, 50))
+        # Add buttons with images on the blue rectangle buttons with specific pixel size
+        button1 = QPushButton(self)
+        button1.setGeometry(100, 640, 50, 50)
+        button1.setStyleSheet("background-color: #F2FAFD; border-image: url('listcheck.png');")
+        button1.clicked.connect(self.button1_clicked)
 
-        label2 = QLabel(self)
-        label2.setGeometry(350, 640, 50, 50)
-        label2.setPixmap(QPixmap('settings.png').scaled(50, 50))
+        button2 = QPushButton(self)
+        button2.setGeometry(350, 640, 50, 50)
+        button2.setStyleSheet("background-color: #F2FAFD; border-image: url('settings.png');")
+        button2.clicked.connect(self.button2_clicked)
 
-        label1.show()
-        label2.show()
+        button1.show()
+        button2.show()
+
+    def button1_clicked(self):
+        print("Button 1 clicked")
+        self.clear_window()
+        self.setFixedSize(500, 700)
+        self.main_screen()
+
+
+    def button2_clicked(self):
+        print("Button 2 clicked")
+        self.clear_window()
+        self.setFixedSize(500, 700)
+
+        rect_view = QLabel(self)
+        rect_view.setGeometry(0, 630, 500, 70)
+        rect_view.setStyleSheet('background-color: #F2FAFD;')
+        rect_view.show()
+        # Add buttons with images on the blue rectangle buttons with specific pixel size
+        button1 = QPushButton(self)
+        button1.setGeometry(100, 640, 50, 50)
+        button1.setStyleSheet("background-color: #F2FAFD; border-image: url('listcheck.png');")
+        button1.clicked.connect(self.button1_clicked)
+
+        button2 = QPushButton(self)
+        button2.setGeometry(350, 640, 50, 50)
+        button2.setStyleSheet("background-color: #F2FAFD; border-image: url('settings.png');")
+        button2.clicked.connect(self.button2_clicked)
+
+        button1.show()
+        button2.show()
+        settings_window = QMainWindow()
+        settings_window.setWindowTitle('Settings')
+        settings_window.setGeometry(750, 250, 500, 700)
+        settings_window.show()
+
 
     def add_task_group(self, tasks, y_start, is_important):
         for i, task in enumerate(tasks):
@@ -125,8 +162,8 @@ class MainWin(QMainWindow):
             self.save_tasks_to_file()  # Save tasks to file
             self.main_screen()  # Update the main screen after adding the task
 
-    def clear_tasks(self):
-        for widget in self.findChildren(QtWidgets.QPushButton):
+    def clear_window(self):
+        for widget in self.findChildren(QtWidgets.QWidget):
             widget.deleteLater()
 
 
