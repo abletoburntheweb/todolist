@@ -80,6 +80,9 @@ class MainWin(QMainWindow):
         button1.show()
         button2.show()
 
+        self.text1.show()
+        self.text2.show()
+
     def main_page(self):
         print("Button 1 clicked")
         self.clear_window()
@@ -136,6 +139,7 @@ class MainWin(QMainWindow):
                 delete_btn = QtWidgets.QPushButton("☓", self)
                 delete_btn.setGeometry(430, y_start + i * 50 + 10, 25, 25)
                 delete_btn.setStyleSheet("background-color: #FF0000; color: white;")
+                delete_btn.clicked.connect(lambda _, t=task: self.delete_task(t, is_important))
 
             if task in ["Добавить важных дел", "Добавить дел"]:
                 btn.setStyleSheet(
@@ -155,6 +159,20 @@ class MainWin(QMainWindow):
                 checkbox.show()
             if delete_btn:
                 delete_btn.show()
+
+    def delete_task(self, task, is_important):
+        try:
+            if is_important:
+                self.tasks_high_priority.remove(task)
+            else:
+                self.tasks_low_priority.remove(task)
+            self.save_tasks_to_file()
+
+            # Clear the window and then redraw the task groups
+            self.clear_window()
+            self.main_screen()
+        except ValueError as e:
+            print(f"Error deleting task: {e}")
 
     def add_important_task_input(self):
         text, ok = QtWidgets.QInputDialog.getText(self, 'Добавить важных дел', 'Добавить задачу:')
