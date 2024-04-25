@@ -122,6 +122,12 @@ class MainWin(QMainWindow):
             checkbox = QtWidgets.QCheckBox(self)
             checkbox.setGeometry(40, y_start + i * 50 + 10, 30, 30)
 
+            checkbox.setStyleSheet(
+                "QCheckBox::indicator { width: 25px; height: 25px; border-radius: 15px; border: 3px solid #989898;}"
+                "QCheckBox::indicator:checked { background-color: #808080;}"
+                "QCheckBox::indicator:unchecked { background-color: white;}"
+            )
+
             delete_btn = QtWidgets.QPushButton("☓", self)
             delete_btn.setGeometry(430, y_start + i * 50 + 10, 25, 25)
             delete_btn.setStyleSheet("background-color: #FF0000; color: white;")
