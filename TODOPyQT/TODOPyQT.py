@@ -3,7 +3,6 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QLin
 from PyQt5.QtGui import QPixmap, QIcon
 import json
 
-
 class MainWin(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -116,21 +115,27 @@ class MainWin(QMainWindow):
 
     def add_task_group(self, tasks, y_start, is_important):
         for i, task in enumerate(tasks):
-            btn = QtWidgets.QPushButton(task, self)
-            btn.setGeometry(25, y_start + i * 50, 450, 40)
+            if task in ["Добавить важных дел", "Добавить дел"]:
+                btn = QtWidgets.QPushButton(task, self)
+                btn.setGeometry(25, y_start + i * 50, 450, 40)
+                checkbox = None
+                delete_btn = None
+            else:
+                btn = QtWidgets.QPushButton(task, self)
+                btn.setGeometry(25, y_start + i * 50, 450, 40)
 
-            checkbox = QtWidgets.QCheckBox(self)
-            checkbox.setGeometry(40, y_start + i * 50 + 10, 30, 30)
+                checkbox = QtWidgets.QCheckBox(self)
+                checkbox.setGeometry(40, y_start + i * 50 + 10, 30, 30)
 
-            checkbox.setStyleSheet(
-                "QCheckBox::indicator { width: 25px; height: 25px; border-radius: 15px; border: 3px solid #989898;}"
-                "QCheckBox::indicator:checked { background-color: #808080;}"
-                "QCheckBox::indicator:unchecked { background-color: white;}"
-            )
+                checkbox.setStyleSheet(
+                    "QCheckBox::indicator { width: 25px; height: 25px; border-radius: 15px; border: 3px solid #989898;}"
+                    "QCheckBox::indicator:checked { background-color: #808080;}"
+                    "QCheckBox::indicator:unchecked { background-color: white;}"
+                )
 
-            delete_btn = QtWidgets.QPushButton("☓", self)
-            delete_btn.setGeometry(430, y_start + i * 50 + 10, 25, 25)
-            delete_btn.setStyleSheet("background-color: #FF0000; color: white;")
+                delete_btn = QtWidgets.QPushButton("☓", self)
+                delete_btn.setGeometry(430, y_start + i * 50 + 10, 25, 25)
+                delete_btn.setStyleSheet("background-color: #FF0000; color: white;")
 
             if task in ["Добавить важных дел", "Добавить дел"]:
                 btn.setStyleSheet(
@@ -146,8 +151,10 @@ class MainWin(QMainWindow):
                     "border-color: #989898; font-size: 20px}")
 
             btn.show()
-            checkbox.show()
-            delete_btn.show()
+            if checkbox:
+                checkbox.show()
+            if delete_btn:
+                delete_btn.show()
 
     def add_important_task_input(self):
         text, ok = QtWidgets.QInputDialog.getText(self, 'Добавить важных дел', 'Добавить задачу:')
