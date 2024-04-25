@@ -1,6 +1,7 @@
-from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QLineEdit, QStackedWidget, QMessageBox
-from PyQt5.QtGui import QPixmap, QIcon
+from PyQt5 import QtWidgets, QtCore
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QInputDialog, QCheckBox, QMessageBox
+from PyQt5.QtCore import Qt, QMimeData
+from PyQt5.QtGui import QIcon, QPixmap, QDrag
 import json
 
 class MainWin(QMainWindow):
@@ -42,14 +43,37 @@ class MainWin(QMainWindow):
             self.save_tasks_to_file()
             self.main_screen()
 
-    def main_screen(self):
-        self.clear_window()
-        self.setFixedSize(500, 700)
-
+    def ui_elements(self):
         rect_view = QLabel(self)
         rect_view.setGeometry(0, 630, 500, 70)
         rect_view.setStyleSheet('background-color: #F2FAFD;')
         rect_view.show()
+
+        button1 = QPushButton(self)
+        button1.setGeometry(100, 640, 50, 50)
+        button1.setStyleSheet("background-color: #F2FAFD; border-image: url('listcheck.png');")
+        button1.clicked.connect(self.main_page)
+
+        button2 = QPushButton(self)
+        button2.setGeometry(350, 640, 50, 50)
+        button2.setStyleSheet("background-color: #F2FAFD; border-image: url('note.png');")
+        button2.clicked.connect(self.note_page)
+
+        button3 = QPushButton(self)
+        button3.setGeometry(450, 640, 50, 50)
+        button3.setStyleSheet("background-color: #F2FAFD; border-image: url('settings.png');")
+        button3.clicked.connect(self.settings_page)
+
+
+        button1.show()
+        button2.show()
+        button3.show()
+
+
+    def main_screen(self):
+        self.clear_window()
+        self.setFixedSize(500, 700)
+
 
         self.text1 = QtWidgets.QLabel("HIGH", self)
         self.text1.move(220, 50)
@@ -67,21 +91,10 @@ class MainWin(QMainWindow):
         self.add_task_group(self.additional_tasks, 350, True)
         self.add_task_group(self.tasks_low_priority, 400, False)
 
-        button1 = QPushButton(self)
-        button1.setGeometry(100, 640, 50, 50)
-        button1.setStyleSheet("background-color: #F2FAFD; border-image: url('listcheck.png');")
-        button1.clicked.connect(self.main_page)
-
-        button2 = QPushButton(self)
-        button2.setGeometry(350, 640, 50, 50)
-        button2.setStyleSheet("background-color: #F2FAFD; border-image: url('settings.png');")
-        button2.clicked.connect(self.settings_page)
-
-        button1.show()
-        button2.show()
-
         self.text1.show()
         self.text2.show()
+        self.ui_elements()
+
 
     def main_page(self):
         print("Button 1 clicked")
@@ -89,32 +102,49 @@ class MainWin(QMainWindow):
         self.setFixedSize(500, 700)
         self.main_screen()
 
-    def settings_page(self):
+
+    def note_page(self):
         print("Button 2 clicked")
         self.clear_window()
         self.setFixedSize(500, 700)
 
-        rect_view = QLabel(self)
-        rect_view.setGeometry(0, 630, 500, 70)
-        rect_view.setStyleSheet('background-color: #F2FAFD;')
-        rect_view.show()
+        notes_label = QtWidgets.QLabel("Заметки", self)
+        notes_label.setGeometry(200, 50, 100, 30)
+        notes_label.setStyleSheet("font-size: 20px; color: #000000;")
 
-        button1 = QPushButton(self)
-        button1.setGeometry(100, 640, 50, 50)
-        button1.setStyleSheet("background-color: #F2FAFD; border-image: url('listcheck.png');")
-        button1.clicked.connect(self.main_page)
+        notes_text_edit = QtWidgets.QTextEdit(self)
+        notes_text_edit.setGeometry(50, 100, 400, 400)
+        notes_text_edit.setStyleSheet("font-size: 14px;")
 
-        button2 = QPushButton(self)
-        button2.setGeometry(350, 640, 50, 50)
-        button2.setStyleSheet("background-color: #F2FAFD; border-image: url('settings.png');")
-        button2.clicked.connect(self.settings_page)
+        save_notes_button = QPushButton("Сохранить", self)
+        save_notes_button.setGeometry(200, 530, 100, 50)
+        save_notes_button.clicked.connect(lambda: self.save_notes(notes_text_edit.toPlainText()))
 
-        button1.show()
-        button2.show()
-        settings_window = QMainWindow()
-        settings_window.setWindowTitle('Settings')
-        settings_window.setGeometry(750, 250, 500, 700)
-        settings_window.show()
+        notes_label.show()
+        notes_text_edit.show()
+        save_notes_button.show()
+        self.ui_elements()
+
+
+    def settings_page(self):
+        print("Button 3 clicked")
+        self.clear_window()
+        self.setFixedSize(500, 700)
+
+        dark_mode_checkbox = QtWidgets.QCheckBox('Dark Mode', self)
+        dark_mode_checkbox.setGeometry(200, 50, 100, 30)
+        dark_mode_checkbox.setStyleSheet("color: white; font-size: 14px;")
+
+        def toggle_dark_mode(checked):
+            if checked:
+                self.setStyleSheet("background-color: #1E1E1E; color: white;")
+            else:
+                self.setStyleSheet("background-color: white; color: black;")
+
+        dark_mode_checkbox.stateChanged.connect(toggle_dark_mode)
+
+        dark_mode_checkbox.show()
+        self.ui_elements()
 
     def add_task_group(self, tasks, y_start, is_important):
         for i, task in enumerate(tasks):
@@ -160,6 +190,8 @@ class MainWin(QMainWindow):
             if delete_btn:
                 delete_btn.show()
 
+
+
     def delete_task(self, task, is_important):
         try:
             if is_important:
@@ -173,6 +205,7 @@ class MainWin(QMainWindow):
             self.main_screen()
         except ValueError as e:
             print(f"Error deleting task: {e}")
+
 
     def add_important_task_input(self):
         text, ok = QtWidgets.QInputDialog.getText(self, 'Добавить важных дел', 'Добавить задачу:')
