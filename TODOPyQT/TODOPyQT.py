@@ -111,31 +111,42 @@ class MainWin(QMainWindow):
         self.setFixedSize(500, 700)
         self.main_screen()
 
-    def note_page(self, selected_note):
+    def note_page(self, selected_note=None):
         self.clear_window()
-        self.setFixedSize(750, 700)  # Увеличьте размер, чтобы вместить боковую панель
+        self.setFixedSize(500, 700)
 
-        # Боковая панель для заголовков заметок в виде QListWidget
+        # Sidebar for note titles as a QListWidget
         self.sidebar_list_widget = QListWidget(self)
         self.sidebar_list_widget.setGeometry(10, 10, 150, 650)
         self.sidebar_list_widget.setStyleSheet("background-color: #F2FAFD;")
         self.load_note_titles()
 
-        # LineEdit для заголовка заметки
+        # LineEdit for the note title
         self.note_title_edit = QLineEdit(self)
         self.note_title_edit.setGeometry(170, 10, 570, 30)
-        self.note_title_edit.setPlaceholderText("Заголовок заметки")
+        self.note_title_edit.setPlaceholderText("Название заметки")
 
-        # QTextEdit для содержимого заметки
+        # QTextEdit for the note content
         self.notes_text_edit = QTextEdit(self)
         self.notes_text_edit.setGeometry(170, 50, 570, 610)
-        self.notes_text_edit.setPlaceholderText("Содержимое заметки")
+        self.notes_text_edit.setPlaceholderText("Напишите что-нибудь...")
+
 
         save_notes_button = QPushButton("Сохранить заметку", self)
-        save_notes_button.setGeometry(10, 600, 150, 30)
+        save_notes_button.setGeometry(350, 600, 150, 30)
         save_notes_button.clicked.connect(self.save_current_note)
 
-        # Загрузка содержимого выбранной заметки
+        delete_note_button = QPushButton("Удалить заметку", self)
+        delete_note_button.setGeometry(200, 600, 150, 30)
+        delete_note_button.clicked.connect(self.delete_current_note)
+        delete_note_button.show()
+
+
+
+        self.add_new_note_button()
+
+
+        # Load the selected note content
         if selected_note:
             self.note_title_edit.setText(selected_note)
             self.notes_text_edit.setText(self.notes.get(selected_note, ""))
@@ -146,6 +157,26 @@ class MainWin(QMainWindow):
         save_notes_button.show()
         self.ui_elements()
 
+    def create_new_note(self):
+        self.note_title_edit.clear()  # Очистить поле заголовка заметки
+        self.notes_text_edit.clear()
+
+    def add_new_note_button(self):
+        new_note_button = QPushButton("Создать новую заметку", self)
+        new_note_button.setGeometry(10, 600, 150, 30)
+        new_note_button.clicked.connect(self.create_new_note)
+        new_note_button.show()
+
+    def delete_current_note(self):
+        title = self.note_title_edit.text()
+        if title in self.notes:
+            del self.notes[title]
+            self.save_notes_to_file()
+            self.load_note_titles()
+            self.create_new_note()  # Clear the note fields
+            QMessageBox.information(self, 'Deleted', 'Note deleted successfully.')
+        else:
+            QMessageBox.warning(self, 'Warning', 'Please select a note to delete.')
     def load_note_titles(self):
         self.sidebar_list_widget.clear()
         for note in self.notes.keys():
@@ -156,6 +187,18 @@ class MainWin(QMainWindow):
     def on_note_selected(self, item):
         selected_note = item.text()
         self.note_page(selected_note)
+
+    def save_notes_to_file(self):
+        title = self.sidebar.toPlainText()  # Get the title from the sidebar
+        notes = self.notes_text_edit.toPlainText()  # Get the content from the QTextEdit
+        self.save_notes(title, notes)  # Save both title and notes to file
+        QMessageBox.information(self, 'Save', 'Notes saved.')  # Optional message about saving
+
+        # Reload note titles after saving a new note
+        with open("notes.json", "w", encoding="utf-8") as file:
+            json.dump({"notes": self.notes}, file)
+
+        self.load_note_titles()
 
     def save_current_note(self):
         title = self.note_title_edit.text()
