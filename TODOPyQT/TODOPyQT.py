@@ -1,10 +1,8 @@
+import json
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QInputDialog, QCheckBox, QMessageBox, \
     QTextEdit, QListWidget, QLineEdit, QListWidgetItem
-from PyQt5.QtCore import Qt, QMimeData
-from PyQt5.QtGui import QIcon, QPixmap, QDrag
-import json
-
+from ui_elements import setup_ui_elements
 
 class MainWin(QMainWindow):
     def __init__(self):
@@ -21,27 +19,32 @@ class MainWin(QMainWindow):
 
         with open("notes.json", "r", encoding="utf-8") as file:
             notes_data = json.load(file)
-            self.notes = notes_data.get("notes", "")
+            self.notes = notes_data.get("notes", {})
 
         self.main_screen()
 
     def save_tasks_to_file(self):
         tasks_data = {
-            "important_tasks": self.important_tasks,
-            "additional_tasks": self.additional_tasks,
             "tasks_high_priority": self.tasks_high_priority,
             "tasks_low_priority": self.tasks_low_priority
         }
-        with open("notes.json", "r", encoding="utf-8") as file:
-            data = json.load(file)
-            self.notes = data.get("notes", {})
+        with open("tasks.json", "w", encoding="utf-8") as file:
+            json.dump(tasks_data, file)
 
     def save_notes_to_file(self):
-        title = self.sidebar.toPlainText()  # Get the title from the sidebar
+        title = self.note_title_edit.text()  # Get the title from the QLineEdit
         notes = self.notes_text_edit.toPlainText()  # Get the content from the QTextEdit
-        self.save_notes(title, notes)  # Save both title and notes to file
-        QMessageBox.information(self, 'Save', 'Notes saved.')  # Optional message about saving
-
+        if title:  # Проверяем, что заголовок заметки не пустой
+            self.notes[title] = notes  # Обновляем или добавляем заметку в словарь
+            try:
+                with open("notes.json", "w", encoding="utf-8") as file:
+                    json.dump({"notes": self.notes}, file, ensure_ascii=False, indent=4)  # Сохраняем словарь в файл
+                QMessageBox.information(self, 'Save', 'Note saved.')  # Информационное сообщение о сохранении
+            except Exception as e:
+                QMessageBox.warning(self, 'Save Failed',
+                                    f"An error occurred while saving the note: {str(e)}")  # Сообщение об ошибке
+        else:
+            QMessageBox.warning(self, 'Warning', 'The note title cannot be empty.')  # Сообщение, если заголовок пустой
     def add_important_task_input(self):
         text, ok = QtWidgets.QInputDialog.getText(self, 'Add Important Task', 'Enter task:')
         if ok and text:
@@ -56,31 +59,6 @@ class MainWin(QMainWindow):
             self.save_tasks_to_file()
             self.main_screen()
 
-    def ui_elements(self):
-        rect_view = QLabel(self)
-        rect_view.setGeometry(0, 630, 500, 70)
-        rect_view.setStyleSheet('background-color: #F2FAFD;')
-        rect_view.show()
-
-        button1 = QPushButton(self)
-        button1.setGeometry(100, 640, 50, 50)
-        button1.setStyleSheet("background-color: #F2FAFD; border-image: url('listcheck.png');")
-        button1.clicked.connect(self.main_page)
-
-        button2 = QPushButton(self)
-        button2.setGeometry(350, 640, 50, 50)
-        button2.setStyleSheet("background-color: #F2FAFD; border-image: url('note.png');")
-        button2.clicked.connect(self.note_page)
-
-        button3 = QPushButton(self)
-        button3.setGeometry(450, 640, 50, 50)
-        button3.setStyleSheet("background-color: #F2FAFD; border-image: url('settings.png');")
-        button3.clicked.connect(self.settings_page)
-
-        button1.show()
-        button2.show()
-        button3.show()
-
     def main_screen(self):
         self.clear_window()
         self.setFixedSize(500, 700)
@@ -90,8 +68,8 @@ class MainWin(QMainWindow):
         self.text1.setStyleSheet("font-size: 15pt; color: #000000;")
         self.text1.adjustSize()
 
-        self.add_task_group(self.important_tasks, 100, True)
-        self.add_task_group(self.tasks_high_priority, 150, False)
+        self.add_task_group(self.important_tasks, 100, False)
+        self.add_task_group(self.tasks_high_priority, 150, True)
 
         self.text2 = QtWidgets.QLabel("LOW", self)
         self.text2.move(220, 300)
@@ -103,7 +81,7 @@ class MainWin(QMainWindow):
 
         self.text1.show()
         self.text2.show()
-        self.ui_elements()
+        setup_ui_elements(self)
 
     def main_page(self):
         print("Button 1 clicked")
@@ -112,6 +90,7 @@ class MainWin(QMainWindow):
         self.main_screen()
 
     def note_page(self, selected_note=None):
+        print("Button 2 clicked")
         self.clear_window()
         self.setFixedSize(500, 700)
 
@@ -131,10 +110,9 @@ class MainWin(QMainWindow):
         self.notes_text_edit.setGeometry(170, 50, 570, 610)
         self.notes_text_edit.setPlaceholderText("Напишите что-нибудь...")
 
-
         save_notes_button = QPushButton("Сохранить заметку", self)
         save_notes_button.setGeometry(350, 600, 150, 30)
-        save_notes_button.clicked.connect(self.save_current_note)
+        save_notes_button.clicked.connect(self.save_notes_to_file)
 
         delete_note_button = QPushButton("Удалить заметку", self)
         delete_note_button.setGeometry(200, 600, 150, 30)
@@ -155,7 +133,7 @@ class MainWin(QMainWindow):
         self.note_title_edit.show()
         self.notes_text_edit.show()
         save_notes_button.show()
-        self.ui_elements()
+        setup_ui_elements(self)
 
     def create_new_note(self):
         self.note_title_edit.clear()  # Очистить поле заголовка заметки
@@ -171,7 +149,6 @@ class MainWin(QMainWindow):
         title = self.note_title_edit.text()
         if title in self.notes:
             del self.notes[title]
-            self.save_notes_to_file()
             self.load_note_titles()
             self.create_new_note()  # Clear the note fields
             QMessageBox.information(self, 'Deleted', 'Note deleted successfully.')
@@ -188,18 +165,6 @@ class MainWin(QMainWindow):
         selected_note = item.text()
         self.note_page(selected_note)
 
-    def save_notes_to_file(self):
-        title = self.sidebar.toPlainText()  # Get the title from the sidebar
-        notes = self.notes_text_edit.toPlainText()  # Get the content from the QTextEdit
-        self.save_notes(title, notes)  # Save both title and notes to file
-        QMessageBox.information(self, 'Save', 'Notes saved.')  # Optional message about saving
-
-        # Reload note titles after saving a new note
-        with open("notes.json", "w", encoding="utf-8") as file:
-            json.dump({"notes": self.notes}, file)
-
-        self.load_note_titles()
-
     def save_current_note(self):
         title = self.note_title_edit.text()
         content = self.notes_text_edit.toPlainText()
@@ -207,9 +172,9 @@ class MainWin(QMainWindow):
             self.notes[title] = content
             self.save_notes_to_file()
             self.load_note_titles()
-            QMessageBox.information(self, 'Saved', 'Note saved successfully.')
+            QMessageBox.information(self, 'Сохранено', 'Заметка успешно сохранена.')
         else:
-            QMessageBox.warning(self, 'Warning', 'Please enter a note title.')
+            QMessageBox.warning(self, 'Предупреждение', 'Пожалуйста, введите заголовок заметки.')
 
 
     def settings_page(self):
@@ -230,7 +195,7 @@ class MainWin(QMainWindow):
         dark_mode_checkbox.stateChanged.connect(toggle_dark_mode)
 
         dark_mode_checkbox.show()
-        self.ui_elements()
+        setup_ui_elements(self)
 
     def add_task_group(self, tasks, y_start, is_important):
         for i, task in enumerate(tasks):
@@ -279,7 +244,10 @@ class MainWin(QMainWindow):
     def delete_task(self, task, is_important):
         try:
             if is_important:
-                self.tasks_high_priority.remove(task)
+                if task in self.important_tasks:
+                    self.important_tasks.remove(task)
+                elif task in self.tasks_high_priority:
+                    self.tasks_high_priority.remove(task)
             else:
                 self.tasks_low_priority.remove(task)
             self.save_tasks_to_file()
