@@ -10,5 +10,7 @@
         "Сверстать этот TODO List",
         "Начать делать задачу"
     ],
-    "tasks_low_priority": ["Задача"]
+    "tasks_low_priority": [
+        "Задача"
+    ]
 }

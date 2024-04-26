@@ -1,8 +1,10 @@
 from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QInputDialog, QCheckBox, QMessageBox
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QInputDialog, QCheckBox, QMessageBox, \
+    QTextEdit, QListWidget, QLineEdit, QListWidgetItem
 from PyQt5.QtCore import Qt, QMimeData
 from PyQt5.QtGui import QIcon, QPixmap, QDrag
 import json
+
 
 class MainWin(QMainWindow):
     def __init__(self):
@@ -17,6 +19,10 @@ class MainWin(QMainWindow):
             self.tasks_high_priority = tasks_data.get("tasks_high_priority", [])
             self.tasks_low_priority = tasks_data.get("tasks_low_priority", [])
 
+        with open("notes.json", "r", encoding="utf-8") as file:
+            notes_data = json.load(file)
+            self.notes = notes_data.get("notes", "")
+
         self.main_screen()
 
     def save_tasks_to_file(self):
@@ -26,8 +32,15 @@ class MainWin(QMainWindow):
             "tasks_high_priority": self.tasks_high_priority,
             "tasks_low_priority": self.tasks_low_priority
         }
-        with open("tasks.json", "w", encoding="utf-8") as file:
-            json.dump(tasks_data, file, ensure_ascii=False, indent=4)
+        with open("notes.json", "r", encoding="utf-8") as file:
+            data = json.load(file)
+            self.notes = data.get("notes", {})
+
+    def save_notes_to_file(self):
+        title = self.sidebar.toPlainText()  # Get the title from the sidebar
+        notes = self.notes_text_edit.toPlainText()  # Get the content from the QTextEdit
+        self.save_notes(title, notes)  # Save both title and notes to file
+        QMessageBox.information(self, 'Save', 'Notes saved.')  # Optional message about saving
 
     def add_important_task_input(self):
         text, ok = QtWidgets.QInputDialog.getText(self, 'Add Important Task', 'Enter task:')
@@ -64,16 +77,13 @@ class MainWin(QMainWindow):
         button3.setStyleSheet("background-color: #F2FAFD; border-image: url('settings.png');")
         button3.clicked.connect(self.settings_page)
 
-
         button1.show()
         button2.show()
         button3.show()
 
-
     def main_screen(self):
         self.clear_window()
         self.setFixedSize(500, 700)
-
 
         self.text1 = QtWidgets.QLabel("HIGH", self)
         self.text1.move(220, 50)
@@ -95,35 +105,68 @@ class MainWin(QMainWindow):
         self.text2.show()
         self.ui_elements()
 
-
     def main_page(self):
         print("Button 1 clicked")
         self.clear_window()
         self.setFixedSize(500, 700)
         self.main_screen()
 
-
-    def note_page(self):
-        print("Button 2 clicked")
+    def note_page(self, selected_note):
         self.clear_window()
-        self.setFixedSize(500, 700)
+        self.setFixedSize(750, 700)  # Увеличьте размер, чтобы вместить боковую панель
 
-        notes_label = QtWidgets.QLabel("Заметки", self)
-        notes_label.setGeometry(200, 50, 100, 30)
-        notes_label.setStyleSheet("font-size: 20px; color: #000000;")
+        # Боковая панель для заголовков заметок в виде QListWidget
+        self.sidebar_list_widget = QListWidget(self)
+        self.sidebar_list_widget.setGeometry(10, 10, 150, 650)
+        self.sidebar_list_widget.setStyleSheet("background-color: #F2FAFD;")
+        self.load_note_titles()
 
-        notes_text_edit = QtWidgets.QTextEdit(self)
-        notes_text_edit.setGeometry(50, 100, 400, 400)
-        notes_text_edit.setStyleSheet("font-size: 14px;")
+        # LineEdit для заголовка заметки
+        self.note_title_edit = QLineEdit(self)
+        self.note_title_edit.setGeometry(170, 10, 570, 30)
+        self.note_title_edit.setPlaceholderText("Заголовок заметки")
 
-        save_notes_button = QPushButton("Сохранить", self)
-        save_notes_button.setGeometry(200, 530, 100, 50)
-        save_notes_button.clicked.connect(lambda: self.save_notes(notes_text_edit.toPlainText()))
+        # QTextEdit для содержимого заметки
+        self.notes_text_edit = QTextEdit(self)
+        self.notes_text_edit.setGeometry(170, 50, 570, 610)
+        self.notes_text_edit.setPlaceholderText("Содержимое заметки")
 
-        notes_label.show()
-        notes_text_edit.show()
+        save_notes_button = QPushButton("Сохранить заметку", self)
+        save_notes_button.setGeometry(10, 600, 150, 30)
+        save_notes_button.clicked.connect(self.save_current_note)
+
+        # Загрузка содержимого выбранной заметки
+        if selected_note:
+            self.note_title_edit.setText(selected_note)
+            self.notes_text_edit.setText(self.notes.get(selected_note, ""))
+
+        self.sidebar_list_widget.show()
+        self.note_title_edit.show()
+        self.notes_text_edit.show()
         save_notes_button.show()
         self.ui_elements()
+
+    def load_note_titles(self):
+        self.sidebar_list_widget.clear()
+        for note in self.notes.keys():
+            item = QListWidgetItem(note)
+            self.sidebar_list_widget.addItem(item)
+        self.sidebar_list_widget.itemClicked.connect(self.on_note_selected)
+
+    def on_note_selected(self, item):
+        selected_note = item.text()
+        self.note_page(selected_note)
+
+    def save_current_note(self):
+        title = self.note_title_edit.text()
+        content = self.notes_text_edit.toPlainText()
+        if title:
+            self.notes[title] = content
+            self.save_notes_to_file()
+            self.load_note_titles()
+            QMessageBox.information(self, 'Saved', 'Note saved successfully.')
+        else:
+            QMessageBox.warning(self, 'Warning', 'Please enter a note title.')
 
 
     def settings_page(self):
@@ -190,8 +233,6 @@ class MainWin(QMainWindow):
             if delete_btn:
                 delete_btn.show()
 
-
-
     def delete_task(self, task, is_important):
         try:
             if is_important:
@@ -205,7 +246,6 @@ class MainWin(QMainWindow):
             self.main_screen()
         except ValueError as e:
             print(f"Error deleting task: {e}")
-
 
     def add_important_task_input(self):
         text, ok = QtWidgets.QInputDialog.getText(self, 'Добавить важных дел', 'Добавить задачу:')
