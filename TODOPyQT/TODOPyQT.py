@@ -8,23 +8,23 @@ from ui_elements import setup_ui_elements
 
 
 class MainWin(QMainWindow):
-    def __init__(self):  # Corrected the method name
+    def __init__(self):
         super().__init__()
         self.setWindowTitle('TODO List')
         self.setGeometry(750, 250, 500, 700)
 
         self.load_tasks()
 
-        # Set the default background image
         self.current_background_image = "background1.png"
         self.apply_background_image(self.current_background_image)
 
-        # Load settings and apply styles
-        self.load_settings()
-        self.save_settings()
+        self.current_font_size = 14
+
         self.apply_font_size_style()
 
-        # Finally, set up the main screen UI
+        self.load_settings()
+        self.save_settings()
+
         self.main_screen()
 
         with open("tasks.json", "r", encoding="utf-8") as file:
@@ -88,8 +88,16 @@ class MainWin(QMainWindow):
             "font_size": self.current_font_size,
             "background_image": self.current_background_image
         }
-        with open("settings.json", "w", encoding="utf-8") as file:
-            json.dump(settings, file, ensure_ascii=False, indent=4)
+        try:
+            # Attempt to open the file and dump the settings
+            with open("settings.json", "w", encoding="utf-8") as file:
+                json.dump(settings, file, ensure_ascii=False, indent=4)
+        except IOError as e:
+            # An IOError occurred while trying to write the file
+            QMessageBox.warning(self, 'Error', f'Failed to save settings due to an I/O error: {e}')
+        except Exception as e:
+            # Catch-all for any other exceptions that might occur
+            QMessageBox.warning(self, 'Error', f'An unexpected error occurred: {e}')
 
     def load_tasks(self):
         # Attempt to load tasks from a file or initialize with empty lists
@@ -107,15 +115,17 @@ class MainWin(QMainWindow):
             self.additional_tasks = []
             self.tasks_low_priority = []
 
-
-
     def apply_font_size_from_input(self):
+        font_size_str = self.font_size_input.text()
         try:
-            font_size_str = self.font_size_input.text()
             font_size = int(font_size_str)
-            self.current_font_size = font_size
-            self.apply_font_size_style()
-            self.save_settings()
+            if 5 <= font_size <= 32:
+                self.current_font_size = font_size
+                self.apply_font_size_style()
+                self.save_settings()
+                QMessageBox.information(self, 'Success', 'Font size has been updated.')
+            else:
+                QMessageBox.warning(self, 'Error', 'Font size must be between 5 and 32.')
         except ValueError:
             QMessageBox.warning(self, 'Error', 'Please enter a valid font size.')
 
@@ -271,7 +281,7 @@ class MainWin(QMainWindow):
         self.setFixedSize(500, 700)
 
         # Create a label for the font size input
-        font_size_label = QLabel("Choose font size:", self)
+        font_size_label = QLabel("Размер шрифта", self)
         font_size_label.setGeometry(50, 50, 150, 30)
         font_size_label.show()
 
@@ -280,10 +290,15 @@ class MainWin(QMainWindow):
         self.font_size_input.setGeometry(200, 50, 50, 30)
         self.font_size_input.setText(str(self.current_font_size))  # Set the current font size as the initial text
         self.font_size_input.setMaxLength(2)  # Limit the input to two characters
-        self.font_size_input.returnPressed.connect(self.apply_font_size_from_input)
-
         self.font_size_input.show()
-        background_image_label = QLabel("Choose background image:", self)
+
+        # Create a 'Save Font Size' button
+        save_font_size_button = QPushButton("Сохранить", self)
+        save_font_size_button.setGeometry(260, 50, 120, 30)
+        save_font_size_button.clicked.connect(self.apply_font_size_from_input)
+        save_font_size_button.show()
+
+        background_image_label = QLabel("Задний фон", self)
         background_image_label.setGeometry(50, 150, 200, 30)
         background_image_label.show()
 
@@ -300,31 +315,45 @@ class MainWin(QMainWindow):
         # Get the current selection from the dropdown
         image_file = self.background_image_dropdown.currentText()
         image_path = f"{image_file}"
-        self.apply_background_image(image_path)
+        if self.apply_background_image(image_path):
+            self.current_background_image = image_path
+            self.save_settings()
+
     def apply_font_size_from_input(self):
-        # This method is called when the user presses Enter on the font size input
         try:
             font_size_str = self.font_size_input.text()
             font_size = int(font_size_str)
-            self.current_font_size = font_size
-            self.apply_font_size_style()  # Update the font size immediately
-            self.save_settings()  # Save the new font size to the settings file
+
+            # Ensure the font size is within a reasonable range to prevent UI issues
+            if 5 <= font_size <= 32:
+                self.current_font_size = font_size
+                self.apply_font_size_style()  # Apply the new font size
+                self.save_settings()  # Save the new font size to settings
+            else:
+                QMessageBox.warning(self, 'Error', 'Font size must be between 5 and 32.')
+
         except ValueError:
             QMessageBox.warning(self, 'Error', 'Please enter a valid font size.')
 
-    def apply_font_size_style(self):
-        # This method updates the notes text edit with the current font size
-        if hasattr(self, 'notes_text_edit'):
-            self.notes_text_edit.setStyleSheet(f"font-size: {self.current_font_size}px;")
 
     def apply_background_image(self, image_path):
         pixmap = QPixmap(image_path)
         if pixmap.isNull():
-            print(f"Failed to load background image from {image_path}")
-            return
-        palette = QPalette()
-        palette.setBrush(QPalette.Window, QBrush(pixmap))
-        self.setPalette(palette)
+            QMessageBox.warning(self, 'Error', f"Failed to load background image from {image_path}")
+            return False
+        else:
+            palette = QPalette()
+            palette.setBrush(QPalette.Window, QBrush(pixmap))
+            self.setPalette(palette)
+            return True
+
+    def apply_font_size_style(self):
+        # Define the font size style string
+        font_size_style = f"font-size: {self.current_font_size}px;"
+
+        # Update the font size style for the notes text edit
+        if hasattr(self, 'notes_text_edit'):
+            self.notes_text_edit.setStyleSheet(font_size_style)
 
 
     def add_task_group(self, tasks, y_start, is_important):
