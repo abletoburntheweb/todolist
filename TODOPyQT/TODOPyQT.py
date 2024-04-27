@@ -1,14 +1,31 @@
 import json
 from PyQt5 import QtWidgets, QtCore
+from PyQt5.QtGui import QPixmap, QPalette, QBrush
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QInputDialog, QCheckBox, QMessageBox, \
-    QTextEdit, QListWidget, QLineEdit, QListWidgetItem
+    QLineEdit, QListWidget, QTextEdit, QListWidgetItem, QComboBox
+
 from ui_elements import setup_ui_elements
 
+
 class MainWin(QMainWindow):
-    def __init__(self):
+    def __init__(self):  # Corrected the method name
         super().__init__()
         self.setWindowTitle('TODO List')
         self.setGeometry(750, 250, 500, 700)
+
+        self.load_tasks()
+
+        # Set the default background image
+        self.current_background_image = "background1.png"
+        self.apply_background_image(self.current_background_image)
+
+        # Load settings and apply styles
+        self.load_settings()
+        self.save_settings()
+        self.apply_font_size_style()
+
+        # Finally, set up the main screen UI
+        self.main_screen()
 
         with open("tasks.json", "r", encoding="utf-8") as file:
             tasks_data = json.load(file)
@@ -23,8 +40,12 @@ class MainWin(QMainWindow):
 
         self.main_screen()
 
+
+
     def save_tasks_to_file(self):
         tasks_data = {
+            "important_tasks": self.important_tasks,
+            "additional_tasks": self.additional_tasks,
             "tasks_high_priority": self.tasks_high_priority,
             "tasks_low_priority": self.tasks_low_priority
         }
@@ -39,21 +60,74 @@ class MainWin(QMainWindow):
             try:
                 with open("notes.json", "w", encoding="utf-8") as file:
                     json.dump({"notes": self.notes}, file, ensure_ascii=False, indent=4)  # Сохраняем словарь в файл
-                QMessageBox.information(self, 'Save', 'Note saved.')  # Информационное сообщение о сохранении
+                QMessageBox.information(self, 'Success', 'Заметка сохранена')  # Информационное сообщение о сохранении
             except Exception as e:
                 QMessageBox.warning(self, 'Save Failed',
                                     f"An error occurred while saving the note: {str(e)}")  # Сообщение об ошибке
         else:
-            QMessageBox.warning(self, 'Warning', 'The note title cannot be empty.')  # Сообщение, если заголовок пустой
+            QMessageBox.warning(self, 'Warning', 'Заголовок не может быть пустым.')  # Сообщение, если заголовок пустой
+
+
+    def load_settings(self):
+        try:
+            with open("settings.json", "r", encoding="utf-8") as file:
+                settings = json.load(file)
+                self.current_font_size = settings.get("font_size", 14)
+                self.current_background_image = settings.get("background_image", "background1.png")
+                self.apply_font_size_style()
+                self.apply_background_image(self.current_background_image)
+        except Exception as e:
+            # If settings.json does not exist or there is an error, use default settings
+            self.current_font_size = 14
+            self.current_background_image = "background1.png"
+            self.apply_font_size_style()
+            self.apply_background_image(self.current_background_image)
+
+    def save_settings(self):
+        settings = {
+            "font_size": self.current_font_size,
+            "background_image": self.current_background_image
+        }
+        with open("settings.json", "w", encoding="utf-8") as file:
+            json.dump(settings, file, ensure_ascii=False, indent=4)
+
+    def load_tasks(self):
+        # Attempt to load tasks from a file or initialize with empty lists
+        try:
+            with open("tasks.json", "r", encoding="utf-8") as file:
+                tasks_data = json.load(file)
+                self.important_tasks = tasks_data.get("important_tasks", [])
+                self.tasks_high_priority = tasks_data.get("tasks_high_priority", [])
+                self.additional_tasks = tasks_data.get("additional_tasks", [])
+                self.tasks_low_priority = tasks_data.get("tasks_low_priority", [])
+        except FileNotFoundError:
+            # If tasks.json does not exist, initialize with default empty lists
+            self.important_tasks = []
+            self.tasks_high_priority = []
+            self.additional_tasks = []
+            self.tasks_low_priority = []
+
+
+
+    def apply_font_size_from_input(self):
+        try:
+            font_size_str = self.font_size_input.text()
+            font_size = int(font_size_str)
+            self.current_font_size = font_size
+            self.apply_font_size_style()
+            self.save_settings()
+        except ValueError:
+            QMessageBox.warning(self, 'Error', 'Please enter a valid font size.')
+
     def add_important_task_input(self):
-        text, ok = QtWidgets.QInputDialog.getText(self, 'Add Important Task', 'Enter task:')
+        text, ok = QtWidgets.QInputDialog.getText(self, 'Добавить важную задачу', 'Введите задачу:')
         if ok and text:
             self.tasks_high_priority.append(text)
             self.save_tasks_to_file()
             self.main_screen()
 
     def add_additional_task_input(self):
-        text, ok = QtWidgets.QInputDialog.getText(self, 'Add Additional Task', 'Enter task:')
+        text, ok = QtWidgets.QInputDialog.getText(self, 'Добавить задачу', 'Введите задачу:')
         if ok and text:
             self.tasks_low_priority.append(text)
             self.save_tasks_to_file()
@@ -88,6 +162,7 @@ class MainWin(QMainWindow):
         self.clear_window()
         self.setFixedSize(500, 700)
         self.main_screen()
+        setup_ui_elements(self)
 
     def note_page(self, selected_note=None):
         print("Button 2 clicked")
@@ -100,29 +175,32 @@ class MainWin(QMainWindow):
         self.sidebar_list_widget.setStyleSheet("background-color: #F2FAFD;")
         self.load_note_titles()
 
-        # LineEdit for the note title
+        # Adjust the geometry for the note title LineEdit
+        # Subtracting sidebar width (150) and some margin from the total window width (500)
         self.note_title_edit = QLineEdit(self)
-        self.note_title_edit.setGeometry(170, 10, 570, 30)
+        self.note_title_edit.setGeometry(170, 10, 320, 30)  # Adjusted width to 320
         self.note_title_edit.setPlaceholderText("Название заметки")
 
-        # QTextEdit for the note content
+        # Adjust the geometry for the note content QTextEdit
+        # Subtracting sidebar width (150) and some margin from the total window width (500)
         self.notes_text_edit = QTextEdit(self)
-        self.notes_text_edit.setGeometry(170, 50, 570, 610)
+        self.notes_text_edit.setGeometry(170, 50, 320, 610)  # Adjusted width to 320
         self.notes_text_edit.setPlaceholderText("Напишите что-нибудь...")
 
+
+        # Apply font size style to the notes text edit
+        self.apply_font_size_style()  # Эта строка применяет текущий размер шрифта
+
         save_notes_button = QPushButton("Сохранить заметку", self)
-        save_notes_button.setGeometry(350, 600, 150, 30)
+        save_notes_button.setGeometry(340, 600, 150, 30)
         save_notes_button.clicked.connect(self.save_notes_to_file)
 
         delete_note_button = QPushButton("Удалить заметку", self)
-        delete_note_button.setGeometry(200, 600, 150, 30)
+        delete_note_button.setGeometry(190, 600, 150, 30)
         delete_note_button.clicked.connect(self.delete_current_note)
         delete_note_button.show()
 
-
-
         self.add_new_note_button()
-
 
         # Load the selected note content
         if selected_note:
@@ -133,11 +211,13 @@ class MainWin(QMainWindow):
         self.note_title_edit.show()
         self.notes_text_edit.show()
         save_notes_button.show()
-        setup_ui_elements(self)
 
+        setup_ui_elements(self)
     def create_new_note(self):
-        self.note_title_edit.clear()  # Очистить поле заголовка заметки
-        self.notes_text_edit.clear()
+        self.note_title_edit.clear()  # Clear the note title field
+        self.notes_text_edit.clear()  # Clear the note content field
+        # Apply the current font size to the new note
+        self.apply_font_size_style()
 
     def add_new_note_button(self):
         new_note_button = QPushButton("Создать новую заметку", self)
@@ -148,12 +228,21 @@ class MainWin(QMainWindow):
     def delete_current_note(self):
         title = self.note_title_edit.text()
         if title in self.notes:
-            del self.notes[title]
-            self.load_note_titles()
-            self.create_new_note()  # Clear the note fields
-            QMessageBox.information(self, 'Deleted', 'Note deleted successfully.')
+            reply = QMessageBox.question(self, 'Подтверждение удаления',
+                                         'Вы действительно хотите удалить эту заметку?',
+                                         QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if reply == QMessageBox.Yes:
+                del self.notes[title]
+                self.load_note_titles()
+                self.create_new_note()  # Очистить поля заметки
+                try:
+                    with open("notes.json", "w", encoding="utf-8") as file:
+                        json.dump({"notes": self.notes}, file, ensure_ascii=False, indent=4)
+                    QMessageBox.information(self, 'Успех', 'Заметка удалена.')
+                except Exception as e:
+                    QMessageBox.warning(self, 'Ошибка', f'Произошла ошибка при сохранении изменений: {e}')
         else:
-            QMessageBox.warning(self, 'Warning', 'Please select a note to delete.')
+            QMessageBox.warning(self, 'Внимание!', 'Заметка не найдена или уже удалена.')
     def load_note_titles(self):
         self.sidebar_list_widget.clear()
         for note in self.notes.keys():
@@ -172,30 +261,71 @@ class MainWin(QMainWindow):
             self.notes[title] = content
             self.save_notes_to_file()
             self.load_note_titles()
-            QMessageBox.information(self, 'Сохранено', 'Заметка успешно сохранена.')
+            QMessageBox.information(self,'Заметка успешно сохранена.')
         else:
             QMessageBox.warning(self, 'Предупреждение', 'Пожалуйста, введите заголовок заметки.')
-
 
     def settings_page(self):
         print("Button 3 clicked")
         self.clear_window()
         self.setFixedSize(500, 700)
 
-        dark_mode_checkbox = QtWidgets.QCheckBox('Dark Mode', self)
-        dark_mode_checkbox.setGeometry(200, 50, 100, 30)
-        dark_mode_checkbox.setStyleSheet("color: white; font-size: 14px;")
+        # Create a label for the font size input
+        font_size_label = QLabel("Choose font size:", self)
+        font_size_label.setGeometry(50, 50, 150, 30)
+        font_size_label.show()
 
-        def toggle_dark_mode(checked):
-            if checked:
-                self.setStyleSheet("background-color: #1E1E1E; color: white;")
-            else:
-                self.setStyleSheet("background-color: white; color: black;")
+        # Create the QLineEdit for font size input
+        self.font_size_input = QLineEdit(self)
+        self.font_size_input.setGeometry(200, 50, 50, 30)
+        self.font_size_input.setText(str(self.current_font_size))  # Set the current font size as the initial text
+        self.font_size_input.setMaxLength(2)  # Limit the input to two characters
+        self.font_size_input.returnPressed.connect(self.apply_font_size_from_input)
 
-        dark_mode_checkbox.stateChanged.connect(toggle_dark_mode)
+        self.font_size_input.show()
+        background_image_label = QLabel("Choose background image:", self)
+        background_image_label.setGeometry(50, 150, 200, 30)
+        background_image_label.show()
 
-        dark_mode_checkbox.show()
+        # Create a dropdown for background image options
+        self.background_image_dropdown = QComboBox(self)
+        self.background_image_dropdown.setGeometry(250, 150, 200, 30)
+        self.background_image_dropdown.addItems(
+            ["background1.png", "background2.png", "background3.png", "background4.png", "background5.png"])
+        self.background_image_dropdown.currentIndexChanged.connect(self.on_background_image_changed)
+        self.background_image_dropdown.show()
         setup_ui_elements(self)
+
+    def on_background_image_changed(self):
+        # Get the current selection from the dropdown
+        image_file = self.background_image_dropdown.currentText()
+        image_path = f"{image_file}"
+        self.apply_background_image(image_path)
+    def apply_font_size_from_input(self):
+        # This method is called when the user presses Enter on the font size input
+        try:
+            font_size_str = self.font_size_input.text()
+            font_size = int(font_size_str)
+            self.current_font_size = font_size
+            self.apply_font_size_style()  # Update the font size immediately
+            self.save_settings()  # Save the new font size to the settings file
+        except ValueError:
+            QMessageBox.warning(self, 'Error', 'Please enter a valid font size.')
+
+    def apply_font_size_style(self):
+        # This method updates the notes text edit with the current font size
+        if hasattr(self, 'notes_text_edit'):
+            self.notes_text_edit.setStyleSheet(f"font-size: {self.current_font_size}px;")
+
+    def apply_background_image(self, image_path):
+        pixmap = QPixmap(image_path)
+        if pixmap.isNull():
+            print(f"Failed to load background image from {image_path}")
+            return
+        palette = QPalette()
+        palette.setBrush(QPalette.Window, QBrush(pixmap))
+        self.setPalette(palette)
+
 
     def add_task_group(self, tasks, y_start, is_important):
         for i, task in enumerate(tasks):
@@ -284,13 +414,11 @@ class MainWin(QMainWindow):
         for widget in self.findChildren(QtWidgets.QWidget):
             widget.deleteLater()
 
-
 def run_app():
     app = QApplication([])
     window = MainWin()
     window.show()
     app.exec_()
-
 
 if __name__ == '__main__':
     run_app()
