@@ -116,9 +116,10 @@ class MainWin(QMainWindow):
             self.tasks_low_priority = []
 
     def apply_font_size_from_input(self):
-        font_size_str = self.font_size_input.text()
         try:
+            font_size_str = self.font_size_input.text()
             font_size = int(font_size_str)
+
             if 5 <= font_size <= 32:
                 self.current_font_size = font_size
                 self.apply_font_size_style()
