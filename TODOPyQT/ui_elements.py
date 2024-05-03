@@ -14,7 +14,7 @@ def setup_ui_elements(main_window):
     button2 = QPushButton(main_window)
     button2.setGeometry(350, 640, 50, 50)
     button2.setStyleSheet("background-color: #F2FAFD; border-image: url('note.png');")
-    button2.clicked.connect(main_window.note_page)
+    button2.clicked.connect(main_window.show_note_page)
 
     button3 = QPushButton(main_window)
     button3.setGeometry(450, 640, 50, 50)
