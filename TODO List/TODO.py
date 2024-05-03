@@ -1,8 +1,10 @@
-#выводить время, когда была добавлена задача
+# выводить время, когда была добавлена задача
 import Store
+
 Store.loadTasks(), Store.saveTasks()
 
-list = []
+todo_list = []
+
 
 def addTask():
     task = input("Введите новую задачу: ")
@@ -10,31 +12,38 @@ def addTask():
     while priority.lower() not in ["важный", "обычный"]:
         print("Неверный приоритет. Попробуйте еще раз.")
         priority = input("Введите приоритет задачи (важный/обычный): ").lower()
-    list.append((task, priority))
+    todo_list.append((task, priority))
     print("Задача успешно добавлена!")
 
+
 def removeTask():
-    if len(list) == 0:
+    if len(todo_list) == 0:
         print("Список дел пуст.")
     else:
         print("Список дел:")
-        for index, task in enumerate(list):
+        for index, task in enumerate(todo_list):
             print(f"{index + 1}. {task}")
         task_index = int(input("Введите номер задачи для удаления: ")) - 1
-        if task_index < 0 or task_index >= len(list):
+        if task_index < 0 or task_index >= len(todo_list):
             print("Неверный номер задачи.")
         else:
-           deleted_task = list.pop(task_index)
-           print(f"Задача '{deleted_task}' успешно удалена.")
+            deleted_task = todo_list.pop(task_index)
+            print(f"Задача '{deleted_task}' успешно удалена.")
+
+
+def sortTasks():
+    todo_list.sort()
+    print("Список задач отсортирован по алфавиту.")
+
 
 def viewTasks():
-    if len(list) == 0:
+    if len(todo_list) == 0:
         print("Список дел пуст.")
     else:
         print("Список дел:")
         important_tasks = []
         ordinary_tasks = []
-        for task in list:
+        for task in todo_list:
             if task[1] == "важный":
                 important_tasks.append(task[0])
             else:
@@ -48,9 +57,16 @@ def viewTasks():
             for index, task in enumerate(ordinary_tasks):
                 print(f"{index + 1}. {task}")
 
+            option = input("Для сортировки задач по алфавиту нажмите 's': ")
+            if option.lower() == 's':
+                sortTasks()
+                print("Задачи отсортированы по алфавиту.")
+
+
 def clearList():
-    list.clear()
+    todo_list.clear()
     print("Список дел успешно очищен.")
+
 
 def main():
     Store.loadTasks()
