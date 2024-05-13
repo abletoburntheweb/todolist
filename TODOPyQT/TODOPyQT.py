@@ -52,20 +52,27 @@ class MainWin(QMainWindow):
             json.dump(tasks_data, file)
 
     def save_notes_to_file(self):
-        title = self.note_title_edit.text()  # Get the title from the QLineEdit
-        notes = self.notes_text_edit.toPlainText()  # Get the content from the QTextEdit
-        if title:  # Проверяем, что заголовок заметки не пустой
-            self.notes[title] = notes  # Обновляем или добавляем заметку в словарь
-            try:
-                with open("notes.json", "w", encoding="utf-8") as file:
-                    json.dump({"notes": self.notes}, file, ensure_ascii=False, indent=4)  # Сохраняем словарь в файл
-                QMessageBox.information(self, 'Success', 'Заметка сохранена')  # Информационное сообщение о сохранении
-            except Exception as e:
-                QMessageBox.warning(self, 'Save Failed',
-                                    f"An error occurred while saving the note: {str(e)}")  # Сообщение об ошибке
+        title = self.note_title_edit.text()
+        notes = self.notes_text_edit.toPlainText()
+        if title:
+            if title in self.notes:  # Check if the note exists before deleting it
+                del self.notes[title]
+                try:
+                    with open("notes.json", "w", encoding="utf-8") as file:
+                        json.dump({"notes": self.notes}, file, ensure_ascii=False, indent=4)
+                    QMessageBox.information(self, 'Сохранено', 'Заметка удалена')
+                except Exception as e:
+                    QMessageBox.warning(self, 'Сохранение не удалось',
+                                        f"An error occurred while saving the note: {str(e)}")
+            else:
+                QMessageBox.warning(self, 'Ошибка', 'Заметка не существует')
+            self.clear_note_page()  # Clear the note page after deleting the note
         else:
-            QMessageBox.warning(self, 'Warning', 'Заголовок не может быть пустым.')  # Сообщение, если заголовок пустой
+            QMessageBox.warning(self, 'Внимание', 'Заголовок не может быть пустым.')
 
+    def clear_note_page(self):
+        self.note_title_edit.clear()
+        self.notes_text_edit.clear()
 
     def load_settings(self):
         try:
@@ -76,7 +83,6 @@ class MainWin(QMainWindow):
                 self.apply_font_size_style()
                 self.apply_background_image(self.current_background_image)
         except Exception as e:
-            # If settings.json does not exist or there is an error, use default settings
             self.current_font_size = 14
             self.current_background_image = "background1.png"
             self.apply_font_size_style()
@@ -88,18 +94,14 @@ class MainWin(QMainWindow):
             "background_image": self.current_background_image
         }
         try:
-            # Attempt to open the file and dump the settings
             with open("settings.json", "w", encoding="utf-8") as file:
                 json.dump(settings, file, ensure_ascii=False, indent=4)
         except IOError as e:
-            # An IOError occurred while trying to write the file
             QMessageBox.warning(self, 'Error', f'Failed to save settings due to an I/O error: {e}')
         except Exception as e:
-            # Catch-all for any other exceptions that might occur
             QMessageBox.warning(self, 'Error', f'An unexpected error occurred: {e}')
 
     def load_tasks(self):
-        # Attempt to load tasks from a file or initialize with empty lists
         try:
             with open("tasks.json", "r", encoding="utf-8") as file:
                 tasks_data = json.load(file)
@@ -108,12 +110,10 @@ class MainWin(QMainWindow):
                 self.additional_tasks = tasks_data.get("additional_tasks", [])
                 self.tasks_low_priority = tasks_data.get("tasks_low_priority", [])
         except FileNotFoundError:
-            # If tasks.json does not exist, initialize with default empty lists
             self.important_tasks = []
             self.tasks_high_priority = []
             self.additional_tasks = []
             self.tasks_low_priority = []
-
 
     def main_screen(self):
         self.clear_window()
@@ -148,33 +148,29 @@ class MainWin(QMainWindow):
 
     def show_note_page(self, selected_note=None):
         try:
-            self.clear_window()  # Clear the current widgets if necessary
-            self._note_page = NotePage(self)  # Create a new note page if necessary
+            self.clear_window()
+            self._note_page = NotePage(self)
             self._note_page.note_title_edit.setText(selected_note or "")
             self._note_page.notes_text_edit.setText(self.notes.get(selected_note, ""))
             self._note_page.setup_note_page_ui()
         except Exception as e:
             QMessageBox.warning(self, 'Ошибка', f'Произошла ошибка при показе страницы заметок: {e}')
 
-
     def settings_page(self):
         print("Button 3 clicked")
         self.clear_window()
         self.setFixedSize(500, 700)
 
-        # Create a label for the font size input
         font_size_label = QLabel("Размер шрифта", self)
         font_size_label.setGeometry(50, 50, 150, 30)
         font_size_label.show()
 
-        # Create the QLineEdit for font size input
         self.font_size_input = QLineEdit(self)
         self.font_size_input.setGeometry(200, 50, 50, 30)
-        self.font_size_input.setText(str(self.current_font_size))  # Set the current font size as the initial text
-        self.font_size_input.setMaxLength(2)  # Limit the input to two characters
+        self.font_size_input.setText(str(self.current_font_size))
+        self.font_size_input.setMaxLength(2)
         self.font_size_input.show()
 
-        # Create a 'Save Font Size' button
         save_font_size_button = QPushButton("Сохранить", self)
         save_font_size_button.setGeometry(260, 50, 120, 30)
         save_font_size_button.clicked.connect(self.apply_font_size_from_input)
@@ -184,7 +180,6 @@ class MainWin(QMainWindow):
         background_image_label.setGeometry(50, 150, 200, 30)
         background_image_label.show()
 
-        # Create a dropdown for background image options
         self.background_image_dropdown = QComboBox(self)
         self.background_image_dropdown.setGeometry(250, 150, 200, 30)
         self.background_image_dropdown.addItems(
@@ -194,7 +189,7 @@ class MainWin(QMainWindow):
         setup_ui_elements(self)
 
     def on_background_image_changed(self):
-        # Get the current selection from the dropdown
+
         image_file = self.background_image_dropdown.currentText()
         image_path = f"{image_file}"
         if self.apply_background_image(image_path):
@@ -202,31 +197,25 @@ class MainWin(QMainWindow):
             self.save_settings()
 
     def apply_font_size_from_input(self):
-        # Получаем новое значение размера шрифта из виджета ввода
+
         font_size_str = self.font_size_input.text()
 
-        # Пытаемся преобразовать строку в целое число
         try:
             font_size = int(font_size_str)
         except ValueError:
-            # Если преобразование не удалось, выводим сообщение об ошибке
+
             QMessageBox.warning(self, 'Ошибка', 'Введите корректный размер шрифта.')
             return
 
-        # Проверяем, что размер шрифта находится в допустимых пределах
         if 5 <= font_size <= 32:
-            # Обновляем текущий размер шрифта
+
             self.current_font_size = font_size
 
-            # Обновляем стиль шрифта на странице заметок
             self._note_page.apply_font_size_style()
 
-            # Сохраняем новый размер шрифта в настройках
             self.save_settings()
         else:
-            # Выводим сообщение об ошибке, если размер шрифта не подходит
             QMessageBox.warning(self, 'Ошибка', 'Размер шрифта должен быть между 5 и 32.')
-
 
     def apply_background_image(self, image_path):
         pixmap = QPixmap(image_path)
@@ -240,13 +229,10 @@ class MainWin(QMainWindow):
             return True
 
     def apply_font_size_style(self):
-        # Define the font size style string
         font_size_style = f"font-size: {self.current_font_size}px;"
 
-        # Update the font size style for the notes text edit
         if hasattr(self, 'notes_text_edit'):
             self.notes_text_edit.setStyleSheet(font_size_style)
-
 
     def add_task_group(self, tasks, y_start, is_important):
         for i, task in enumerate(tasks):
@@ -303,7 +289,6 @@ class MainWin(QMainWindow):
                 self.tasks_low_priority.remove(task)
             self.save_tasks_to_file()
 
-            # Clear the window and then redraw the task groups
             self.clear_window()
             self.main_screen()
         except ValueError as e:
@@ -335,6 +320,7 @@ class MainWin(QMainWindow):
         for widget in self.findChildren(QtWidgets.QWidget):
             widget.deleteLater()
 
+
 def run_app():
     try:
         app = QApplication([])
@@ -343,7 +329,7 @@ def run_app():
         app.exec_()
     except Exception as e:
         print(f"Произошла непредвиденная ошибка: {e}")
-        # Здесь можно добавить логирование в файл или другие действия по обработке ошибки
+
 
 if __name__ == '__main__':
     run_app()

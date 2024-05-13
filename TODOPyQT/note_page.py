@@ -1,5 +1,5 @@
 import json
-from PyQt5.QtWidgets import QListWidget, QLineEdit, QTextEdit, QPushButton, QMessageBox, QListWidgetItem
+from PyQt5.QtWidgets import QListWidget, QLineEdit, QTextEdit, QPushButton, QMessageBox
 from PyQt5 import QtCore
 from ui_elements import setup_ui_elements
 class NotePage:
@@ -95,12 +95,17 @@ class NotePage:
                                          QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 
             if reply == QMessageBox.Yes:
-                del self.notes[title]  # Удаляем заметку из словаря
-                self.note_title_edit.clear()  # Очищаем поле заголовка
-                self.notes_text_edit.clear()  # Очищаем поле текста заметки
-                self.load_note_titles()  # Обновляем список заметок в сайдбаре
-                self.save_notes_to_file()  # Сохраняем обновленные данные в файл
-                QMessageBox.information(self.main_win, 'Удалено', 'Заметка успешно удалена.')
+                del self.notes[title]  # Remove the note from the dictionary
+                self.note_title_edit.clear()  # Clear the title field
+                self.notes_text_edit.clear()  # Clear the note text field
+                self.load_note_titles()  # Refresh the note titles in the sidebar
+
+                try:
+                    with open("notes.json", "w", encoding="utf-8") as file:
+                        json.dump({"notes": self.notes}, file, ensure_ascii=False, indent=4)
+                    QMessageBox.information(self.main_win, 'Удалено', 'Заметка успешно удалена.')
+                except Exception as e:
+                    QMessageBox.warning(self.main_win, 'Ошибка', f'Произошла ошибка при сохранении заметки: {e}')
         else:
             QMessageBox.warning(self.main_win, 'Ошибка', 'Выберите заметку для удаления.')
 
@@ -109,9 +114,9 @@ class NotePage:
         self.notes_text_edit.clear()
         self.note_title_edit.setFocus()
 
-    def apply_font_size_style(self):
-        font_size = self.main_win.current_font_size  # Получаем текущий размер шрифта из главного окна
-        font_size_style = f"font-size: {font_size}px;"
+    def apply_font_size_style(self, font_size):
+        # Устанавливаем стиль для QTextEdit
+        self.notes_text_edit.setStyleSheet(f"font-size: {font_size}px;")
 
         # Применяем стиль к виджетам в NotePage
         self.note_title_edit.setStyleSheet(font_size_style)
