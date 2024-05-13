@@ -197,22 +197,17 @@ class MainWin(QMainWindow):
             self.save_settings()
 
     def apply_font_size_from_input(self):
-
         font_size_str = self.font_size_input.text()
 
         try:
             font_size = int(font_size_str)
         except ValueError:
-
             QMessageBox.warning(self, 'Ошибка', 'Введите корректный размер шрифта.')
             return
 
         if 5 <= font_size <= 32:
-
             self.current_font_size = font_size
-
-            self._note_page.apply_font_size_style()
-
+            self.apply_font_size_style()  # Apply font size to all relevant elements
             self.save_settings()
         else:
             QMessageBox.warning(self, 'Ошибка', 'Размер шрифта должен быть между 5 и 32.')
