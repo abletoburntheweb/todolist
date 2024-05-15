@@ -320,6 +320,16 @@ class MainWin(QMainWindow):
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Escape:
             self.close()
+        elif event.key() == Qt.Key_Q:
+            self.clear_window()
+            self.main_page()
+        elif event.key() == Qt.Key_W:
+            self.clear_window()
+            NotePage(self)
+        elif event.key() == Qt.Key_E:
+            self.clear_window()
+            self.settings_page()
+
 def run_app():
     try:
         app = QApplication([])
