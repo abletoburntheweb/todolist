@@ -4,6 +4,7 @@ from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtGui import QPixmap, QPalette, QBrush
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QInputDialog, QCheckBox, QMessageBox, \
     QLineEdit, QListWidget, QTextEdit, QListWidgetItem, QComboBox
+from PyQt5.QtCore import Qt
 from note_page import NotePage
 from ui_elements import setup_ui_elements
 
@@ -212,6 +213,7 @@ class MainWin(QMainWindow):
         else:
             QMessageBox.warning(self, 'Ошибка', 'Размер шрифта должен быть между 5 и 32.')
 
+
     def apply_background_image(self, image_path):
         pixmap = QPixmap(image_path)
         if pixmap.isNull():
@@ -315,7 +317,9 @@ class MainWin(QMainWindow):
         for widget in self.findChildren(QtWidgets.QWidget):
             widget.deleteLater()
 
-
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Escape:
+            self.close()
 def run_app():
     try:
         app = QApplication([])
