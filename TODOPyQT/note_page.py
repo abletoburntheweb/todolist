@@ -5,11 +5,12 @@ from ui_elements import setup_ui_elements
 class NotePage:
     def __init__(self, main_win):
         self.main_win = main_win
+        print("Button 2 clicked")
         self.sidebar_list_widget = QListWidget(main_win)
         self.sidebar_list_widget.itemClicked.connect(self.on_note_selected)
         self.note_title_edit = QLineEdit(main_win)
         self.notes_text_edit = QTextEdit(main_win)
-        self.notes = {}  # This will hold the notes loaded from file
+        self.notes = {}
         self.load_notes_from_file()
         self.setup_note_page_ui()
 
@@ -67,7 +68,6 @@ class NotePage:
             self.sidebar_list_widget.addItem(note_title)
 
     def on_note_selected(self, item):
-        # Load the selected note into the text edit fields
         selected_note = item.text()
         self.note_title_edit.setText(selected_note)
         self.notes_text_edit.setText(self.notes[selected_note])
@@ -95,10 +95,10 @@ class NotePage:
                                          QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 
             if reply == QMessageBox.Yes:
-                del self.notes[title]  # Remove the note from the dictionary
-                self.note_title_edit.clear()  # Clear the title field
-                self.notes_text_edit.clear()  # Clear the note text field
-                self.load_note_titles()  # Refresh the note titles in the sidebar
+                del self.notes[title]
+                self.note_title_edit.clear()
+                self.notes_text_edit.clear()
+                self.load_note_titles()
 
                 try:
                     with open("notes.json", "w", encoding="utf-8") as file:

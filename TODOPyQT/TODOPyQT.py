@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QInp
     QLineEdit, QListWidget, QTextEdit, QListWidgetItem, QComboBox
 from PyQt5.QtCore import Qt
 from note_page import NotePage
+from settings_page import SettingsPage
 from ui_elements import setup_ui_elements
 
 
@@ -23,6 +24,10 @@ class MainWin(QMainWindow):
         self.current_font_size = 14
 
         self.apply_font_size_style()
+
+        self.text2 = QtWidgets.QLabel("LOW", self)
+        self.text2.setStyleSheet("font-size: 15pt; color: #000000;")
+        self.text2.adjustSize()
 
         self.load_settings()
         self.save_settings()
@@ -126,7 +131,14 @@ class MainWin(QMainWindow):
         self.text1.adjustSize()
 
         self.add_task_group(self.important_tasks, 100, False)
-        self.add_task_group(self.tasks_high_priority, 150, True)
+        self.add_task_group(self.tasks_high_priority, 100 + len(self.important_tasks) * 50, True)
+
+        high_tasks_count = len(self.important_tasks) + len(self.tasks_high_priority)
+        low_label_y_start = 100 + high_tasks_count * 50 + 20  # Отступ после задач
+
+        # Теперь обновляем позицию существующего QLabel для "LOW"
+        self.text2.move(220, low_label_y_start)
+        self.text2.show()
 
         self.text2 = QtWidgets.QLabel("LOW", self)
         self.text2.move(220, 300)
@@ -231,7 +243,8 @@ class MainWin(QMainWindow):
         if hasattr(self, 'notes_text_edit'):
             self.notes_text_edit.setStyleSheet(font_size_style)
 
-    def add_task_group(self, tasks, y_start, is_important):
+    def add_task_group(self, tasks, y_start, is_important, label=None):
+        y_offset = 50
         for i, task in enumerate(tasks):
             if task in ["Добавить важных дел", "Добавить дел"]:
                 btn = QtWidgets.QPushButton(task, self)
@@ -268,6 +281,8 @@ class MainWin(QMainWindow):
                 btn.setStyleSheet(
                     "QPushButton { border-radius: 15px; background-color: white; color: black; border: 1px solid; "
                     "border-color: #989898; font-size: 20px}")
+            if label and i == len(tasks) - 1:
+                label.move(220, y_start + (i + 1) * y_offset)
 
             btn.show()
             if checkbox:
@@ -292,24 +307,26 @@ class MainWin(QMainWindow):
             print(f"Error deleting task: {e}")
 
     def add_important_task_input(self):
+        total_tasks = len(self.important_tasks) + len(self.tasks_high_priority)
+        if total_tasks >= 5:
+            QMessageBox.information(self, 'Сообщение', 'Вы уже добавили пять задач!')
+            return
+
         text, ok = QtWidgets.QInputDialog.getText(self, 'Добавить важных дел', 'Добавить задачу:')
         if ok and text:
-            if len(self.tasks_high_priority) < 3:
-                self.tasks_high_priority.append(text)
-            else:
-                QMessageBox.information(self, 'Сообщение', 'Вы уже добавили три задачи!')
-
+            self.tasks_high_priority.append(text)
             self.save_tasks_to_file()
             self.main_screen()
 
     def add_additional_task_input(self):
+        total_tasks = len(self.additional_tasks) + len(self.tasks_low_priority)
+        if total_tasks >= 5:
+            QMessageBox.information(self, 'Сообщение', 'Вы уже добавили пять задач!')
+            return
+
         text, ok = QtWidgets.QInputDialog.getText(self, 'Добавить дел', 'Добавить задачу:')
         if ok and text:
-            if len(self.tasks_low_priority) < 3:
-                self.tasks_low_priority.append(text)
-            else:
-                QMessageBox.information(self, 'Сообщение', 'Вы уже добавили три задачи!')
-
+            self.tasks_high_priority.append(text)
             self.save_tasks_to_file()
             self.main_screen()
 
