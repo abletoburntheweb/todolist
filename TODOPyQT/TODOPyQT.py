@@ -3,22 +3,17 @@ import json
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtGui import QPixmap, QPalette, QBrush
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QInputDialog, QCheckBox, QMessageBox, \
-    QLineEdit, QListWidget, QTextEdit, QListWidgetItem, QComboBox, QWidget, QScrollArea
+    QLineEdit, QListWidget, QTextEdit, QListWidgetItem, QComboBox, QScrollArea, QScrollBar, QVBoxLayout, QWidget, \
+    QLayout
 from PyQt5.QtCore import Qt
+from weekend import weekend_dropdown
 from note_page import NotePage
 from ui_elements import setup_ui_elements
-
 
 class MainWin(QMainWindow):
     def __init__(self):
         super().__init__()
-        scroll_area = QScrollArea(self)
-        scroll_area.setWidgetResizable(True)
 
-        scroll_content = QWidget(scroll_area)
-        scroll_area.setWidget(scroll_content)
-        scroll_area.setGeometry(0, 0, 500, 700)
-        
         self.setWindowTitle('TODO List')
         self.setGeometry(750, 250, 500, 700)
         self._note_page = NotePage(self)
@@ -57,7 +52,7 @@ class MainWin(QMainWindow):
             "tasks_low_priority": self.tasks_low_priority
         }
         with open("tasks.json", "w", encoding="utf-8") as file:
-            json.dump(tasks_data, file)
+            json.dump(tasks_data, file, ensure_ascii=False)
 
     def save_notes_to_file(self):
         title = self.note_title_edit.text()
@@ -136,15 +131,16 @@ class MainWin(QMainWindow):
         self.add_task_group(self.tasks_high_priority, 150, True)
 
         self.text2 = QtWidgets.QLabel("LOW", self)
-        self.text2.move(220, 400)
+        self.text2.move(220, 300)
         self.text2.setStyleSheet("font-size: 15pt; color: #000000;")
         self.text2.adjustSize()
-
-        self.add_task_group(self.additional_tasks, 450, True)
-        self.add_task_group(self.tasks_low_priority, 500, False)
+        self.add_task_group(self.additional_tasks, 350, True)
+        self.add_task_group(self.tasks_low_priority, 400, False)
 
         self.text1.show()
         self.text2.show()
+        self.weekend_label, self.weeken_dropdown = weekend_dropdown(self)
+
         setup_ui_elements(self)
 
     def main_page(self):
@@ -197,12 +193,12 @@ class MainWin(QMainWindow):
         setup_ui_elements(self)
 
     def on_background_image_changed(self):
-
         image_file = self.background_image_dropdown.currentText()
         image_path = f"{image_file}"
         if self.apply_background_image(image_path):
             self.current_background_image = image_path
             self.save_settings()
+
 
     def apply_font_size_from_input(self):
         font_size_str = self.font_size_input.text()
@@ -219,7 +215,6 @@ class MainWin(QMainWindow):
             self.save_settings()
         else:
             QMessageBox.warning(self, 'Ошибка', 'Размер шрифта должен быть между 5 и 32.')
-
 
     def apply_background_image(self, image_path):
         pixmap = QPixmap(image_path)
@@ -301,21 +296,20 @@ class MainWin(QMainWindow):
     def add_important_task_input(self):
         text, ok = QtWidgets.QInputDialog.getText(self, 'Добавить важных дел', 'Добавить задачу:')
         if ok and text:
-            if len(self.tasks_high_priority) < 5:
+            if len(self.tasks_high_priority) < 3:
                 self.tasks_high_priority.append(text)
             else:
-                QMessageBox.information(self, 'Сообщение', 'Вы уже добавили пять задач!')
-
+                QMessageBox.information(self, 'Сообщение', 'Вы уже добавили три задачи!')
             self.save_tasks_to_file()
             self.main_screen()
 
     def add_additional_task_input(self):
         text, ok = QtWidgets.QInputDialog.getText(self, 'Добавить дел', 'Добавить задачу:')
         if ok and text:
-            if len(self.tasks_low_priority) < 5:
+            if len(self.tasks_low_priority) < 3:
                 self.tasks_low_priority.append(text)
             else:
-                QMessageBox.information(self, 'Сообщение', 'Вы уже добавили пять задач!')
+                QMessageBox.information(self, 'Сообщение', 'Вы уже добавили три задачи!')
 
             self.save_tasks_to_file()
             self.main_screen()
@@ -346,6 +340,6 @@ def run_app():
     except Exception as e:
         print(f"Произошла непредвиденная ошибка: {e}")
 
-
 if __name__ == '__main__':
     run_app()
+
