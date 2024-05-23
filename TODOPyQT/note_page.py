@@ -16,31 +16,87 @@ class NotePage:
         self.setup_note_page_ui()
 
     def setup_note_page_ui(self):
+        # Определение стиля для кнопок
+        button_style = """
+            QPushButton {
+                background-color: #6CA6CD;
+                color: white;
+                border-radius: 4px;
+                padding: 5px;
+                font-size: 14px;
+                border: none;
+            }
+            QPushButton:pressed {
+                background-color: #5B9BD5;
+            }
+            QPushButton:hover {
+                background-color: #8DBDD8;
+            }
+        """
+
+        # Стиль для боковой панели со списком заметок
+        self.sidebar_list_widget.setStyleSheet("""
+            QListWidget {
+                background-color: #F2FAFD;
+                border: none;
+                color: #333;
+                font-size: 14px;
+            }
+            QListWidget::item:selected {
+                background-color: #89CFF0;
+                color: black;
+            }
+        """)
         self.sidebar_list_widget.setGeometry(10, 10, 150, 650)
-        self.sidebar_list_widget.setStyleSheet("background-color: #F2FAFD;")
-        self.load_note_titles()
+        # ... [остальные настройки виджета]
 
-        self.sidebar_list_widget.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.sidebar_list_widget.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-
+        # Стиль для поля ввода названия заметки
+        self.note_title_edit.setStyleSheet("""
+            QLineEdit {
+                border: 1px solid #ccc;
+                padding: 5px;
+                border-radius: 4px;
+            }
+            QLineEdit:focus {
+                border-color: #6CA6CD;
+            }
+        """)
         self.note_title_edit.setGeometry(170, 10, 320, 30)
-        self.note_title_edit.setPlaceholderText("Название заметки")
+        # ... [остальные настройки QLineEdit]
 
+        # Стиль для окна текста заметки
+        self.notes_text_edit.setStyleSheet("""
+            QTextEdit {
+                border: 1px solid #ccc;
+                padding: 5px;
+                border-radius: 4px;
+                font-size: 14px;
+                color: #555;
+            }
+            QTextEdit:focus {
+                border-color: #6CA6CD;
+            }
+        """)
         self.notes_text_edit.setGeometry(170, 50, 320, 610)
-        self.notes_text_edit.setPlaceholderText("Напишите что-нибудь...")
+        # ... [остальные настройки QTextEdit]
 
+        # Создание и стилизация кнопок с использованием определенного выше стиля
         save_notes_button = QPushButton("Сохранить заметку", self.main_win)
+        save_notes_button.setStyleSheet(button_style)
         save_notes_button.setGeometry(340, 600, 150, 30)
         save_notes_button.clicked.connect(self.save_notes_to_file)
 
         delete_note_button = QPushButton("Удалить заметку", self.main_win)
+        delete_note_button.setStyleSheet(button_style)
         delete_note_button.setGeometry(190, 600, 150, 30)
         delete_note_button.clicked.connect(self.delete_current_note)
 
-        new_note_button = QPushButton("Создать новую заметку", self.main_win)
+        new_note_button = QPushButton("Создать заметку", self.main_win)
+        new_note_button.setStyleSheet(button_style)
         new_note_button.setGeometry(10, 600, 150, 30)
         new_note_button.clicked.connect(self.create_new_note)
 
+        # Отображаем виджеты
         self.sidebar_list_widget.show()
         self.note_title_edit.show()
         self.notes_text_edit.show()
@@ -111,10 +167,3 @@ class NotePage:
         self.note_title_edit.clear()
         self.notes_text_edit.clear()
         self.note_title_edit.setFocus()
-
-    def apply_font_size_style(self, font_size):
-        self.notes_text_edit.setStyleSheet(f"font-size: {font_size}px;")
-
-        self.note_title_edit.setStyleSheet(font_size_style)
-        self.notes_text_edit.setStyleSheet(font_size_style)
-        self.sidebar_list_widget.setStyleSheet("QListView { font-size: " + str(font_size) + "px; }")

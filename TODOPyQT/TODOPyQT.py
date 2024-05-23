@@ -23,9 +23,6 @@ class MainWin(QMainWindow):
         self.current_background_image = "background1.png"
         self.apply_background_image(self.current_background_image)
 
-        self.current_font_size = 14
-
-        self.apply_font_size_style()
         self.completed_tasks_count = 0
         self.load_settings()
         self.save_settings()
@@ -75,21 +72,20 @@ class MainWin(QMainWindow):
         try:
             with open("settings.json", "r", encoding="utf-8") as file:
                 settings = json.load(file)
-                self.current_font_size = settings.get("font_size", 14)
+
                 self.current_background_image = settings.get("background_image", "background1.png")
-                self.apply_font_size_style()
+
                 self.apply_background_image(self.current_background_image)
                 self.completed_tasks_count = settings.get("completed_tasks_count", 0)
         except Exception as e:
-            self.current_font_size = 14
             self.current_background_image = "background1.png"
-            self.apply_font_size_style()
+
             self.apply_background_image(self.current_background_image)
             self.completed_tasks_count = 0
 
     def save_settings(self):
         settings = {
-            "font_size": self.current_font_size,
+
             "background_image": self.current_background_image,
             "completed_tasks_count": self.completed_tasks_count
         }
@@ -242,21 +238,6 @@ class MainWin(QMainWindow):
         self.clear_window()
         self.setFixedSize(500, 700)
 
-        font_size_label = QLabel("Размер шрифта", self)
-        font_size_label.setGeometry(50, 50, 150, 30)
-        font_size_label.show()
-
-        self.font_size_input = QLineEdit(self)
-        self.font_size_input.setGeometry(200, 50, 50, 30)
-        self.font_size_input.setText(str(self.current_font_size))
-        self.font_size_input.setMaxLength(2)
-        self.font_size_input.show()
-
-        save_font_size_button = QPushButton("Сохранить", self)
-        save_font_size_button.setGeometry(260, 50, 120, 30)
-        save_font_size_button.clicked.connect(self.apply_font_size_from_input)
-        save_font_size_button.show()
-
         background_image_label = QLabel("Задний фон", self)
         background_image_label.setGeometry(50, 150, 200, 30)
         background_image_label.show()
@@ -282,23 +263,6 @@ class MainWin(QMainWindow):
             self.current_background_image = image_path
             self.save_settings()
 
-    def apply_font_size_from_input(self):
-        font_size_str = self.font_size_input.text()
-
-        try:
-            font_size = int(font_size_str)
-        except ValueError:
-            QMessageBox.warning(self, 'Ошибка', 'Введите корректный размер шрифта.')
-            return
-
-        if 5 <= font_size <= 32:
-            self.current_font_size = font_size
-            self.apply_font_size_style()
-            self.save_settings()
-        else:
-            QMessageBox.warning(self, 'Ошибка', 'Размер шрифта должен быть между 5 и 32.')
-
-
     def apply_background_image(self, image_path):
         pixmap = QPixmap(image_path)
         if pixmap.isNull():
@@ -309,12 +273,6 @@ class MainWin(QMainWindow):
             palette.setBrush(QPalette.Window, QBrush(pixmap))
             self.setPalette(palette)
             return True
-
-    def apply_font_size_style(self):
-        font_size_style = f"font-size: {self.current_font_size}px;"
-
-        if hasattr(self, 'notes_text_edit'):
-            self.notes_text_edit.setStyleSheet(font_size_style)
 
     def add_task_group(self, tasks, y_start, is_important, button_index):
         for i, task in enumerate(tasks):
