@@ -26,7 +26,7 @@ class MainWin(QMainWindow):
         self.current_font_size = 14
 
         self.apply_font_size_style()
-
+        self.completed_tasks_count = 0
         self.load_settings()
         self.save_settings()
 
@@ -79,16 +79,19 @@ class MainWin(QMainWindow):
                 self.current_background_image = settings.get("background_image", "background1.png")
                 self.apply_font_size_style()
                 self.apply_background_image(self.current_background_image)
+                self.completed_tasks_count = settings.get("completed_tasks_count", 0)
         except Exception as e:
             self.current_font_size = 14
             self.current_background_image = "background1.png"
             self.apply_font_size_style()
             self.apply_background_image(self.current_background_image)
+            self.completed_tasks_count = 0
 
     def save_settings(self):
         settings = {
             "font_size": self.current_font_size,
-            "background_image": self.current_background_image
+            "background_image": self.current_background_image,
+            "completed_tasks_count": self.completed_tasks_count
         }
         try:
             with open("settings.json", "w", encoding="utf-8") as file:
@@ -127,10 +130,8 @@ class MainWin(QMainWindow):
             self.buttons.append(btn)
 
     def toggle_task_completed(self, task, button_index, checked):
-        # Обновляем статус выполнения задачи
         task['completed'] = checked
 
-        # Определяем категорию задачи, чтобы обновить в self.tasks_data
         if task in self.tasks_data[str(button_index)]["important_tasks"]:
             category = "important_tasks"
         elif task in self.tasks_data[str(button_index)]["tasks_high_priority"]:
@@ -140,17 +141,19 @@ class MainWin(QMainWindow):
         elif task in self.tasks_data[str(button_index)]["tasks_low_priority"]:
             category = "tasks_low_priority"
         else:
-            # Если задача не найдена в списках, выводим сообщение об ошибке
             QMessageBox.warning(self, 'Ошибка', 'Не удалось найти задачу в списках.')
             return
 
-        # Находим индекс задачи в соответствующем списке и обновляем ее статус
         for i, t in enumerate(self.tasks_data[str(button_index)][category]):
             if t['name'] == task['name']:
                 self.tasks_data[str(button_index)][category][i]['completed'] = checked
                 break
+        if checked:
+            self.completed_tasks_count += 1
+        else:
+            self.completed_tasks_count -= 1
+        self.save_settings()
 
-        # Сохраняем обновленные данные в файл
         self.save_tasks_to_file()
     def handle_button_click(self, button_index):
         self.clear_window(keep_main_buttons=True)
@@ -202,7 +205,6 @@ class MainWin(QMainWindow):
         self.text1.setStyleSheet("font-size: 15pt; color: #000000;")
         self.text1.adjustSize()
 
-        # Добавляем аргумент button_index в вызовы add_task_group
         self.add_task_group(button_tasks["important_tasks"], 100, True, button_index)
         self.add_task_group(button_tasks["tasks_high_priority"], 150, True, button_index)
 
@@ -265,6 +267,11 @@ class MainWin(QMainWindow):
             ["background1.png", "background2.png", "background3.png", "background4.png", "background5.png"])
         self.background_image_dropdown.currentIndexChanged.connect(self.on_background_image_changed)
         self.background_image_dropdown.show()
+
+        completed_tasks_label = QLabel(f"Выполнено задач: {self.completed_tasks_count}", self)
+        completed_tasks_label.setGeometry(50, 200, 300, 30)
+        completed_tasks_label.show()
+
         setup_ui_elements(self)
 
     def on_background_image_changed(self):
@@ -358,7 +365,7 @@ class MainWin(QMainWindow):
                     if t['name'] == task['name']:
                         category = cat
                         break
-                if category:  # Если задача найдена, прервать внешний цикл
+                if category:
                     break
 
             if category:
@@ -366,7 +373,7 @@ class MainWin(QMainWindow):
                     t for t in self.tasks_data[str(button_index)][category] if t['name'] != task['name']
                 ]
                 self.save_tasks_to_file()
-                self.handle_button_click(button_index)  # Обновляем отображение для соответствующего дня
+                self.handle_button_click(button_index)
             else:
                 QMessageBox.warning(self, 'Ошибка', 'Задача не найдена для удаления.')
 

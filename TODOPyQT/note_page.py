@@ -2,6 +2,8 @@ import json
 from PyQt5.QtWidgets import QListWidget, QLineEdit, QTextEdit, QPushButton, QMessageBox
 from PyQt5 import QtCore
 from ui_elements import setup_ui_elements
+
+
 class NotePage:
     def __init__(self, main_win):
         self.main_win = main_win
@@ -9,12 +11,11 @@ class NotePage:
         self.sidebar_list_widget.itemClicked.connect(self.on_note_selected)
         self.note_title_edit = QLineEdit(main_win)
         self.notes_text_edit = QTextEdit(main_win)
-        self.notes = {}  # This will hold the notes loaded from file
+        self.notes = {}
         self.load_notes_from_file()
         self.setup_note_page_ui()
 
     def setup_note_page_ui(self):
-        # Configure the UI elements for the note page
         self.sidebar_list_widget.setGeometry(10, 10, 150, 650)
         self.sidebar_list_widget.setStyleSheet("background-color: #F2FAFD;")
         self.load_note_titles()
@@ -40,7 +41,6 @@ class NotePage:
         new_note_button.setGeometry(10, 600, 150, 30)
         new_note_button.clicked.connect(self.create_new_note)
 
-        # Show the widgets
         self.sidebar_list_widget.show()
         self.note_title_edit.show()
         self.notes_text_edit.show()
@@ -48,7 +48,6 @@ class NotePage:
         delete_note_button.show()
         new_note_button.show()
         setup_ui_elements(self.main_win)
-
 
     def load_notes_from_file(self):
         try:
@@ -67,7 +66,6 @@ class NotePage:
             self.sidebar_list_widget.addItem(note_title)
 
     def on_note_selected(self, item):
-        # Load the selected note into the text edit fields
         selected_note = item.text()
         self.note_title_edit.setText(selected_note)
         self.notes_text_edit.setText(self.notes[selected_note])
@@ -95,10 +93,10 @@ class NotePage:
                                          QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 
             if reply == QMessageBox.Yes:
-                del self.notes[title]  # Remove the note from the dictionary
-                self.note_title_edit.clear()  # Clear the title field
-                self.notes_text_edit.clear()  # Clear the note text field
-                self.load_note_titles()  # Refresh the note titles in the sidebar
+                del self.notes[title]
+                self.note_title_edit.clear()
+                self.notes_text_edit.clear()
+                self.load_note_titles()
 
                 try:
                     with open("notes.json", "w", encoding="utf-8") as file:
@@ -115,10 +113,8 @@ class NotePage:
         self.note_title_edit.setFocus()
 
     def apply_font_size_style(self, font_size):
-        # Устанавливаем стиль для QTextEdit
         self.notes_text_edit.setStyleSheet(f"font-size: {font_size}px;")
 
-        # Применяем стиль к виджетам в NotePage
         self.note_title_edit.setStyleSheet(font_size_style)
         self.notes_text_edit.setStyleSheet(font_size_style)
         self.sidebar_list_widget.setStyleSheet("QListView { font-size: " + str(font_size) + "px; }")
