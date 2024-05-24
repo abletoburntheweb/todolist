@@ -117,11 +117,28 @@ class MainWin(QMainWindow):
         start_x = 25
         start_y = 10
 
+        # Стиль для кнопок задач
+        task_button_style = """
+            QPushButton {
+                background-color: #87CEFA; /* Светло-синий цвет */
+                border-radius: 10px; /* Скругление углов */
+                padding: 5px;
+                font-size: 16px;
+                border: 2px solid #1E90FF; /* Темно-синяя граница */
+            }
+            QPushButton:hover {
+                background-color: #B0E0E6; /* При наведении */
+            }
+            QPushButton:pressed {
+                background-color: #ADD8E6; /* При нажатии */
+            }
+        """
+
         self.buttons = []
         for i in range(1, 8):
             btn = QPushButton(f"{i}", self)
-
             btn.setGeometry(start_x + (i - 1) * (button_width + button_spacing), start_y, button_width, button_height)
+            btn.setStyleSheet(task_button_style)
             btn.clicked.connect(lambda checked, index=i: self.handle_button_click(index))
             btn.show()
             self.buttons.append(btn)
@@ -237,34 +254,84 @@ class MainWin(QMainWindow):
             QMessageBox.warning(self, 'Ошибка', f'Произошла ошибка при показе страницы заметок: {e}')
 
     def settings_page(self):
-        print("Button 3 clicked")
         self.clear_window()
         self.setFixedSize(500, 700)
 
-        usage_label = QLabel("Как пользоваться:", self)
-        usage_label.setGeometry(50, 50, 200, 30)
-        usage_label.show()
+        # Стиль для заголовков на странице настроек
+        label_style = """
+               QLabel {
+                   font-size: 16px;
+                   color: #333;
+                   padding: 5px;
+               }
+           """
 
-        help_button = QPushButton("Справка", self)
-        help_button.setGeometry(260, 50, 120, 30)
-        help_button.clicked.connect(self.show_help_dialog)
-        help_button.show()
+        # Стиль для кнопок на странице настроек
+        button_style = """
+               QPushButton {
+                   background-color: #5CACEE;
+                   color: white;
+                   border-radius: 6px;
+                   padding: 8px;
+                   font-size: 14px;
+                   border: 1px solid #5CACEE;
+                   min-width: 80px;
+               }
+               QPushButton:hover {
+                   background-color: #1E90FF;
+               }
+               QPushButton:pressed {
+                   background-color: #4682B4;
+               }
+           """
 
+        # Стиль для выпадающих списков на странице настроек
+        combobox_style = """
+               QComboBox {
+                   border: 1px solid #AAA;
+                   border-radius: 4px;
+                   padding: 5px;
+                   min-width: 6em;
+               }
+               QComboBox::drop-down {
+                   subcontrol-origin: padding;
+                   subcontrol-position: top right;
+                   width: 25px;
+                   border-left-width: 1px;
+                   border-left-color: darkgray;
+                   border-left-style: solid;
+                   border-top-right-radius: 3px;
+                   border-bottom-right-radius: 3px;
+               }
+           """
+
+        # Заголовок "Задний фон"
         background_image_label = QLabel("Задний фон", self)
         background_image_label.setGeometry(50, 100, 200, 30)
+        background_image_label.setStyleSheet(label_style)
         background_image_label.show()
 
+        # Выпадающий список для выбора фонового изображения
         self.background_image_dropdown = QComboBox(self)
         self.background_image_dropdown.setGeometry(250, 100, 200, 30)
         self.background_image_dropdown.addItems(
             ["background1.png", "background2.png", "background3.png", "background4.png", "background5.png"])
+        self.background_image_dropdown.setStyleSheet(combobox_style)
         self.background_image_dropdown.currentIndexChanged.connect(self.on_background_image_changed)
         self.background_image_dropdown.show()
 
-        completed_tasks_label = QLabel(f"Выполнено задач: {self.completed_tasks_count}", self)
-        completed_tasks_label.setGeometry(50, 150, 300, 30)
-        completed_tasks_label.show()
+        # Заголовок "Как пользоваться"
+        usage_label = QLabel("Как пользоваться:", self)
+        usage_label.setGeometry(50, 50, 200, 30)
+        usage_label.setStyleSheet(label_style)
+        usage_label.show()
 
+        # Кнопка "Справка"
+        help_button = QPushButton("Справка", self)
+        help_button.setGeometry(250, 50, 200, 30)
+        help_button.setStyleSheet(button_style)
+        help_button.clicked.connect(self.show_help_dialog)
+        help_button.show()
         setup_ui_elements(self)
 
     def show_help_dialog(self):
