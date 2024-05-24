@@ -43,6 +43,8 @@ class MainWin(QMainWindow):
             notes_data = json.load(file)
             self.notes = notes_data.get("notes", {})
 
+    MAX_TASKS_COUNT = 3
+    MAX_TASK_LENGTH = 28
     def save_tasks_to_file(self):
         with open("tasks.json", "w", encoding="utf-8") as file:
             json.dump(self.tasks_data, file, ensure_ascii=False, indent=4)
@@ -495,29 +497,33 @@ class MainWin(QMainWindow):
         except Exception as e:
             QMessageBox.warning(self, 'Ошибка', f'Ошибка при удалении задачи: {e}')
 
-    MAX_TASKS_COUNT = 3
-
     def add_important_task_input(self, button_index):
         text, ok = QInputDialog.getText(self, 'Добавить важных дел', 'Введите название задачи:')
         if ok and text:
+            if len(text) > self.MAX_TASK_LENGTH:
+                QMessageBox.warning(self, 'Ошибка', 'Название задачи должно быть не более 28 символов.')
+                return
             if len(self.tasks_data[str(button_index)]["tasks_high_priority"]) < self.MAX_TASKS_COUNT:
                 new_task = {"name": text, "completed": False}
                 self.tasks_data[str(button_index)]["tasks_high_priority"].append(new_task)
                 self.save_tasks_to_file()
                 self.handle_button_click(button_index)
             else:
-                QMessageBox.information(self, 'Сообщение', 'Вы уже добавили три задачи!')
+                QMessageBox.information(self, 'Сообщение', 'Вы уже добавили три важных задачи!')
 
     def add_additional_task_input(self, button_index):
         text, ok = QInputDialog.getText(self, 'Добавить дел', 'Введите название задачи:')
         if ok and text:
+            if len(text) > self.MAX_TASK_LENGTH:
+                QMessageBox.warning(self, 'Ошибка', 'Название задачи должно быть не более 28 символов.')
+                return
             if len(self.tasks_data[str(button_index)]["tasks_low_priority"]) < self.MAX_TASKS_COUNT:
                 new_task = {"name": text, "completed": False}
                 self.tasks_data[str(button_index)]["tasks_low_priority"].append(new_task)
                 self.save_tasks_to_file()
                 self.handle_button_click(button_index)
             else:
-                QMessageBox.information(self, 'Сообщение', 'Вы уже добавили три задачи!')
+                QMessageBox.information(self, 'Сообщение', 'Вы уже добавили три дополнительные задачи!')
 
     def clear_window(self, keep_main_buttons=False):
         widgets_to_keep = self.buttons if keep_main_buttons else []
