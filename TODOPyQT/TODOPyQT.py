@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QInp
     QLineEdit, QListWidget, QTextEdit, QListWidgetItem, QComboBox
 from PyQt5.QtCore import Qt
 from note_page import NotePage
+from HowToUse import HelpDialog
 from ui_elements import setup_ui_elements
 
 
@@ -184,18 +185,7 @@ class MainWin(QMainWindow):
 
         setup_ui_elements(self)
 
-    def show_help_dialog(self):
-        help_dialog = QMessageBox(self)
-        help_dialog.setWindowTitle("Справка")
-        help_dialog.setText("Кнопка \"добавить дел\" из окно с задачами\n\n"
-                            "Нажмите на кнопку, чтобы добавить задачу\n\n"
-                            "Появится окно, куда необходимо вписать название задачи\n\n"
-                            "После этого, как задача была вписана\n\n"
-                            "Она появится в списке задач\n\n"
-                            "LOW\n\n"
-                            "Добавить важных дел\n\n"
-                            "записаться к стоматологу")
-        help_dialog.exec_()
+
 
     def main_screen(self, button_index='1'):
         self.clear_window(keep_main_buttons=True)
@@ -257,8 +247,8 @@ class MainWin(QMainWindow):
 
         help_button = QPushButton("Справка", self)
         help_button.setGeometry(260, 50, 120, 30)
-        help_button.show()
         help_button.clicked.connect(self.show_help_dialog)
+        help_button.show()
 
         background_image_label = QLabel("Задний фон", self)
         background_image_label.setGeometry(50, 100, 200, 30)
@@ -277,6 +267,13 @@ class MainWin(QMainWindow):
 
         setup_ui_elements(self)
 
+    def show_help_dialog(self):
+        try:
+            help_dialog = HelpDialog(self)
+            help_dialog.exec_()
+        except Exception as e:
+            QMessageBox.critical(self, 'Ошибка', f'При попытке открыть справку произошла ошибка: {e}')
+            print(f'Ошибка: {e}')
     def on_background_image_changed(self):
 
         image_file = self.background_image_dropdown.currentText()
@@ -329,7 +326,7 @@ class MainWin(QMainWindow):
                 checkbox.show()
 
                 delete_btn = QtWidgets.QPushButton("☓", self)
-                delete_btn.setGeometry(430, y_start + i * 50 + 10, 25, 25)
+                delete_btn.setGeometry(420, y_start + i * 50 + 10, 25, 25)
                 delete_btn.setStyleSheet(
                     "QPushButton { background-color: #FF0000; color: white; "
                     "border-radius: 12px; font-weight: bold; }"
