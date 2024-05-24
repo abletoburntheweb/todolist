@@ -33,7 +33,8 @@ class NotePage:
                 background-color: #8DBDD8;
             }
         """
-
+        self.note_title_edit.setPlaceholderText("Название заметки")
+        self.note_title_edit.setGeometry(170, 10, 320, 30)
         # Стиль для боковой панели со списком заметок
         self.sidebar_list_widget.setStyleSheet("""
             QListWidget {
@@ -49,7 +50,8 @@ class NotePage:
         """)
         self.sidebar_list_widget.setGeometry(10, 10, 150, 650)
         # ... [остальные настройки виджета]
-
+        self.notes_text_edit.setPlaceholderText("Напишите что-нибудь...")
+        self.notes_text_edit.setGeometry(170, 50, 320, 610)
         # Стиль для поля ввода названия заметки
         self.note_title_edit.setStyleSheet("""
             QLineEdit {
@@ -62,7 +64,6 @@ class NotePage:
             }
         """)
         self.note_title_edit.setGeometry(170, 10, 320, 30)
-        # ... [остальные настройки QLineEdit]
 
         # Стиль для окна текста заметки
         self.notes_text_edit.setStyleSheet("""
@@ -77,6 +78,7 @@ class NotePage:
                 border-color: #6CA6CD;
             }
         """)
+
         self.notes_text_edit.setGeometry(170, 50, 320, 610)
         # ... [остальные настройки QTextEdit]
 
