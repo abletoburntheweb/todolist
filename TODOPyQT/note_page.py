@@ -16,7 +16,7 @@ class NotePage:
         self.setup_note_page_ui()
 
     def setup_note_page_ui(self):
-        # Определение стиля для кнопок
+
         button_style = """
             QPushButton {
                 background-color: #6CA6CD;
@@ -35,7 +35,7 @@ class NotePage:
         """
         self.note_title_edit.setPlaceholderText("Название заметки")
         self.note_title_edit.setGeometry(170, 10, 320, 30)
-        # Стиль для боковой панели со списком заметок
+
         self.sidebar_list_widget.setStyleSheet("""
             QListWidget {
                 background-color: #F2FAFD;
@@ -49,10 +49,10 @@ class NotePage:
             }
         """)
         self.sidebar_list_widget.setGeometry(10, 10, 150, 650)
-        # ... [остальные настройки виджета]
+
         self.notes_text_edit.setPlaceholderText("Напишите что-нибудь...")
         self.notes_text_edit.setGeometry(170, 50, 320, 610)
-        # Стиль для поля ввода названия заметки
+
         self.note_title_edit.setStyleSheet("""
             QLineEdit {
                 border: 1px solid #ccc;
@@ -65,7 +65,6 @@ class NotePage:
         """)
         self.note_title_edit.setGeometry(170, 10, 320, 30)
 
-        # Стиль для окна текста заметки
         self.notes_text_edit.setStyleSheet("""
             QTextEdit {
                 border: 1px solid #ccc;
@@ -80,9 +79,7 @@ class NotePage:
         """)
 
         self.notes_text_edit.setGeometry(170, 50, 320, 610)
-        # ... [остальные настройки QTextEdit]
 
-        # Создание и стилизация кнопок с использованием определенного выше стиля
         save_notes_button = QPushButton("Сохранить заметку", self.main_win)
         save_notes_button.setStyleSheet(button_style)
         save_notes_button.setGeometry(340, 600, 150, 30)
@@ -98,7 +95,6 @@ class NotePage:
         new_note_button.setGeometry(10, 600, 150, 30)
         new_note_button.clicked.connect(self.create_new_note)
 
-        # Отображаем виджеты
         self.sidebar_list_widget.show()
         self.note_title_edit.show()
         self.notes_text_edit.show()

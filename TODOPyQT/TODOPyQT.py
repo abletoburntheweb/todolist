@@ -116,17 +116,14 @@ class MainWin(QMainWindow):
         button_height = 40
         button_spacing = 10
 
-        # Вычисление общей ширины всех кнопок с учетом промежутков
         total_width = (button_width * 7) + (button_spacing * (7 - 1))
 
-        # Вычисление начальной координаты X, чтобы отцентрировать кнопки
         start_x = (self.width() - total_width) // 2  # Вычитаем общую ширину из ширины окна и делим на два
         start_y = 10
 
         self.buttons = []
         for i in range(1, 8):
             btn = QPushButton(f"{i}", self)
-            # Вычисляем позицию каждой кнопки на основе их индекса
             x_position = start_x + (i - 1) * (button_width + button_spacing)
             active_button_style = """
                         QPushButton {
@@ -180,7 +177,6 @@ class MainWin(QMainWindow):
         if checked:
             self.completed_tasks_count += 1
         else:
-            # Проверка, чтобы счётчик не уходил в минус
             if self.completed_tasks_count > 0:
                 self.completed_tasks_count -= 1
 
@@ -188,8 +184,8 @@ class MainWin(QMainWindow):
 
     def reset_completed_tasks_count(self):
         self.completed_tasks_count = 0
-        self.update_completed_tasks_label()  # Обновляем текст метки
-        self.save_settings()  # Сохраняем изменения в файл настроек
+        self.update_completed_tasks_label()
+        self.save_settings()
 
     def update_completed_tasks_label(self):
         self.completed_tasks_label.setText(f"Выполнено задач: {self.completed_tasks_count}")
@@ -319,13 +315,11 @@ class MainWin(QMainWindow):
                }
            """
 
-        # Заголовок "Задний фон"
         background_image_label = QLabel("Задний фон", self)
         background_image_label.setGeometry(50, 100, 200, 30)
         background_image_label.setStyleSheet(label_style)
         background_image_label.show()
 
-        # Выпадающий список для выбора фонового изображения
         self.background_image_dropdown = QComboBox(self)
         self.background_image_dropdown.setGeometry(250, 100, 200, 30)
         self.background_image_dropdown.addItems(
@@ -334,13 +328,11 @@ class MainWin(QMainWindow):
         self.background_image_dropdown.currentIndexChanged.connect(self.on_background_image_changed)
         self.background_image_dropdown.show()
 
-        # Заголовок "Как пользоваться"
         usage_label = QLabel("Как пользоваться:", self)
         usage_label.setGeometry(50, 50, 200, 30)
         usage_label.setStyleSheet(label_style)
         usage_label.show()
 
-        # Кнопка "Справка"
         help_button = QPushButton("Справка", self)
         help_button.setGeometry(250, 50, 200, 40)  # Увеличение высоты кнопки
         help_button.setStyleSheet("""
@@ -374,17 +366,17 @@ class MainWin(QMainWindow):
                     }
                 """
         self.completed_tasks_label = QLabel(f"Выполнено задач: {self.completed_tasks_count}", self)
-        self.completed_tasks_label.setGeometry(50, 150, 400, 50)  # Размеры и расположение надписи
+        self.completed_tasks_label.setGeometry(50, 150, 400, 50)
         self.completed_tasks_label.setStyleSheet(completed_tasks_label_style)
-        self.completed_tasks_label.setAlignment(QtCore.Qt.AlignCenter)  # Выравнивание текста по центру
+        self.completed_tasks_label.setAlignment(QtCore.Qt.AlignCenter)
         self.completed_tasks_label.show()
 
-        reset_button_width = 200  # Установите желаемую ширину кнопки
-        reset_button_height = 40  # Установите желаемую высоту кнопки
-        right_margin = 20  # Установите желаемый отступ справа
+        reset_button_width = 200
+        reset_button_height = 40
+        right_margin = 20
 
-        reset_button_x = self.width() - reset_button_width - right_margin  # Координата X с учетом отступа справа
-        reset_button_y = 210  # Установите желаемую координату Y
+        reset_button_x = self.width() - reset_button_width - right_margin
+        reset_button_y = 210
 
         reset_button = QPushButton("Сбросить", self)
         reset_button.setGeometry(reset_button_x, reset_button_y, reset_button_width, reset_button_height)
