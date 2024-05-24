@@ -18,6 +18,14 @@
             {
                 "name": "Добавить дел",
                 "completed": false
+            },
+            {
+                "name": "Задача",
+                "completed": false
+            },
+            {
+                "name": "Записаться к стоматологу",
+                "completed": false
             }
         ],
         "tasks_high_priority": [
@@ -30,16 +38,7 @@
                 "completed": false
             }
         ],
-        "tasks_low_priority": [
-            {
-                "name": "Задача",
-                "completed": false
-            },
-            {
-                "name": "Тест",
-                "completed": false
-            }
-        ]
+        "tasks_low_priority": []
     },
     "2": {
         "important_tasks": [

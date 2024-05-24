@@ -184,6 +184,19 @@ class MainWin(QMainWindow):
 
         setup_ui_elements(self)
 
+    def show_help_dialog(self):
+        help_dialog = QMessageBox(self)
+        help_dialog.setWindowTitle("Справка")
+        help_dialog.setText("Кнопка \"добавить дел\" из окно с задачами\n\n"
+                            "Нажмите на кнопку, чтобы добавить задачу\n\n"
+                            "Появится окно, куда необходимо вписать название задачи\n\n"
+                            "После этого, как задача была вписана\n\n"
+                            "Она появится в списке задач\n\n"
+                            "LOW\n\n"
+                            "Добавить важных дел\n\n"
+                            "записаться к стоматологу")
+        help_dialog.exec_()
+
     def main_screen(self, button_index='1'):
         self.clear_window(keep_main_buttons=True)
         self.setFixedSize(500, 700)
@@ -238,19 +251,28 @@ class MainWin(QMainWindow):
         self.clear_window()
         self.setFixedSize(500, 700)
 
+        usage_label = QLabel("Как пользоваться:", self)
+        usage_label.setGeometry(50, 50, 200, 30)
+        usage_label.show()
+
+        help_button = QPushButton("Справка", self)
+        help_button.setGeometry(260, 50, 120, 30)
+        help_button.show()
+        help_button.clicked.connect(self.show_help_dialog)
+
         background_image_label = QLabel("Задний фон", self)
-        background_image_label.setGeometry(50, 150, 200, 30)
+        background_image_label.setGeometry(50, 100, 200, 30)
         background_image_label.show()
 
         self.background_image_dropdown = QComboBox(self)
-        self.background_image_dropdown.setGeometry(250, 150, 200, 30)
+        self.background_image_dropdown.setGeometry(250, 100, 200, 30)
         self.background_image_dropdown.addItems(
             ["background1.png", "background2.png", "background3.png", "background4.png", "background5.png"])
         self.background_image_dropdown.currentIndexChanged.connect(self.on_background_image_changed)
         self.background_image_dropdown.show()
 
         completed_tasks_label = QLabel(f"Выполнено задач: {self.completed_tasks_count}", self)
-        completed_tasks_label.setGeometry(50, 200, 300, 30)
+        completed_tasks_label.setGeometry(50, 150, 300, 30)
         completed_tasks_label.show()
 
         setup_ui_elements(self)
@@ -308,7 +330,10 @@ class MainWin(QMainWindow):
 
                 delete_btn = QtWidgets.QPushButton("☓", self)
                 delete_btn.setGeometry(430, y_start + i * 50 + 10, 25, 25)
-                delete_btn.setStyleSheet("background-color: #FF0000; color: white;")
+                delete_btn.setStyleSheet(
+                    "QPushButton { background-color: #FF0000; color: white; "
+                    "border-radius: 12px; font-weight: bold; }"
+                )
                 delete_btn.clicked.connect(
                     lambda _, t=task, b_index=button_index: self.delete_task(t, b_index))
                 delete_btn.show()
