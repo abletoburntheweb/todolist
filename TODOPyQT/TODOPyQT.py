@@ -202,15 +202,37 @@ class MainWin(QMainWindow):
             "tasks_low_priority": []
         })
 
-        self.text_high = QtWidgets.QLabel("HIGH", self)
-        self.text_high.move(220, 50)
-        self.text_high.setStyleSheet("font-size: 15pt; color: #000000;")
-        self.text_high.show()
+        self.setStyleSheet("""
+                   QMainWindow {
+                       background-color: #ECEFF1; /* Светло-серый фон всего окна */
+                   }
+                   QPushButton {
+                       font-size: 16px;
+                       border-radius: 8px;
+                       padding: 6px;
+                       background-color: #2196F3; /* Синий цвет кнопок */
+                       color: white; /* Белый цвет текста */
+                   }
+                   QPushButton:hover {
+                       background-color: #64B5F6; /* Светло-синий цвет при наведении */
+                   }
+                   QPushButton:pressed {
+                       background-color: #1E88E5; /* Темно-синий цвет при нажатии */
+                   }
+                   QLabel {
+                       font-size: 18px;
+                       color: #37474F; /* Цвет текста заголовков */
+                   }
+               """)
 
-        self.text_low = QtWidgets.QLabel("LOW", self)
-        self.text_low.move(220, 300)
-        self.text_low.setStyleSheet("font-size: 15pt; color: #000000;")
-        self.text_low.show()
+        # Создание и стилизация заголовков
+        self.text_high = QtWidgets.QLabel("Важные задачи", self)
+        self.text_high.setGeometry(20, 50, 460, 40)
+        self.text_high.setAlignment(QtCore.Qt.AlignCenter)
+
+        self.text_low = QtWidgets.QLabel("Обычные задачи", self)
+        self.text_low.setGeometry(20, 320, 460, 40)
+        self.text_low.setAlignment(QtCore.Qt.AlignCenter)
 
         if button_index in range(1, 8):
             self.add_task_group(button_tasks["important_tasks"], 100, True, button_index)
@@ -219,7 +241,8 @@ class MainWin(QMainWindow):
             self.add_task_group(button_tasks["tasks_low_priority"], 400, False, button_index)
         else:
             self.main_screen()
-
+        self.text_high.show()
+        self.text_low.show()
         setup_ui_elements(self)
 
     def main_screen(self, button_index='1'):
@@ -227,31 +250,56 @@ class MainWin(QMainWindow):
         self.setFixedSize(500, 700)
         self.setup_main_buttons()
 
-        button_tasks = self.tasks_data.get(button_index, {
+        # Стили для главного окна
+        self.setStyleSheet("""
+            QMainWindow {
+                background-color: #ECEFF1; /* Светло-серый фон всего окна */
+            }
+            QPushButton {
+                font-size: 16px;
+                border-radius: 8px;
+                padding: 6px;
+                background-color: #2196F3; /* Синий цвет кнопок */
+                color: white; /* Белый цвет текста */
+            }
+            QPushButton:hover {
+                background-color: #64B5F6; /* Светло-синий цвет при наведении */
+            }
+            QPushButton:pressed {
+                background-color: #1E88E5; /* Темно-синий цвет при нажатии */
+            }
+            QLabel {
+                font-size: 18px;
+                color: #37474F; /* Цвет текста заголовков */
+            }
+        """)
+
+        # Создание и стилизация заголовков
+        self.text_high = QtWidgets.QLabel("Важные задачи", self)
+        self.text_high.setGeometry(20, 50, 460, 40)
+        self.text_high.setAlignment(QtCore.Qt.AlignCenter)
+
+        self.text_low = QtWidgets.QLabel("Обычные задачи", self)
+        self.text_low.setGeometry(20, 320, 460, 40)
+        self.text_low.setAlignment(QtCore.Qt.AlignCenter)
+
+        # Получение и отображение задач
+        button_tasks = self.tasks_data.get(str(button_index), {
             "important_tasks": [],
             "additional_tasks": [],
             "tasks_high_priority": [],
             "tasks_low_priority": []
         })
 
-        self.text1 = QtWidgets.QLabel("HIGH", self)
-        self.text1.move(220, 50)
-        self.text1.setStyleSheet("font-size: 15pt; color: #000000;")
-        self.text1.adjustSize()
-
+        # Отображение задач
         self.add_task_group(button_tasks["important_tasks"], 100, True, button_index)
         self.add_task_group(button_tasks["tasks_high_priority"], 150, True, button_index)
+        self.add_task_group(button_tasks["additional_tasks"], 380, False, button_index)
+        self.add_task_group(button_tasks["tasks_low_priority"], 430, False, button_index)
 
-        self.text2 = QtWidgets.QLabel("LOW", self)
-        self.text2.move(220, 300)
-        self.text2.setStyleSheet("font-size: 15pt; color: #000000;")
-        self.text2.adjustSize()
-
-        self.add_task_group(button_tasks["additional_tasks"], 350, False, button_index)
-        self.add_task_group(button_tasks["tasks_low_priority"], 400, False, button_index)
-
-        self.text1.show()
-        self.text2.show()
+        # Показываем созданные элементы
+        self.text_high.show()
+        self.text_low.show()
         setup_ui_elements(self)
 
     def main_page(self):
@@ -431,61 +479,90 @@ class MainWin(QMainWindow):
             return True
 
     def add_task_group(self, tasks, y_start, is_important, button_index):
+        edit_button_style = """
+                  QPushButton {
+                      background-color: #FFEB3B;
+                      border-radius: 15px;
+                  }
+                  QPushButton:hover {
+                      background-color: #FDD835;
+                  }
+              """
+
+        delete_button_style = """
+                  QPushButton {
+                      background-color: #F44336;
+                      border-radius: 15px;
+                  }
+                  QPushButton:hover {
+                      background-color: #E53935;
+                  }
+              """
+
+        checkbox_style = """
+                  QCheckBox::indicator {
+                      width: 20px;
+                      height: 20px;
+                  }
+                  QCheckBox::indicator:checked {
+                      background-color: #22a4f5;
+                  }
+              """
+
         for i, task in enumerate(tasks):
             task_name = task['name']
             btn = QtWidgets.QPushButton(task_name, self)
-            btn.setGeometry(25, y_start + i * 50, 450, 40)
+            btn.setGeometry(25, y_start + i * 50, 300, 40)
+
 
             if task_name in ["Добавить важных дел", "Добавить дел"]:
-                btn.setStyleSheet(
-                    "QPushButton { border-radius: 15px; background-color: white; color: #BBBBBB; border: 1px solid; "
-                    "border-color: #989898; font-size: 20px}")
+                btn.setEnabled(True)
+                btn.setStyleSheet("""
+                            QPushButton {
+                                background-color: #84cdfa;
+                                text-align: left;
+                                padding-left: 10px;
+                                border-radius: 15px;
+                            }
+                            QPushButton:hover {
+                                background-color: #ADD8E6;
+                            }
+                        """)
                 if task_name == "Добавить важных дел":
                     btn.clicked.connect(lambda _, b_index=button_index: self.add_important_task_input(b_index))
                 else:
                     btn.clicked.connect(lambda _, b_index=button_index: self.add_additional_task_input(b_index))
             else:
-                task_completed = task.get('completed', False)
-                btn.setStyleSheet(
-                    "QPushButton { border-radius: 15px; background-color: white; color: black; border: 1px solid; "
-                    "border-color: #989898; font-size: 20px}")
+                btn.setEnabled(False)
+                btn.setStyleSheet("""
+                            QPushButton {
+                                text-align: left;
+                                padding-left: 10px;
+                                border-radius: 15px;
+                            }
+                            QPushButton:hover {
+                                background-color: #f0f0f0;
+                            }
+                        """)
 
                 checkbox = QtWidgets.QCheckBox(self)
-                checkbox.setChecked(task_completed)
-                checkbox.setGeometry(40, y_start + i * 50 + 10, 30, 30)
-                checkbox.setStyleSheet(
-                    "QCheckBox::indicator { width: 25px; height: 25px; border-radius: 15px; border: 3px solid #989898;}"
-                    "QCheckBox::indicator:checked { background-color: #808080;}"
-                    "QCheckBox::indicator:unchecked { background-color: white;}"
-                )
+                checkbox.setChecked(task.get('completed', False))
+                checkbox.setGeometry(330, y_start + i * 50 + 10, 20, 20)
+                checkbox.setStyleSheet(checkbox_style)
                 checkbox.toggled.connect(
                     lambda checked, t=task, b_index=button_index: self.toggle_task_completed(t, b_index, checked))
                 checkbox.show()
+
                 edit_btn = QtWidgets.QPushButton("✎", self)
-                edit_btn.setGeometry(380, y_start + i * 50, 40, 40)
-                edit_btn.setStyleSheet("""
-                                QPushButton {
-                                    background-color: #FFD700; /* Желтый фон */
-                                    color: white; /* Белый текст */
-                                    border-radius: 20px; /* Круглая кнопка */
-                                    font-size: 16px; /* Размер шрифта */
-                                    padding: 5px;
-                                }
-                                QPushButton:hover {
-                                    background-color: #FFA500; /* Оранжевый фон при наведении */
-                                }
-                            """)
+                edit_btn.setGeometry(360, y_start + i * 50, 30, 30)
+                edit_btn.setStyleSheet(edit_button_style)
                 edit_btn.clicked.connect(lambda _, t=task, b_index=button_index: self.edit_task(t, b_index))
                 edit_btn.show()
 
-                delete_btn = QtWidgets.QPushButton("☓", self)
-                delete_btn.setGeometry(420, y_start + i * 50 + 10, 25, 25)
-                delete_btn.setStyleSheet(
-                    "QPushButton { background-color: #FF0000; color: white; "
-                    "border-radius: 12px; font-weight: bold; }"
-                )
-                delete_btn.clicked.connect(
-                    lambda _, t=task, b_index=button_index: self.delete_task(t, b_index))
+                delete_btn = QtWidgets.QPushButton("✖", self)
+                delete_btn.setGeometry(400, y_start + i * 50, 30, 30)
+                delete_btn.setStyleSheet(delete_button_style)
+                delete_btn.clicked.connect(lambda _, t=task, b_index=button_index: self.delete_task(t, b_index))
                 delete_btn.show()
 
             btn.show()
