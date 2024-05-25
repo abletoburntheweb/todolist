@@ -3,7 +3,7 @@ import json
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtGui import QPixmap, QPalette, QBrush
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QInputDialog, QCheckBox, QMessageBox, \
-    QLineEdit, QListWidget, QTextEdit, QListWidgetItem, QComboBox
+    QLineEdit, QListWidget, QTextEdit, QListWidgetItem, QComboBox, QWidget
 from PyQt5.QtCore import Qt
 from note_page import NotePage
 from HowToUse import HelpDialog
@@ -20,15 +20,14 @@ class MainWin(QMainWindow):
         self.long_term_tasks = []
         self.daily_tasks = []
 
-        self.setup_main_buttons()
-        self.load_tasks()
-
-        self.current_background_image = "background1.png"
-        self.apply_background_image(self.current_background_image)
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
 
         self.completed_tasks_count = 0
         self.load_settings()
         self.save_settings()
+        self.setup_main_buttons()
+        self.load_tasks()
 
         self.main_screen()
 
@@ -45,6 +44,7 @@ class MainWin(QMainWindow):
 
     MAX_TASKS_COUNT = 3
     MAX_TASK_LENGTH = 28
+
     def save_tasks_to_file(self):
         with open("tasks.json", "w", encoding="utf-8") as file:
             json.dump(self.tasks_data, file, ensure_ascii=False, indent=4)
@@ -61,7 +61,7 @@ class MainWin(QMainWindow):
                     QMessageBox.information(self, 'Сохранено', 'Заметка удалена')
                 except Exception as e:
                     QMessageBox.warning(self, 'Сохранение не удалось',
-                                        f"An error occurred while saving the note: {str(e)}")
+                                        f"Произошла ошибка при сохранении заметки {str(e)}")
             else:
                 QMessageBox.warning(self, 'Ошибка', 'Заметка не существует')
             self.clear_note_page()
@@ -76,30 +76,21 @@ class MainWin(QMainWindow):
         try:
             with open("settings.json", "r", encoding="utf-8") as file:
                 settings = json.load(file)
-
-                self.current_background_image = settings.get("background_image", "background1.png")
-
-                self.apply_background_image(self.current_background_image)
                 self.completed_tasks_count = settings.get("completed_tasks_count", 0)
         except Exception as e:
-            self.current_background_image = "background1.png"
-
-            self.apply_background_image(self.current_background_image)
             self.completed_tasks_count = 0
 
     def save_settings(self):
         settings = {
-
-            "background_image": self.current_background_image,
             "completed_tasks_count": self.completed_tasks_count
         }
         try:
             with open("settings.json", "w", encoding="utf-8") as file:
                 json.dump(settings, file, ensure_ascii=False, indent=4)
         except IOError as e:
-            QMessageBox.warning(self, 'Error', f'Failed to save settings due to an I/O error: {e}')
+            QMessageBox.warning(self, 'Error', f'Произошла ошибка: {e}')
         except Exception as e:
-            QMessageBox.warning(self, 'Error', f'An unexpected error occurred: {e}')
+            QMessageBox.warning(self, 'Error', f'Произошла ошибка: {e}')
 
     def load_tasks(self):
         try:
@@ -120,14 +111,14 @@ class MainWin(QMainWindow):
 
         total_width = (button_width * 7) + (button_spacing * (7 - 1))
 
-        start_x = (self.width() - total_width) // 2  # Вычитаем общую ширину из ширины окна и делим на два
+        start_x = (self.width() - total_width) // 2  # Вычитание общей ширины из ширины окна и делим на два
         start_y = 10
 
         self.buttons = []
         for i in range(1, 8):
             btn = QPushButton(f"{i}", self)
             x_position = start_x + (i - 1) * (button_width + button_spacing)
-            active_button_style = """
+            '''active_button_style = """
                         QPushButton {
                             background-color: #6495ED; /* Темно-синий цвет для активной кнопки */
                             color: white;
@@ -136,7 +127,7 @@ class MainWin(QMainWindow):
                             font-size: 16px;
                             border: none;
                         }
-                    """
+                    """ '''
             btn.setGeometry(x_position, start_y, button_width, button_height)
             btn.setStyleSheet("""
                    QPushButton {
@@ -191,6 +182,7 @@ class MainWin(QMainWindow):
 
     def update_completed_tasks_label(self):
         self.completed_tasks_label.setText(f"Выполнено задач: {self.completed_tasks_count}")
+
     def handle_button_click(self, button_index):
         self.clear_window(keep_main_buttons=True)
         self.setFixedSize(500, 700)
@@ -203,9 +195,7 @@ class MainWin(QMainWindow):
         })
 
         self.setStyleSheet("""
-                   QMainWindow {
-                       background-color: #ECEFF1; /* Светло-серый фон всего окна */
-                   }
+                  
                    QPushButton {
                        font-size: 16px;
                        border-radius: 8px;
@@ -225,14 +215,11 @@ class MainWin(QMainWindow):
                    }
                """)
 
-        # Создание и стилизация заголовков
         self.text_high = QtWidgets.QLabel("Важные задачи", self)
         self.text_high.setGeometry(20, 50, 460, 40)
-        self.text_high.setAlignment(QtCore.Qt.AlignCenter)
 
         self.text_low = QtWidgets.QLabel("Обычные задачи", self)
         self.text_low.setGeometry(20, 320, 460, 40)
-        self.text_low.setAlignment(QtCore.Qt.AlignCenter)
 
         if button_index in range(1, 8):
             self.add_task_group(button_tasks["important_tasks"], 100, True, button_index)
@@ -274,14 +261,11 @@ class MainWin(QMainWindow):
             }
         """)
 
-        # Создание и стилизация заголовков
         self.text_high = QtWidgets.QLabel("Важные задачи", self)
         self.text_high.setGeometry(20, 50, 460, 40)
-        self.text_high.setAlignment(QtCore.Qt.AlignCenter)
 
         self.text_low = QtWidgets.QLabel("Обычные задачи", self)
         self.text_low.setGeometry(20, 320, 460, 40)
-        self.text_low.setAlignment(QtCore.Qt.AlignCenter)
 
         # Получение и отображение задач
         button_tasks = self.tasks_data.get(str(button_index), {
@@ -311,6 +295,7 @@ class MainWin(QMainWindow):
 
     def show_note_page(self, selected_note=None):
         try:
+            print("Button 2 clicked")
             self.clear_window()
             self._note_page = NotePage(self)
             self._note_page.note_title_edit.setText(selected_note or "")
@@ -322,6 +307,7 @@ class MainWin(QMainWindow):
     def settings_page(self):
         self.clear_window()
         self.setFixedSize(500, 700)
+        print("Button 3 clicked")
 
         label_style = """
                QLabel {
@@ -346,38 +332,6 @@ class MainWin(QMainWindow):
                    background-color: #4682B4;
                }
            """
-        combobox_style = """
-               QComboBox {
-                   border: 1px solid #AAA;
-                   border-radius: 4px;
-                   padding: 5px;
-                   min-width: 6em;
-               }
-               QComboBox::drop-down {
-                   subcontrol-origin: padding;
-                   subcontrol-position: top right;
-                   width: 25px;
-                   border-left-width: 1px;
-                   border-left-color: darkgray;
-                   border-left-style: solid;
-                   border-top-right-radius: 3px;
-                   border-bottom-right-radius: 3px;
-               }
-           """
-
-        background_image_label = QLabel("Задний фон", self)
-        background_image_label.setGeometry(50, 100, 200, 30)
-        background_image_label.setStyleSheet(label_style)
-        background_image_label.show()
-
-        self.background_image_dropdown = QComboBox(self)
-        self.background_image_dropdown.setGeometry(250, 100, 200, 30)
-        self.background_image_dropdown.addItems(
-            ["background1.png", "background2.png", "background3.png", "background4.png", "background5.png"])
-        self.background_image_dropdown.setStyleSheet(combobox_style)
-        self.background_image_dropdown.currentIndexChanged.connect(self.on_background_image_changed)
-        self.background_image_dropdown.show()
-
         usage_label = QLabel("Как пользоваться:", self)
         usage_label.setGeometry(50, 50, 200, 30)
         usage_label.setStyleSheet(label_style)
@@ -416,7 +370,7 @@ class MainWin(QMainWindow):
                     }
                 """
         self.completed_tasks_label = QLabel(f"Выполнено задач: {self.completed_tasks_count}", self)
-        self.completed_tasks_label.setGeometry(50, 150, 400, 50)
+        self.completed_tasks_label.setGeometry(50, 100, 400, 50)
         self.completed_tasks_label.setStyleSheet(completed_tasks_label_style)
         self.completed_tasks_label.setAlignment(QtCore.Qt.AlignCenter)
         self.completed_tasks_label.show()
@@ -426,7 +380,7 @@ class MainWin(QMainWindow):
         right_margin = 20
 
         reset_button_x = self.width() - reset_button_width - right_margin
-        reset_button_y = 210
+        reset_button_y = 160
 
         reset_button = QPushButton("Сбросить", self)
         reset_button.setGeometry(reset_button_x, reset_button_y, reset_button_width, reset_button_height)
@@ -458,25 +412,6 @@ class MainWin(QMainWindow):
         except Exception as e:
             QMessageBox.critical(self, 'Ошибка', f'При попытке открыть справку произошла ошибка: {e}')
             print(f'Ошибка: {e}')
-
-    def on_background_image_changed(self):
-
-        image_file = self.background_image_dropdown.currentText()
-        image_path = f"{image_file}"
-        if self.apply_background_image(image_path):
-            self.current_background_image = image_path
-            self.save_settings()
-
-    def apply_background_image(self, image_path):
-        pixmap = QPixmap(image_path)
-        if pixmap.isNull():
-            QMessageBox.warning(self, 'Error', f"Failed to load background image from {image_path}")
-            return False
-        else:
-            palette = QPalette()
-            palette.setBrush(QPalette.Window, QBrush(pixmap))
-            self.setPalette(palette)
-            return True
 
     def add_task_group(self, tasks, y_start, is_important, button_index):
         edit_button_style = """
@@ -513,7 +448,6 @@ class MainWin(QMainWindow):
             task_name = task['name']
             btn = QtWidgets.QPushButton(task_name, self)
             btn.setGeometry(25, y_start + i * 50, 300, 40)
-
 
             if task_name in ["Добавить важных дел", "Добавить дел"]:
                 btn.setEnabled(True)
@@ -579,6 +513,7 @@ class MainWin(QMainWindow):
             task['name'] = new_name
             self.save_tasks_to_file()
             self.handle_button_click(button_index)
+
     def delete_task(self, task, button_index):
         try:
             category = None
