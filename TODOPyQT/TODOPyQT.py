@@ -461,6 +461,22 @@ class MainWin(QMainWindow):
                 checkbox.toggled.connect(
                     lambda checked, t=task, b_index=button_index: self.toggle_task_completed(t, b_index, checked))
                 checkbox.show()
+                edit_btn = QtWidgets.QPushButton("✎", self)
+                edit_btn.setGeometry(380, y_start + i * 50, 40, 40)
+                edit_btn.setStyleSheet("""
+                                QPushButton {
+                                    background-color: #FFD700; /* Желтый фон */
+                                    color: white; /* Белый текст */
+                                    border-radius: 20px; /* Круглая кнопка */
+                                    font-size: 16px; /* Размер шрифта */
+                                    padding: 5px;
+                                }
+                                QPushButton:hover {
+                                    background-color: #FFA500; /* Оранжевый фон при наведении */
+                                }
+                            """)
+                edit_btn.clicked.connect(lambda _, t=task, b_index=button_index: self.edit_task(t, b_index))
+                edit_btn.show()
 
                 delete_btn = QtWidgets.QPushButton("☓", self)
                 delete_btn.setGeometry(420, y_start + i * 50 + 10, 25, 25)
@@ -474,6 +490,18 @@ class MainWin(QMainWindow):
 
             btn.show()
 
+    def edit_task(self, task, button_index):
+        # Запрашиваем новое название для задачи
+        new_name, ok = QInputDialog.getText(self, 'Редактировать задачу', 'Введите новое название задачи:',
+                                            text=task['name'])
+        if ok and new_name:
+            if len(new_name) > self.MAX_TASK_LENGTH:
+                QMessageBox.warning(self, 'Ошибка', 'Название задачи должно быть не более 28 символов.')
+                return
+            # Обновляем название задачи в данных
+            task['name'] = new_name
+            self.save_tasks_to_file()
+            self.handle_button_click(button_index)
     def delete_task(self, task, button_index):
         try:
             category = None
