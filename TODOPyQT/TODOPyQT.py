@@ -29,6 +29,8 @@ class MainWin(QMainWindow):
         self.setup_main_buttons()
         self.load_tasks()
 
+
+
         self.main_screen()
 
         with open("tasks.json", "r", encoding="utf-8") as file:
@@ -45,6 +47,9 @@ class MainWin(QMainWindow):
     MAX_TASKS_COUNT = 3
     MAX_TASK_LENGTH = 28
 
+    def load_stylesheet(self):
+        with open("style.css", "r") as file:
+            self.setStyleSheet(file.read())
     def save_tasks_to_file(self):
         with open("tasks.json", "w", encoding="utf-8") as file:
             json.dump(self.tasks_data, file, ensure_ascii=False, indent=4)
