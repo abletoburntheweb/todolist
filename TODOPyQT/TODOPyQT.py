@@ -420,6 +420,7 @@ class MainWin(QMainWindow):
 
     def show_task_full_title(self, task_name):
         QMessageBox.information(self, 'Полное название задачи', task_name)
+
     def add_task_group(self, tasks, y_start, is_important, button_index):
         edit_button_style = """
                   QPushButton {
@@ -456,25 +457,22 @@ class MainWin(QMainWindow):
             btn = QtWidgets.QPushButton(task_name, self)
             btn.setGeometry(25, y_start + i * 50, 300, 40)
 
-            btn.clicked.connect(lambda _, name=task_name: self.show_task_full_title(name))
+            # Установка стилей для кнопок задачи
             btn.setStyleSheet("""
-                        QPushButton {
-                            background-color: #84cdfa;
-                            text-align: left;
-                            padding-left: 10px;
-                            border-radius: 15px;
-                        }
-                        QPushButton:hover {
-                            background-color: #ADD8E6;
-                        }
-                    """)
-            if task_name in ["Добавить важных дел", "Добавить дел"]:
-                btn.setEnabled(True)
-                if task_name == "Добавить важных дел":
-                    btn.clicked.connect(lambda _, b_index=button_index: self.add_important_task_input(b_index))
-                else:
-                    btn.clicked.connect(lambda _, b_index=button_index: self.add_additional_task_input(b_index))
-            else:
+                            QPushButton {
+                                background-color: #84cdfa;
+                                text-align: left;
+                                padding-left: 10px;
+                                border-radius: 15px;
+                            }
+                            QPushButton:hover {
+                                background-color: #ADD8E6;
+                            }
+                        """)
+
+            # Подключаем функцию show_task_full_title только если это не специальная кнопка
+            if task_name not in ["Добавить важных дел", "Добавить дел"]:
+                btn.clicked.connect(lambda _, name=task_name: self.show_task_full_title(name))
                 btn.setEnabled(True)
                 btn.setStyleSheet("""
                             QPushButton {
@@ -506,11 +504,19 @@ class MainWin(QMainWindow):
                 delete_btn.setStyleSheet(delete_button_style)
                 delete_btn.clicked.connect(lambda _, t=task, b_index=button_index: self.delete_task(t, b_index))
                 delete_btn.show()
+            else:
+                btn.setEnabled(True)
+                if task_name == "Добавить важных дел":
+                    btn.clicked.connect(lambda _, b_index=button_index: self.add_important_task_input(b_index))
+                else:
+                    btn.clicked.connect(lambda _, b_index=button_index: self.add_additional_task_input(b_index))
+
+            btn.show()
 
             btn.show()
 
     def edit_task(self, task, button_index):
-        # Запрашиваем новое название для задачи
+
         new_name, ok = QInputDialog.getText(self, 'Редактировать задачу', 'Введите новое название задачи:',
                                             text=task['name'])
         if ok and new_name:

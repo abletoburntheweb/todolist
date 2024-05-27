@@ -20,19 +20,11 @@
             {
                 "name": "Начать делать задачу",
                 "completed": false
-            },
-            {
-                "name": "выфвыфв",
-                "completed": false
             }
         ],
         "tasks_low_priority": [
             {
                 "name": "Задача",
-                "completed": false
-            },
-            {
-                "name": "DSADASDDDSDASDFSAFDGSAGREHTHTAHHAETHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH",
                 "completed": false
             }
         ]
