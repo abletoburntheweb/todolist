@@ -11,7 +11,7 @@ class HelpDialog(QDialog):
         layout = QVBoxLayout(self)
 
         try:
-            help_image = QPixmap("How To Use.png")
+            help_image = QPixmap("How To Use2.png")
             if help_image.isNull():
                 raise IOError("Не удалось загрузить изображение.")
             image_label = QLabel()

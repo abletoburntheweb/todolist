@@ -45,7 +45,7 @@ class MainWin(QMainWindow):
             self.notes = notes_data.get("notes", {})
 
     MAX_TASKS_COUNT = 3
-    MAX_TASK_LENGTH = 28
+    MAX_TASK_LENGTH = 100
 
     def load_stylesheet(self):
         with open("style.css", "r") as file:
@@ -229,8 +229,8 @@ class MainWin(QMainWindow):
         if button_index in range(1, 8):
             self.add_task_group(button_tasks["important_tasks"], 100, True, button_index)
             self.add_task_group(button_tasks["tasks_high_priority"], 150, True, button_index)
-            self.add_task_group(button_tasks["additional_tasks"], 350, False, button_index)
-            self.add_task_group(button_tasks["tasks_low_priority"], 400, False, button_index)
+            self.add_task_group(button_tasks["additional_tasks"], 380, False, button_index)
+            self.add_task_group(button_tasks["tasks_low_priority"], 430, False, button_index)
         else:
             self.main_screen()
         self.text_high.show()
@@ -343,7 +343,7 @@ class MainWin(QMainWindow):
         usage_label.show()
 
         help_button = QPushButton("Справка", self)
-        help_button.setGeometry(250, 50, 200, 40)  # Увеличение высоты кнопки
+        help_button.setGeometry(250, 50, 200, 40)
         help_button.setStyleSheet("""
                    QPushButton {
                        background-color: #5CACEE;
@@ -418,6 +418,8 @@ class MainWin(QMainWindow):
             QMessageBox.critical(self, 'Ошибка', f'При попытке открыть справку произошла ошибка: {e}')
             print(f'Ошибка: {e}')
 
+    def show_task_full_title(self, task_name):
+        QMessageBox.information(self, 'Полное название задачи', task_name)
     def add_task_group(self, tasks, y_start, is_important, button_index):
         edit_button_style = """
                   QPushButton {
@@ -454,33 +456,34 @@ class MainWin(QMainWindow):
             btn = QtWidgets.QPushButton(task_name, self)
             btn.setGeometry(25, y_start + i * 50, 300, 40)
 
+            btn.clicked.connect(lambda _, name=task_name: self.show_task_full_title(name))
+            btn.setStyleSheet("""
+                        QPushButton {
+                            background-color: #84cdfa;
+                            text-align: left;
+                            padding-left: 10px;
+                            border-radius: 15px;
+                        }
+                        QPushButton:hover {
+                            background-color: #ADD8E6;
+                        }
+                    """)
             if task_name in ["Добавить важных дел", "Добавить дел"]:
+                btn.setEnabled(True)
+                if task_name == "Добавить важных дел":
+                    btn.clicked.connect(lambda _, b_index=button_index: self.add_important_task_input(b_index))
+                else:
+                    btn.clicked.connect(lambda _, b_index=button_index: self.add_additional_task_input(b_index))
+            else:
                 btn.setEnabled(True)
                 btn.setStyleSheet("""
                             QPushButton {
-                                background-color: #84cdfa;
                                 text-align: left;
                                 padding-left: 10px;
                                 border-radius: 15px;
                             }
                             QPushButton:hover {
                                 background-color: #ADD8E6;
-                            }
-                        """)
-                if task_name == "Добавить важных дел":
-                    btn.clicked.connect(lambda _, b_index=button_index: self.add_important_task_input(b_index))
-                else:
-                    btn.clicked.connect(lambda _, b_index=button_index: self.add_additional_task_input(b_index))
-            else:
-                btn.setEnabled(False)
-                btn.setStyleSheet("""
-                            QPushButton {
-                                text-align: left;
-                                padding-left: 10px;
-                                border-radius: 15px;
-                            }
-                            QPushButton:hover {
-                                background-color: #f0f0f0;
                             }
                         """)
 
@@ -512,7 +515,7 @@ class MainWin(QMainWindow):
                                             text=task['name'])
         if ok and new_name:
             if len(new_name) > self.MAX_TASK_LENGTH:
-                QMessageBox.warning(self, 'Ошибка', 'Название задачи должно быть не более 28 символов.')
+                QMessageBox.warning(self, 'Ошибка', 'Название задачи должно быть не более 100 символов.')
                 return
             # Обновляем название задачи в данных
             task['name'] = new_name
@@ -546,7 +549,7 @@ class MainWin(QMainWindow):
         text, ok = QInputDialog.getText(self, 'Добавить важных дел', 'Введите название задачи:')
         if ok and text:
             if len(text) > self.MAX_TASK_LENGTH:
-                QMessageBox.warning(self, 'Ошибка', 'Название задачи должно быть не более 28 символов.')
+                QMessageBox.warning(self, 'Ошибка', 'Название задачи должно быть не более 100 символов.')
                 return
             if len(self.tasks_data[str(button_index)]["tasks_high_priority"]) < self.MAX_TASKS_COUNT:
                 new_task = {"name": text, "completed": False}
@@ -560,7 +563,7 @@ class MainWin(QMainWindow):
         text, ok = QInputDialog.getText(self, 'Добавить дел', 'Введите название задачи:')
         if ok and text:
             if len(text) > self.MAX_TASK_LENGTH:
-                QMessageBox.warning(self, 'Ошибка', 'Название задачи должно быть не более 28 символов.')
+                QMessageBox.warning(self, 'Ошибка', 'Название задачи должно быть не более 100 символов.')
                 return
             if len(self.tasks_data[str(button_index)]["tasks_low_priority"]) < self.MAX_TASKS_COUNT:
                 new_task = {"name": text, "completed": False}
