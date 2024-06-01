@@ -20,6 +20,10 @@
             {
                 "name": "Начать делать задачу",
                 "completed": false
+            },
+            {
+                "name": "dsadasd",
+                "completed": false
             }
         ],
         "tasks_low_priority": [
@@ -32,7 +36,7 @@
                 "completed": false
             },
             {
-                "name": "вфыв",
+                "name": "выфв",
                 "completed": false
             }
         ]

@@ -8,6 +8,7 @@ from PyQt5.QtCore import Qt
 from note_page import NotePage
 from HowToUse import HelpDialog
 from text_wrapping import wrap_text
+from styles import search_input_style, day_button_style, main_window_style, settings_style, get_task_group_styles
 from ui_elements import setup_ui_elements
 
 
@@ -53,7 +54,7 @@ class MainWin(QMainWindow):
             self.notes = notes_data.get("notes", {})
 
     MAX_TASKS_COUNT = 3
-    MAX_TASK_LENGTH = 100
+    MAX_TASK_LENGTH = 150
 
     def load_stylesheet(self):
         with open("style.css", "r") as file:
@@ -117,6 +118,20 @@ class MainWin(QMainWindow):
                 "tasks_low_priority": []
             } for i in range(1, 8)}
 
+    def style_search_input(self):
+        self.search_input.setStyleSheet(search_input_style())
+
+    def style_day_buttons(self, active_index=None):
+        if active_index is not None:
+            active_index = int(active_index)
+        for index, btn in enumerate(self.buttons):
+            btn.setStyleSheet(day_button_style(active=(index == active_index - 1)))
+
+    def apply_main_window_style(self):
+        self.setStyleSheet(main_window_style())
+
+    def get_settings_style(self):
+        return settings_style()
     def setup_main_buttons(self):
         button_width = 60
         button_height = 40
@@ -124,7 +139,7 @@ class MainWin(QMainWindow):
 
         total_width = (button_width * 7) + (button_spacing * (7 - 1))
 
-        start_x = (self.width() - total_width) // 2  # Centering the buttons
+        start_x = (self.width() - total_width) // 2 #центрирование кнопки
         start_y = 10
 
         self.buttons = []
@@ -149,9 +164,9 @@ class MainWin(QMainWindow):
                        }
                    """)
             btn.clicked.connect(
-                lambda checked, index=i: self.handle_button_click(index))  # Подключение обработчика клика
+                lambda checked, index=i: self.handle_button_click(index))
             btn.show()  # Отображение кнопки
-            self.buttons.append(btn)  # Добавление кнопки в список
+            self.buttons.append(btn)
 
             # Установка отличительного стиля для первой кнопки, чтобы показать, что она активна
         self.buttons[0].setStyleSheet("""
@@ -206,6 +221,7 @@ class MainWin(QMainWindow):
     def update_completed_tasks_label(self):
         self.completed_tasks_label.setText(f"Выполнено задач: {self.completed_tasks_count}")
 
+
     def handle_button_click(self, button_index):
         self.clear_window(keep_main_buttons=True)
         self.setFixedSize(500, 700)
@@ -219,63 +235,30 @@ class MainWin(QMainWindow):
             "tasks_low_priority": []
         })
 
-        for btn in self.buttons:
-            btn.setStyleSheet("""
-                   QPushButton {
-                       background-color: #87CEFA; /* Светло-синий цвет */
-                       border-radius: 10px; /* Скругление углов */
-                       padding: 5px;
-                       font-size: 16px;
-                       border: 2px solid #1E90FF; /* Темно-синяя граница */
-                   }
-                   QPushButton:hover {
-                       background-color: #B0E0E6; /* При наведении */
-                   }
-                   QPushButton:pressed {
-                       background-color: #ADD8E6; /* При нажатии */
-                   }
-               """)
-
-            # Установка стиля для активной кнопки
-        active_button = self.buttons[button_index - 1]  # Индексы кнопок начинаются с 1
-        active_button.setStyleSheet("""
-               QPushButton {
-                   background-color: #6495ED; /* Темно-синий цвет для активной кнопки */
-                   color: white;
-                   border-radius: 10px;
-                   padding: 5px;
-                   font-size: 16px;
-                   border: none;
-               }
-               QPushButton:hover {
-                   background-color: #16839C; /* При наведении */
-               }
-               QPushButton:pressed {
-                   background-color: #ADD8E6; /* При нажатии */
-               }
-           """)
+        self.style_day_buttons(active_index=button_index)
 
         self.search_input = QLineEdit(self)
         self.search_input.setPlaceholderText("Поиск задачи...")
         self.search_input.setGeometry(20, 60, 340, 30)
+        self.style_search_input()
         self.search_input.show()
 
         self.search_button = QPushButton("Поиск", self)
         self.search_button.setGeometry(370, 60, 100, 30)
-        self.search_button.clicked.connect(lambda: self.search_tasks(button_index))  # Передаем индекс в слот
+        self.search_button.clicked.connect(lambda: self.search_tasks(button_index))
         self.search_button.show()
 
         self.text_high = QtWidgets.QLabel("Важные задачи", self)
-        self.text_high.setGeometry(20, 80, 460, 40)
+        self.text_high.setGeometry(20, 100, 460, 40)
 
         self.text_low = QtWidgets.QLabel("Обычные задачи", self)
-        self.text_low.setGeometry(20, 340, 460, 40)
+        self.text_low.setGeometry(20, 350, 460, 40)
 
         if button_index in range(1, 8):
             self.add_task_group(button_tasks["important_tasks"], 140, True, button_index)
             self.add_task_group(button_tasks["tasks_high_priority"], 190, True, button_index)
-            self.add_task_group(button_tasks["additional_tasks"], 420, False, button_index)
-            self.add_task_group(button_tasks["tasks_low_priority"], 470, False, button_index)
+            self.add_task_group(button_tasks["additional_tasks"], 390, False, button_index)
+            self.add_task_group(button_tasks["tasks_low_priority"], 440, False, button_index)
         else:
             self.main_screen()
         self.text_high.show()
@@ -288,34 +271,13 @@ class MainWin(QMainWindow):
         self.setup_main_buttons()
 
         # Стили для главного окна
-        self.setStyleSheet("""
-            QMainWindow {
-                background-color: #ECEFF1; /* Светло-серый фон всего окна */
-            }
-            QPushButton {
-                font-size: 16px;
-                border-radius: 8px;
-                padding: 6px;
-                background-color: #2196F3; /* Синий цвет кнопок */
-                color: white; /* Белый цвет текста */
-            }
-            QPushButton:hover {
-                background-color: #64B5F6; /* Светло-синий цвет при наведении */
-            }
-            QPushButton:pressed {
-                background-color: #1E88E5; /* Темно-синий цвет при нажатии */
-            }
-            QLabel {
-                font-size: 18px;
-                color: #37474F; /* Цвет текста заголовков */
-            }
-        """)
+        self.apply_main_window_style()
 
         self.text_high = QtWidgets.QLabel("Важные задачи", self)
-        self.text_high.setGeometry(20, 80, 460, 40)
+        self.text_high.setGeometry(20, 100, 460, 40)
 
         self.text_low = QtWidgets.QLabel("Обычные задачи", self)
-        self.text_low.setGeometry(20, 340, 460, 40)
+        self.text_low.setGeometry(20, 350, 460, 40)
 
         # Получение и отображение задач
         button_tasks = self.tasks_data.get(str(button_index), {
@@ -328,12 +290,13 @@ class MainWin(QMainWindow):
         # Отображение задач
         self.add_task_group(button_tasks["important_tasks"], 140, True, button_index)
         self.add_task_group(button_tasks["tasks_high_priority"], 190, True, button_index)
-        self.add_task_group(button_tasks["additional_tasks"], 420, False, button_index)
-        self.add_task_group(button_tasks["tasks_low_priority"], 470, False, button_index)
+        self.add_task_group(button_tasks["additional_tasks"], 390, False, button_index)
+        self.add_task_group(button_tasks["tasks_low_priority"], 440, False, button_index)
 
         self.search_input = QLineEdit(self)
         self.search_input.setPlaceholderText("Поиск задачи...")
         self.search_input.setGeometry(20, 60, 340, 30)
+        self.style_search_input()
         self.search_input.show()
 
         self.search_button = QPushButton("Поиск", self)
@@ -369,97 +332,38 @@ class MainWin(QMainWindow):
         self.setFixedSize(500, 700)
         print("Кнопка 3")
 
-        label_style = """
-               QLabel {
-                   font-size: 16px;
-                   color: #333;
-                   padding: 5px;
-               }
-           """ """
-               QPushButton {
-                   background-color: #5CACEE;
-                   color: white;
-                   border-radius: 6px;
-                   padding: 8px;
-                   font-size: 14px;
-                   border: 1px solid #5CACEE;
-                   min-width: 80px;
-               }
-               QPushButton:hover {
-                   background-color: #1E90FF;
-               }
-               QPushButton:pressed {
-                   background-color: #4682B4;
-               }
-           """
+
+        styles = self.get_settings_style()
+
+
         usage_label = QLabel("Как пользоваться:", self)
         usage_label.setGeometry(50, 50, 200, 30)
-        usage_label.setStyleSheet(label_style)
+        usage_label.setStyleSheet(styles["label_style"])
         usage_label.show()
+
 
         help_button = QPushButton("Справка", self)
         help_button.setGeometry(250, 50, 200, 40)
-        help_button.setStyleSheet("""
-                   QPushButton {
-                       background-color: #5CACEE;
-                       color: white;
-                       border-radius: 6px;
-                       padding: 5px;  
-                       font-size: 14px;  
-                       border: 1px solid #5CACEE;
-                       min-width: 80px;
-                   }
-                   QPushButton:hover {
-                       background-color: #1E90FF;
-                   }
-                   QPushButton:pressed {
-                       background-color: #4682B4;
-                   }
-               """)
+        help_button.setStyleSheet(styles["button_style"])
         help_button.clicked.connect(self.show_help_dialog)
         help_button.show()
-        completed_tasks_label_style = """
-                    QLabel {
-                        font-size: 18px;
-                        color: #2e8b57; 
-                        padding: 5px;
-                        border: 2px solid #2e8b57; 
-                        border-radius: 8px; 
-                        margin-top: 20px; 
-                        background-color: #d9ecd0; 
-                    }
-                """
+
+
         self.completed_tasks_label = QLabel(f"Выполнено задач: {self.completed_tasks_count}", self)
         self.completed_tasks_label.setGeometry(50, 100, 400, 50)
-        self.completed_tasks_label.setStyleSheet(completed_tasks_label_style)
+        self.completed_tasks_label.setStyleSheet(styles["completed_tasks_label_style"])
         self.completed_tasks_label.setAlignment(QtCore.Qt.AlignCenter)
         self.completed_tasks_label.show()
 
         reset_button_width = 200
         reset_button_height = 40
         right_margin = 20
-
         reset_button_x = self.width() - reset_button_width - right_margin
-        reset_button_y = 160
+        reset_token_button_y = 160
 
         reset_button = QPushButton("Сбросить", self)
-        reset_button.setGeometry(reset_button_x, reset_button_y, reset_button_width, reset_button_height)
-        reset_button.setStyleSheet("""
-                QPushButton {
-                    background-color: #FF6347;
-                    color: white;
-                    border-radius: 6px;
-                    padding: 5px;
-                    font-size: 12px;
-                    border: none;
-                }
-                QPushButton:hover {
-                    background-color: #FF4500;
-                }
-                QPushButton:pressed {
-                    background-color: #CD5C5C;
-                }
-            """)
+        reset_button.setGeometry(reset_button_x, reset_token_button_y, reset_button_width, reset_button_height)
+        reset_button.setStyleSheet(styles["reset_button_style"])
         reset_button.clicked.connect(self.reset_completed_tasks_count)
         reset_button.show()
 
@@ -483,7 +387,7 @@ class MainWin(QMainWindow):
         if button_index is None:
             button_index = self.current_button_index
 
-        # Проверяем, существует ли results_list и удаляем его, если необходимо
+
         if hasattr(self, 'results_list') and self.results_list is not None:
             try:
                 self.results_list.deleteLater()
@@ -504,7 +408,7 @@ class MainWin(QMainWindow):
                         search_results.append((day, category, task['name']))
 
         if search_results:
-            # Очищаем предыдущие результаты поиска
+
             self.clear_window(keep_main_buttons=True)
             self.show_search_results(search_results)
         else:
@@ -539,40 +443,16 @@ class MainWin(QMainWindow):
         self.clear_window(keep_main_buttons=True)
         self.handle_button_click(int(day))
     def add_task_group(self, tasks, y_start, is_important, button_index):
-        edit_button_style = """
-                  QPushButton {
-                      background-color: #FFEB3B;
-                      border-radius: 15px;
-                  }
-                  QPushButton:hover {
-                      background-color: #FDD835;
-                  }
-              """
 
-        delete_button_style = """
-                  QPushButton {
-                      background-color: #F44336;
-                      border-radius: 15px;
-                  }
-                  QPushButton:hover {
-                      background-color: #E53935;
-                  }
-              """
-
-        checkbox_style = """
-                  QCheckBox::indicator {
-                      width: 20px;
-                      height: 20px;
-                  }
-                  QCheckBox::indicator:checked {
-                      background-color: #22a4f5;
-                  }
-              """
-
+        styles = get_task_group_styles()
         for i, task in enumerate(tasks):
             task_name = task['name']
             btn = QtWidgets.QPushButton(task_name, self)
-            btn.setGeometry(25, y_start + i * 50, 300, 40)
+            btn_width = 300 + 50
+            btn.setGeometry(25, y_start + i * 50, btn_width, 40)
+            checkbox_x = 330 + 50
+            edit_btn_x = 360 + 50
+            delete_btn_x = 400 + 50
 
             # Установка стилей для кнопок задачи
             btn.setStyleSheet("""
@@ -587,7 +467,6 @@ class MainWin(QMainWindow):
                             }
                         """)
 
-            # Подключаем функцию show_task_full_title только если это не специальная кнопка
             if task_name not in ["Добавить важных дел", "Добавить дел"]:
                 btn.clicked.connect(lambda _, name=task_name: self.show_task_full_title(name))
                 btn.setEnabled(True)
@@ -604,21 +483,21 @@ class MainWin(QMainWindow):
 
                 checkbox = QtWidgets.QCheckBox(self)
                 checkbox.setChecked(task.get('completed', False))
-                checkbox.setGeometry(330, y_start + i * 50 + 10, 20, 20)
-                checkbox.setStyleSheet(checkbox_style)
+                checkbox.setGeometry(checkbox_x, y_start + i * 50 + 10, 20, 20)
+                checkbox.setStyleSheet(styles["checkbox_style"])
                 checkbox.toggled.connect(
                     lambda checked, t=task, b_index=button_index: self.toggle_task_completed(t, b_index, checked))
                 checkbox.show()
 
                 edit_btn = QtWidgets.QPushButton("✎", self)
-                edit_btn.setGeometry(360, y_start + i * 50, 30, 30)
-                edit_btn.setStyleSheet(edit_button_style)
+                edit_btn.setGeometry(edit_btn_x, y_start + i * 50, 30, 30)
+                edit_btn.setStyleSheet(styles["edit_button_style"])
                 edit_btn.clicked.connect(lambda _, t=task, b_index=button_index: self.edit_task(t, b_index))
                 edit_btn.show()
 
                 delete_btn = QtWidgets.QPushButton("✖", self)
-                delete_btn.setGeometry(400, y_start + i * 50, 30, 30)
-                delete_btn.setStyleSheet(delete_button_style)
+                delete_btn.setGeometry(delete_btn_x, y_start + i * 50, 30, 30)
+                delete_btn.setStyleSheet(styles["delete_button_style"])
                 delete_btn.clicked.connect(lambda _, t=task, b_index=button_index: self.delete_task(t, b_index))
                 delete_btn.show()
             else:
@@ -635,9 +514,9 @@ class MainWin(QMainWindow):
                                             text=task['name'])
         if ok and new_name:
             if len(new_name) > self.MAX_TASK_LENGTH:
-                QMessageBox.warning(self, 'Ошибка', 'Название задачи должно быть не более 100 символов.')
+                QMessageBox.warning(self, 'Ошибка', 'Название задачи должно быть не более 150 символов.')
                 return
-            # Обновляем название задачи в данных
+
             task['name'] = new_name
             self.save_tasks_to_file()
             self.handle_button_click(button_index)
@@ -666,10 +545,11 @@ class MainWin(QMainWindow):
             QMessageBox.warning(self, 'Ошибка', f'Ошибка при удалении задачи: {e}')
 
     def add_important_task_input(self, button_index):
+        button_index = int(button_index)
         text, ok = QInputDialog.getText(self, 'Добавить важных дел', 'Введите название задачи:')
         if ok and text:
             if len(text) > self.MAX_TASK_LENGTH:
-                QMessageBox.warning(self, 'Ошибка', 'Название задачи должно быть не более 100 символов.')
+                QMessageBox.warning(self, 'Ошибка', 'Название задачи должно быть не более 150 символов.')
                 return
             if len(self.tasks_data[str(button_index)]["tasks_high_priority"]) < self.MAX_TASKS_COUNT:
                 new_task = {"name": text, "completed": False}
@@ -680,10 +560,11 @@ class MainWin(QMainWindow):
                 QMessageBox.information(self, 'Сообщение', 'Вы уже добавили три важных задачи!')
 
     def add_additional_task_input(self, button_index):
+        button_index = int(button_index)
         text, ok = QInputDialog.getText(self, 'Добавить дел', 'Введите название задачи:')
         if ok and text:
             if len(text) > self.MAX_TASK_LENGTH:
-                QMessageBox.warning(self, 'Ошибка', 'Название задачи должно быть не более 100 символов.')
+                QMessageBox.warning(self, 'Ошибка', 'Название задачи должно быть не более 150 символов.')
                 return
             if len(self.tasks_data[str(button_index)]["tasks_low_priority"]) < self.MAX_TASKS_COUNT:
                 new_task = {"name": text, "completed": False}
