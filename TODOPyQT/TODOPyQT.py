@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QInp
 from PyQt5.QtCore import Qt
 from note_page import NotePage
 from HowToUse import HelpDialog
+from text_wrapping import wrap_text
 from ui_elements import setup_ui_elements
 
 
@@ -219,18 +220,27 @@ class MainWin(QMainWindow):
                        color: #37474F; /* Цвет текста заголовков */
                    }
                """)
+        self.search_input = QLineEdit(self)
+        self.search_input.setPlaceholderText("Поиск задачи...")
+        self.search_input.setGeometry(20, 60, 340, 30)
+        self.search_input.show()
+
+        self.search_button = QPushButton("Поиск", self)
+        self.search_button.setGeometry(370, 60, 100, 30)
+        self.search_button.clicked.connect(lambda: self.search_tasks(button_index))  # Передаем индекс в слот
+        self.search_button.show()
 
         self.text_high = QtWidgets.QLabel("Важные задачи", self)
-        self.text_high.setGeometry(20, 50, 460, 40)
+        self.text_high.setGeometry(20, 80, 460, 40)
 
         self.text_low = QtWidgets.QLabel("Обычные задачи", self)
-        self.text_low.setGeometry(20, 320, 460, 40)
+        self.text_low.setGeometry(20, 340, 460, 40)
 
         if button_index in range(1, 8):
-            self.add_task_group(button_tasks["important_tasks"], 100, True, button_index)
-            self.add_task_group(button_tasks["tasks_high_priority"], 150, True, button_index)
-            self.add_task_group(button_tasks["additional_tasks"], 380, False, button_index)
-            self.add_task_group(button_tasks["tasks_low_priority"], 430, False, button_index)
+            self.add_task_group(button_tasks["important_tasks"], 140, True, button_index)
+            self.add_task_group(button_tasks["tasks_high_priority"], 190, True, button_index)
+            self.add_task_group(button_tasks["additional_tasks"], 420, False, button_index)
+            self.add_task_group(button_tasks["tasks_low_priority"], 470, False, button_index)
         else:
             self.main_screen()
         self.text_high.show()
@@ -267,10 +277,10 @@ class MainWin(QMainWindow):
         """)
 
         self.text_high = QtWidgets.QLabel("Важные задачи", self)
-        self.text_high.setGeometry(20, 50, 460, 40)
+        self.text_high.setGeometry(20, 80, 460, 40)
 
         self.text_low = QtWidgets.QLabel("Обычные задачи", self)
-        self.text_low.setGeometry(20, 320, 460, 40)
+        self.text_low.setGeometry(20, 340, 460, 40)
 
         # Получение и отображение задач
         button_tasks = self.tasks_data.get(str(button_index), {
@@ -281,10 +291,20 @@ class MainWin(QMainWindow):
         })
 
         # Отображение задач
-        self.add_task_group(button_tasks["important_tasks"], 100, True, button_index)
-        self.add_task_group(button_tasks["tasks_high_priority"], 150, True, button_index)
-        self.add_task_group(button_tasks["additional_tasks"], 380, False, button_index)
-        self.add_task_group(button_tasks["tasks_low_priority"], 430, False, button_index)
+        self.add_task_group(button_tasks["important_tasks"], 140, True, button_index)
+        self.add_task_group(button_tasks["tasks_high_priority"], 190, True, button_index)
+        self.add_task_group(button_tasks["additional_tasks"], 420, False, button_index)
+        self.add_task_group(button_tasks["tasks_low_priority"], 470, False, button_index)
+
+        self.search_input = QLineEdit(self)
+        self.search_input.setPlaceholderText("Поиск задачи...")
+        self.search_input.setGeometry(20, 60, 340, 30)
+        self.search_input.show()
+
+        self.search_button = QPushButton("Поиск", self)
+        self.search_button.setGeometry(370, 60, 100, 30)
+        self.search_button.clicked.connect(self.search_tasks)
+        self.search_button.show()
 
         # Показываем созданные элементы
         self.text_high.show()
@@ -292,7 +312,7 @@ class MainWin(QMainWindow):
         setup_ui_elements(self)
 
     def main_page(self):
-        print("Button 1 clicked")
+        print("Кнопка 1")
         self.clear_window()
         self.setFixedSize(500, 700)
         self.main_screen()
@@ -300,7 +320,7 @@ class MainWin(QMainWindow):
 
     def show_note_page(self, selected_note=None):
         try:
-            print("Button 2 clicked")
+            print("Кнопка 2")
             self.clear_window()
             self._note_page = NotePage(self)
             self._note_page.note_title_edit.setText(selected_note or "")
@@ -312,7 +332,7 @@ class MainWin(QMainWindow):
     def settings_page(self):
         self.clear_window()
         self.setFixedSize(500, 700)
-        print("Button 3 clicked")
+        print("Кнопка 3")
 
         label_style = """
                QLabel {
@@ -412,6 +432,7 @@ class MainWin(QMainWindow):
 
     def show_help_dialog(self):
         try:
+            print("Справка")
             help_dialog = HelpDialog(self)
             help_dialog.exec_()
         except Exception as e:
@@ -419,8 +440,57 @@ class MainWin(QMainWindow):
             print(f'Ошибка: {e}')
 
     def show_task_full_title(self, task_name):
-        QMessageBox.information(self, 'Полное название задачи', task_name)
+        wrapped_task_name = wrap_text(task_name, 25)
+        QMessageBox.information(self, 'Полное название задачи', wrapped_task_name)
 
+    def search_tasks(self):
+        search_text = self.search_input.text().lower()
+        if len(search_text.strip()) < 3:  # Проверка на минимальное количество символов
+            QMessageBox.information(self, 'Поиск', 'Введите минимум 3 символа для поиска.')
+            return
+
+        # Список для хранения результатов поиска
+        search_results = []
+        for day, tasks in self.tasks_data.items():
+            for category in ['important_tasks', 'tasks_high_priority', 'additional_tasks', 'tasks_low_priority']:
+                for task in tasks[category]:
+                    if search_text in task['name'].lower():
+                        search_results.append((day, category, task['name']))
+
+        # Отображение результатов поиска
+        if search_results:
+            self.show_search_results(search_results)
+        else:
+            QMessageBox.information(self, 'Поиск', 'Задачи не найдены.')
+
+    def show_search_results(self, search_results):
+        # Очистить окно от предыдущих виджетов
+        self.clear_window(keep_main_buttons=True)
+
+        # Создать виджет списка для отображения результатов
+        self.results_list = QListWidget(self)
+        self.results_list.setGeometry(20, 100, 460, 590)
+
+        # Добавить результаты в список
+        for day, category, task_name in search_results:
+            item = QListWidgetItem(f"{day}: {task_name}")
+            self.results_list.addItem(item)
+
+        # Подключить событие нажатия на элемент списка
+        self.results_list.itemClicked.connect(self.go_to_task_detail)
+
+        self.results_list.show()
+
+    def go_to_task_detail(self, item):
+        # Получить день и название задачи из текста элемента
+        details = item.text().split(": ")
+        day = details[0]
+        task_name = details[1]
+
+        # Перейти к деталям задачи
+        # Добавим keep_main_buttons=True, чтобы оставить кнопки 1-7 на месте
+        self.clear_window(keep_main_buttons=True)
+        self.handle_button_click(int(day))
     def add_task_group(self, tasks, y_start, is_important, button_index):
         edit_button_style = """
                   QPushButton {
@@ -513,10 +583,7 @@ class MainWin(QMainWindow):
 
             btn.show()
 
-            btn.show()
-
     def edit_task(self, task, button_index):
-
         new_name, ok = QInputDialog.getText(self, 'Редактировать задачу', 'Введите новое название задачи:',
                                             text=task['name'])
         if ok and new_name:

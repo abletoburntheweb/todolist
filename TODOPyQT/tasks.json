@@ -26,6 +26,14 @@
             {
                 "name": "Задача",
                 "completed": false
+            },
+            {
+                "name": "Техническое задание (ТЗ) определяет цели, требования и ожидания к проекту. Оно включает в себя",
+                "completed": false
+            },
+            {
+                "name": "вфыв",
+                "completed": false
             }
         ]
     },
@@ -127,7 +135,12 @@
                 "completed": false
             }
         ],
-        "tasks_high_priority": [],
+        "tasks_high_priority": [
+            {
+                "name": "Работаем",
+                "completed": false
+            }
+        ],
         "tasks_low_priority": []
     }
 }
