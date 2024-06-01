@@ -117,42 +117,45 @@ class MainWin(QMainWindow):
 
         total_width = (button_width * 7) + (button_spacing * (7 - 1))
 
-        start_x = (self.width() - total_width) // 2  # Вычитание общей ширины из ширины окна и делим на два
+        start_x = (self.width() - total_width) // 2
         start_y = 10
 
         self.buttons = []
         for i in range(1, 8):
             btn = QPushButton(f"{i}", self)
             x_position = start_x + (i - 1) * (button_width + button_spacing)
-            '''active_button_style = """
-                        QPushButton {
-                            background-color: #6495ED; /* Темно-синий цвет для активной кнопки */
-                            color: white;
-                            border-radius: 10px;
-                            padding: 5px;
-                            font-size: 16px;
-                            border: none;
-                        }
-                    """ '''
             btn.setGeometry(x_position, start_y, button_width, button_height)
             btn.setStyleSheet("""
-                   QPushButton {
-                       background-color: #87CEFA; /* Светло-синий цвет */
-                       border-radius: 10px; /* Скругление углов */
-                       padding: 5px;
-                       font-size: 16px;
-                       border: 2px solid #1E90FF; /* Темно-синяя граница */
-                   }
-                   QPushButton:hover {
-                       background-color: #B0E0E6; /* При наведении */
-                   }
-                   QPushButton:pressed {
-                       background-color: #ADD8E6; /* При нажатии */
-                   }
-               """)
+                QPushButton {
+                    background-color: #87CEFA; /* Светло-синий цвет */
+                    border-radius: 10px;
+                    padding: 5px;
+                    font-size: 16px;
+                    border: 2px solid #1E90FF; /* Темно-синяя граница */
+                }
+                QPushButton:hover {
+                    background-color: #B0E0E6; /* При наведении */
+                }
+                QPushButton:pressed {
+                    background-color: #ADD8E6; /* При нажатии */
+                }
+            """)
             btn.clicked.connect(lambda checked, index=i: self.handle_button_click(index))
             btn.show()
             self.buttons.append(btn)
+
+        # Устанавливаем первую кнопку по умолчанию как активную
+        self.active_button = self.buttons[0]
+        self.active_button.setStyleSheet("""
+            QPushButton {
+                background-color: #6495ED; /* Темно-синий цвет для активной кнопки */
+                color: white;
+                border-radius: 10px;
+                padding: 5px;
+                font-size: 16px;
+                border: none;
+            }
+        """)
 
     def toggle_task_completed(self, task, button_index, checked):
         task['completed'] = checked
@@ -190,62 +193,36 @@ class MainWin(QMainWindow):
         self.completed_tasks_label.setText(f"Выполнено задач: {self.completed_tasks_count}")
 
     def handle_button_click(self, button_index):
-        self.clear_window(keep_main_buttons=True)
-        self.setFixedSize(500, 700)
+        if self.active_button:
+            # Сброс стиля предыдущей активной кнопки
+            self.active_button.setStyleSheet("""
+                QPushButton {
+                    background-color: #87CEFA; /* Светло-синий цвет */
+                    border-radius: 10px;
+                    padding: 5px;
+                    font-size: 16px;
+                    border: 2px solid #1E90FF; /* Темно-синяя граница */
+                }
+                QPushButton:hover {
+                    background-color: #B0E0E6; /* При наведении */
+                }
+                QPushButton:pressed {
+                    background-color: #ADD8E6; /* При нажатии */
+                }
+            """)
 
-        button_tasks = self.tasks_data.get(str(button_index), {
-            "important_tasks": [],
-            "additional_tasks": [],
-            "tasks_high_priority": [],
-            "tasks_low_priority": []
-        })
-
-        self.setStyleSheet("""
-                  
-                   QPushButton {
-                       font-size: 16px;
-                       border-radius: 8px;
-                       padding: 6px;
-                       background-color: #2196F3; /* Синий цвет кнопок */
-                       color: white; /* Белый цвет текста */
-                   }
-                   QPushButton:hover {
-                       background-color: #64B5F6; /* Светло-синий цвет при наведении */
-                   }
-                   QPushButton:pressed {
-                       background-color: #1E88E5; /* Темно-синий цвет при нажатии */
-                   }
-                   QLabel {
-                       font-size: 18px;
-                       color: #37474F; /* Цвет текста заголовков */
-                   }
-               """)
-        self.search_input = QLineEdit(self)
-        self.search_input.setPlaceholderText("Поиск задачи...")
-        self.search_input.setGeometry(20, 60, 340, 30)
-        self.search_input.show()
-
-        self.search_button = QPushButton("Поиск", self)
-        self.search_button.setGeometry(370, 60, 100, 30)
-        self.search_button.clicked.connect(lambda: self.search_tasks(button_index))  # Передаем индекс в слот
-        self.search_button.show()
-
-        self.text_high = QtWidgets.QLabel("Важные задачи", self)
-        self.text_high.setGeometry(20, 80, 460, 40)
-
-        self.text_low = QtWidgets.QLabel("Обычные задачи", self)
-        self.text_low.setGeometry(20, 340, 460, 40)
-
-        if button_index in range(1, 8):
-            self.add_task_group(button_tasks["important_tasks"], 140, True, button_index)
-            self.add_task_group(button_tasks["tasks_high_priority"], 190, True, button_index)
-            self.add_task_group(button_tasks["additional_tasks"], 420, False, button_index)
-            self.add_task_group(button_tasks["tasks_low_priority"], 470, False, button_index)
-        else:
-            self.main_screen()
-        self.text_high.show()
-        self.text_low.show()
-        setup_ui_elements(self)
+        # Устанавливаем новую активную кнопку и обновляем стиль
+        self.active_button = self.buttons[button_index - 1]
+        self.active_button.setStyleSheet("""
+            QPushButton {
+                background-color: #6495ED; /* Темно-синий цвет для активной кнопки */
+                color: white;
+                border-radius: 10px;
+                padding: 5px;
+                font-size: 16px;
+                border: none;
+            }
+        """)
 
     def main_screen(self, button_index='1'):
         self.clear_window(keep_main_buttons=True)
