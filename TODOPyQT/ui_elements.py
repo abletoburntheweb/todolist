@@ -1,5 +1,4 @@
 from PyQt5.QtWidgets import QPushButton, QLabel
-
 def setup_ui_elements(main_window):
     rect_view = QLabel(main_window)
     rect_view.setGeometry(0, 630, 500, 70)
@@ -28,7 +27,6 @@ def setup_ui_elements(main_window):
     button3.setStyleSheet("background-color: #F2FAFD; border-image: url('settings.png');")
     button3.clicked.connect(main_window.settings_page)
 
-    # Отображение кнопок
     button1.show()
     button2.show()
     button3.show()

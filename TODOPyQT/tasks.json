@@ -22,8 +22,8 @@
                 "completed": false
             },
             {
-                "name": "dsadasd",
-                "completed": false
+                "name": "Доделать отчет по УП 05",
+                "completed": true
             }
         ],
         "tasks_low_priority": [
@@ -36,7 +36,7 @@
                 "completed": false
             },
             {
-                "name": "выфв",
+                "name": "Забронировать билеты",
                 "completed": false
             }
         ]
@@ -56,8 +56,8 @@
         ],
         "tasks_high_priority": [
             {
-                "name": "Работаем",
-                "completed": false
+                "name": "Задача",
+                "completed": true
             }
         ],
         "tasks_low_priority": []
@@ -123,7 +123,12 @@
                 "completed": false
             }
         ],
-        "tasks_high_priority": [],
+        "tasks_high_priority": [
+            {
+                "name": "Задача",
+                "completed": false
+            }
+        ],
         "tasks_low_priority": []
     },
     "7": {
@@ -139,12 +144,12 @@
                 "completed": false
             }
         ],
-        "tasks_high_priority": [
+        "tasks_high_priority": [],
+        "tasks_low_priority": [
             {
-                "name": "Работаем",
+                "name": "Задача",
                 "completed": false
             }
-        ],
-        "tasks_low_priority": []
+        ]
     }
 }

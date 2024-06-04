@@ -1,6 +1,7 @@
 import json
 from PyQt5.QtWidgets import QListWidget, QLineEdit, QTextEdit, QPushButton, QMessageBox
 from PyQt5 import QtCore
+from styles import sidebar_list_widget_style, notes_button_style, notes_title_edit_style, notes_text_edit_style
 from ui_elements import setup_ui_elements
 
 
@@ -17,81 +18,34 @@ class NotePage:
 
     def setup_note_page_ui(self):
 
-        button_style = """
-            QPushButton {
-                background-color: #6CA6CD;
-                color: white;
-                border-radius: 4px;
-                padding: 5px;
-                font-size: 14px;
-                border: none;
-            }
-            QPushButton:pressed {
-                background-color: #5B9BD5;
-            }
-            QPushButton:hover {
-                background-color: #8DBDD8;
-            }
-        """
         self.note_title_edit.setPlaceholderText("Название заметки")
         self.note_title_edit.setGeometry(170, 10, 320, 30)
 
-        self.sidebar_list_widget.setStyleSheet("""
-            QListWidget {
-                background-color: #F2FAFD;
-                border: none;
-                color: #333;
-                font-size: 14px;
-            }
-            QListWidget::item:selected {
-                background-color: #89CFF0;
-                color: black;
-            }
-        """)
+        self.sidebar_list_widget.setStyleSheet(sidebar_list_widget_style())
         self.sidebar_list_widget.setGeometry(10, 10, 150, 650)
 
         self.notes_text_edit.setPlaceholderText("Напишите что-нибудь...")
         self.notes_text_edit.setGeometry(170, 50, 320, 610)
 
-        self.note_title_edit.setStyleSheet("""
-            QLineEdit {
-                border: 1px solid #ccc;
-                padding: 5px;
-                border-radius: 4px;
-            }
-            QLineEdit:focus {
-                border-color: #6CA6CD;
-            }
-        """)
+        self.note_title_edit.setStyleSheet(notes_title_edit_style())
         self.note_title_edit.setGeometry(170, 10, 320, 30)
 
-        self.notes_text_edit.setStyleSheet("""
-            QTextEdit {
-                border: 1px solid #ccc;
-                padding: 5px;
-                border-radius: 4px;
-                font-size: 14px;
-                color: #555;
-            }
-            QTextEdit:focus {
-                border-color: #6CA6CD;
-            }
-        """)
+        self.notes_text_edit.setStyleSheet(notes_text_edit_style())
 
         self.notes_text_edit.setGeometry(170, 50, 320, 610)
 
         save_notes_button = QPushButton("Сохранить заметку", self.main_win)
-        save_notes_button.setStyleSheet(button_style)
+        save_notes_button.setStyleSheet(notes_button_style())
         save_notes_button.setGeometry(340, 600, 150, 30)
         save_notes_button.clicked.connect(self.save_notes_to_file)
 
         delete_note_button = QPushButton("Удалить заметку", self.main_win)
-        delete_note_button.setStyleSheet(button_style)
+        delete_note_button.setStyleSheet(notes_button_style())
         delete_note_button.setGeometry(190, 600, 150, 30)
         delete_note_button.clicked.connect(self.delete_current_note)
 
         new_note_button = QPushButton("Создать заметку", self.main_win)
-        new_note_button.setStyleSheet(button_style)
+        new_note_button.setStyleSheet(notes_button_style())
         new_note_button.setGeometry(10, 600, 150, 30)
         new_note_button.clicked.connect(self.create_new_note)
 
@@ -110,7 +64,7 @@ class NotePage:
         except FileNotFoundError:
             self.notes = {}
         except json.JSONDecodeError:
-            QMessageBox.warning(self.main_win, 'Ошибка', 'The notes file is corrupted. Starting with an empty list.')
+            QMessageBox.warning(self.main_win, 'Ошибка', 'Файл поврежден. Начинаем с пустого списка.')
             self.notes = {}
         self.load_note_titles()
 
@@ -125,7 +79,7 @@ class NotePage:
         self.notes_text_edit.setText(self.notes[selected_note])
 
     def save_notes_to_file(self):
-        print("Attempting to save the note...")
+        print("Сохранение заметки...")
         title = self.note_title_edit.text().strip()
         content = self.notes_text_edit.toPlainText().strip()
 
@@ -140,6 +94,7 @@ class NotePage:
             QMessageBox.warning(self.main_win, 'Ошибка', f'Произошла ошибка при сохранении заметки: {e}')
 
     def delete_current_note(self):
+        print("Удаление заметки...")
         title = self.note_title_edit.text()
         if title in self.notes:
             reply = QMessageBox.question(self.main_win, 'Подтверждение удаления',

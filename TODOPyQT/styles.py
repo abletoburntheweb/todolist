@@ -13,13 +13,72 @@ def search_input_style():
         QLineEdit:hover {
             border: 2px solid #64b5f6;
         }
+   """
+
+def results_list_style():
+    return """
+     QListWidget {
+        border: 2px solid #5d8aa8; 
+        border-radius: 10px;
+        background-color: #f7f7f7;
+        font-family: 'Segoe UI', sans-serif;
+        font-size: 16px;
+        color: #2c3e50; 
+        outline: none; 
+    }
+    QListWidget::item {
+        border-radius: 5px;
+        padding: 10px;
+        margin: 2px;
+        background-color: #fdfdfd;
+        border-bottom: 1px solid #eaeaea;
+    }
+    QListWidget::item:alternate {
+        background-color: #f6f6f6;
+    }
+    QListWidget::item:selected {
+        background-color: #5d8aa8; 
+        color: #ffffff; 
+    }
+    QListWidget::item:selected:!active {
+        background-color: #5d8aa8;
+        color: #ffffff;
+    }
+    QListWidget::item:hover {
+        background-color: #ecf0f1; 
+        color: #2c3e50; 
+    }
     """
 
+def add_tasks_button_style():
+    return """
+        QPushButton {
+            background-color: #84cdfa;
+            text-align: left;
+            padding-left: 10px;
+            border-radius: 15px;
+        }
+        QPushButton:hover {
+            background-color: #ADD8E6;
+        }
+    """
+
+def tasks_button_style():
+    return """
+        QPushButton {
+            text-align: left;
+            padding-left: 10px;
+            border-radius: 15px;
+        }
+        QPushButton:hover {
+            background-color: #ADD8E6;
+        }
+    """
 def day_button_style(active=False):
     if active:
         return """
             QPushButton {
-                background-color: #6495ED; /* Dark blue color for the active button */
+                background-color: #6495ED; 
                 color: white;
                 border-radius: 10px;
                 padding: 5px;
@@ -36,11 +95,11 @@ def day_button_style(active=False):
     else:
         return """
             QPushButton {
-                background-color: #87CEFA; /* Light blue color */
+                background-color: #87CEFA; 
                 border-radius: 10px;
                 padding: 5px;
                 font-size: 16px;
-                border: 2px solid #1E90FF; /* Dark blue border */
+                border: 2px solid #1E90FF; 
             }
             QPushButton:hover {
                 background-color: #B0E0E6;
@@ -49,6 +108,7 @@ def day_button_style(active=False):
                 background-color: #ADD8E6;
             }
         """
+
 
 def main_window_style():
     return """
@@ -73,6 +133,7 @@ def main_window_style():
             color: #37474F;
         }
     """
+
 
 def settings_style():
     return {
@@ -128,9 +189,11 @@ def settings_style():
             }
         """
     }
+
+
 def get_task_group_styles():
-        return {
-            "edit_button_style": """
+    return {
+        "edit_button_style": """
             QPushButton {
                 background-color: #FFEB3B;
                 border-radius: 15px;
@@ -159,3 +222,59 @@ def get_task_group_styles():
         """,
 
     }
+
+
+def sidebar_list_widget_style():
+    return """
+        QListWidget {
+            background-color: #F2FAFD;
+            border: none;
+            color: #333;
+            font-size: 14px;
+        }
+        QListWidget::item:selected {
+            background-color: #89CFF0;
+            color: black;
+        }
+    """
+def notes_button_style():
+    return """""
+            QPushButton {
+                background-color: #6CA6CD;
+                color: white;
+                border-radius: 4px;
+                padding: 5px;
+                font-size: 14px;
+                border: none;
+            }
+            QPushButton:pressed {
+                background-color: #5B9BD5;
+            }
+            QPushButton:hover {
+                background-color: #8DBDD8;
+            }
+        """
+def notes_title_edit_style():
+    return("""
+            QLineEdit {
+                border: 1px solid #ccc;
+                padding: 5px;
+                border-radius: 4px;
+            }
+            QLineEdit:focus {
+                border-color: #6CA6CD;
+            }
+        """)
+def notes_text_edit_style():
+    return ("""
+            QTextEdit {
+                border: 1px solid #ccc;
+                padding: 5px;
+                border-radius: 4px;
+                font-size: 14px;
+                color: #555;
+            }
+            QTextEdit:focus {
+                border-color: #6CA6CD;
+            }
+        """)
