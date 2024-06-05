@@ -1,10 +1,42 @@
 [
     {
-        "name": "Проверить почту",
+        "name": "Задача 1",
         "completed": false
     },
     {
-        "name": "Погуулять с собакой",
+        "name": "Задача 2",
+        "completed": false
+    },
+    {
+        "name": "Задача 3",
+        "completed": false
+    },
+    {
+        "name": "Задача 4",
+        "completed": false
+    },
+    {
+        "name": "Задача 5",
+        "completed": false
+    },
+    {
+        "name": "Задача 6",
+        "completed": false
+    },
+    {
+        "name": "Задача 7",
+        "completed": false
+    },
+    {
+        "name": "Задача 8",
+        "completed": false
+    },
+    {
+        "name": "Задача 9",
+        "completed": false
+    },
+    {
+        "name": "Задача 10",
         "completed": false
     }
 ]

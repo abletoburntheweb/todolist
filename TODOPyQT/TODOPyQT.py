@@ -412,8 +412,10 @@ class MainWin(QMainWindow):
         self.handle_button_click(int(day))
 
     def add_task_group(self, tasks, y_start, is_important, button_index):
+        tasks_style = tasks_button_style()
         add_task_style = add_tasks_button_style()
         styles = get_task_group_styles()
+
         for i, task in enumerate(tasks):
             task_name = task['name']
             btn = QtWidgets.QPushButton(task_name, self)
@@ -423,7 +425,6 @@ class MainWin(QMainWindow):
             edit_btn_x = 360 + 50
             delete_btn_x = 400 + 50
 
-            tasks_style = tasks_button_style()
             btn.setStyleSheet(add_task_style)
 
             if task_name not in ["Добавить важных дел", "Добавить дел"]:
