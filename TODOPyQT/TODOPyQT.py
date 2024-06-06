@@ -201,7 +201,15 @@ class MainWin(QMainWindow):
 
         self.text_low = QtWidgets.QLabel("Обычные задачи", self)
         self.text_low.setGeometry(20, 350, 460, 40)
+        self.daily_tasks_button = QPushButton("Ежедневные задачи", self)
+        button_width = 180
+        button_height = 40
+        button_x = self.width() - button_width - 10  # Отступ от правого края
+        button_y = self.height() - button_height - 70  # Отступ от нижнего края
 
+        self.daily_tasks_button.setGeometry(button_x, button_y, button_width, button_height)
+        self.daily_tasks_button.clicked.connect(self.show_daily_tasks_page)
+        self.daily_tasks_button.show()
         if button_index in range(1, 8):
             self.add_task_group(button_tasks["important_tasks"], 140, True, button_index)
             self.add_task_group(button_tasks["tasks_high_priority"], 190, True, button_index)
