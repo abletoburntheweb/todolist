@@ -73,8 +73,8 @@ class DailyTasksPage:
 
     def add_task_group(self):
         y_start = 120
-        tasks_style = tasks_button_style()  # Получаем стиль для кнопок задач
-        styles = get_task_group_styles()  # Получаем стили для группы задач
+        tasks_style = tasks_button_style()
+        styles = get_task_group_styles()
 
         btn_width = 350
         checkbox_x = 380
@@ -85,11 +85,10 @@ class DailyTasksPage:
             task_name = task['name']
             btn = QPushButton(task_name, self.main_win)
             btn.setGeometry(25, y_start + i * 50, btn_width, 40)
-            btn.setStyleSheet(tasks_style)  # Применяем стиль к каждой кнопке задачи
+            btn.setStyleSheet(tasks_style)
             btn.clicked.connect(lambda _, t=task: self.show_task_full_title(t))
             btn.show()
 
-            # Setup completion toggle checkbox
             checkbox = QCheckBox(self.main_win)
             checkbox.setChecked(task.get('completed', False))
             checkbox.setGeometry(checkbox_x, y_start + i * 50 + 10, 20, 20)
@@ -98,14 +97,12 @@ class DailyTasksPage:
                 lambda state, t=task: self.toggle_task_completed(t, state == QtCore.Qt.Checked))
             checkbox.show()
 
-            # Setup edit button
             edit_button = QPushButton("✎", self.main_win)
             edit_button.setGeometry(edit_btn_x, y_start + i * 50, 30, 30)
             edit_button.setStyleSheet(styles["edit_button_style"])
             edit_button.clicked.connect(lambda _, t=task: self.edit_task(t))
             edit_button.show()
 
-            # Setup delete button
             delete_button = QPushButton("✖", self.main_win)
             delete_button.setGeometry(delete_btn_x, y_start + i * 50, 30, 30)
             delete_button.setStyleSheet(styles["delete_button_style"])

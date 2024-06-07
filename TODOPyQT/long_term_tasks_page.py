@@ -200,6 +200,5 @@ class LongTermTasksPage:
         parent_task['subtasks'] = [subtask for subtask in parent_task['subtasks'] if subtask != subtask_to_delete]
         self.save_long_term_tasks_to_file()
         self.setup_ui()
-    # Метод для отображения полного названия долгосрочной задачи
     def show_task_full_title(self, task):
         QMessageBox.information(self.main_win, 'Полное название задачи', task['name'])

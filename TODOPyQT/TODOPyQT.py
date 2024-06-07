@@ -203,17 +203,25 @@ class MainWin(QMainWindow):
         self.text_high = QtWidgets.QLabel("Важные задачи", self)
         self.text_high.setGeometry(20, 100, 460, 40)
 
-        self.text_low = QtWidgets.QLabel("Обычные задачи", self)
-        self.text_low.setGeometry(20, 350, 460, 40)
         self.daily_tasks_button = QPushButton("Ежедневные задачи", self)
         button_width = 180
         button_height = 40
         button_x = self.width() - button_width - 10  # Отступ от правого края
         button_y = self.height() - button_height - 70  # Отступ от нижнего края
-
         self.daily_tasks_button.setGeometry(button_x, button_y, button_width, button_height)
+        self.daily_tasks_button.setStyleSheet(main_window_style())
         self.daily_tasks_button.clicked.connect(self.show_daily_tasks_page)
         self.daily_tasks_button.show()
+
+        self.long_term_tasks_button = QPushButton("Долгосрочные задачи", self)
+        button_width = 180
+        button_height = 40
+        button_x = self.width() - button_width - 195  # Отступ от правого края
+        button_y = self.height() - button_height - 70  # Отступ от нижнего края
+        self.long_term_tasks_button.setGeometry(button_x, button_y, button_width, button_height)
+        self.long_term_tasks_button.setStyleSheet(main_window_style())
+        self.long_term_tasks_button.clicked.connect(self.show_long_term_tasks_page)
+        self.long_term_tasks_button.show()
         if button_index in range(1, 8):
             self.add_task_group(button_tasks["important_tasks"], 140, True, button_index)
             self.add_task_group(button_tasks["tasks_high_priority"], 190, True, button_index)
@@ -231,10 +239,8 @@ class MainWin(QMainWindow):
         self.setFixedSize(500, 700)
         self.setup_main_buttons()
 
-        # Стили для главного окна
         self.apply_main_window_style()
 
-        # Cтиль для кнопок из функции main_window_style
         button_style = main_window_style()
 
         self.text_high = QtWidgets.QLabel("Важные задачи", self)
@@ -278,10 +284,11 @@ class MainWin(QMainWindow):
         self.daily_tasks_button.clicked.connect(self.show_daily_tasks_page)
         self.daily_tasks_button.show()
 
-        # Кнопка "Долгосрочные задачи"
         self.long_term_tasks_button = QPushButton("Долгосрочные задачи", self)
-        button_x = self.width() - button_width - 10  # Отступ от правого края
-        button_y = self.daily_tasks_button.geometry().y() - 50  # Отступ вверх от кнопки "Ежедневные задачи"
+        button_width = 180
+        button_height = 40
+        button_x = self.width() - button_width - 195  # Отступ от правого края
+        button_y = self.height() - button_height - 70 # Отступ от нижнего края
         self.long_term_tasks_button.setGeometry(button_x, button_y, button_width, button_height)
         self.long_term_tasks_button.setStyleSheet(main_window_style())
         self.long_term_tasks_button.clicked.connect(self.show_long_term_tasks_page)
@@ -377,7 +384,7 @@ class MainWin(QMainWindow):
             try:
                 self.results_list.deleteLater()
             except RuntimeError:
-                pass  # Игнорируем ошибку, если объект уже удален
+                pass
             self.results_list = None
 
         search_text = self.search_input.text().lower()
