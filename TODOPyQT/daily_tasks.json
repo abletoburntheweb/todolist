@@ -1,42 +1,26 @@
 [
     {
-        "name": "Задача 1",
+        "name": "Проснуться",
         "completed": false
     },
     {
-        "name": "Задача 2",
+        "name": "Выгулять собаку",
         "completed": false
     },
     {
-        "name": "Задача 3",
+        "name": "Покормить животных",
         "completed": false
     },
     {
-        "name": "Задача 4",
+        "name": "Сделать себе завтрак",
         "completed": false
     },
     {
-        "name": "Задача 5",
+        "name": "Посмотреть утренние новости",
         "completed": false
     },
     {
-        "name": "Задача 6",
-        "completed": false
-    },
-    {
-        "name": "Задача 7",
-        "completed": false
-    },
-    {
-        "name": "Задача 8",
-        "completed": false
-    },
-    {
-        "name": "Задача 9",
-        "completed": false
-    },
-    {
-        "name": "Задача 10",
+        "name": "Собраться и поехать на учебу",
         "completed": false
     }
 ]

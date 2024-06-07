@@ -174,7 +174,12 @@ class LongTermTasksPage:
                     y_start += task_button_height + button_spacing
 
     def toggle_task_completed(self, task, completed):
+        # Устанавливаем состояние выполнения для основной задачи
         task['completed'] = completed
+        # Если основная задача отмечена как выполненная, отмечаем все подзадачи тоже
+        if 'subtasks' in task:
+            for subtask in task['subtasks']:
+                subtask['completed'] = completed
         self.save_long_term_tasks_to_file()
         self.setup_ui()
 

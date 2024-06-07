@@ -176,7 +176,7 @@ class MainWin(QMainWindow):
         self.completed_tasks_label.setText(f"Выполнено задач: {self.completed_tasks_count}")
 
     def handle_button_click(self, button_index):
-        self.clear_window(keep_main_buttons=True)
+        self.clear_window(keep_main_buttons=True, keep_labels=True)
         self.setFixedSize(500, 700)
         self.current_button_index = button_index
 
@@ -202,6 +202,9 @@ class MainWin(QMainWindow):
 
         self.text_high = QtWidgets.QLabel("Важные задачи", self)
         self.text_high.setGeometry(20, 100, 460, 40)
+
+        self.text_low = QtWidgets.QLabel("Обычные задачи", self)
+        self.text_low.setGeometry(20, 350, 460, 40)
 
         self.daily_tasks_button = QPushButton("Ежедневные задачи", self)
         button_width = 180
@@ -415,6 +418,7 @@ class MainWin(QMainWindow):
 
     def show_search_results(self, search_results):
         print("Результаты поиска")
+        self.search_button.hide()  # Скрываем кнопку "Поиск"
         self.results_list = QListWidget(self)
         self.results_list.setGeometry(20, 100, 460, 590)
         self.results_list.setStyleSheet(results_list_style())
@@ -438,8 +442,12 @@ class MainWin(QMainWindow):
         details = item.text().split(": ")
         day = details[0]
         task_name = details[1]
+        # Сохраняем информацию о задаче перед очисткой окна
+        self.selected_day = int(day)
+        self.selected_task_name = task_name
         self.clear_window(keep_main_buttons=True)
-        self.handle_button_click(int(day))
+        # Переходим к нужному дню, используя сохранённые значения
+        self.handle_button_click(self.selected_day)
 
     def add_task_group(self, tasks, y_start, is_important, button_index):
         tasks_style = tasks_button_style()
@@ -557,8 +565,10 @@ class MainWin(QMainWindow):
             else:
                 QMessageBox.information(self, 'Сообщение', 'Вы уже добавили три дополнительные задачи!')
 
-    def clear_window(self, keep_main_buttons=False):
-        widgets_to_keep = self.buttons if keep_main_buttons else []
+    def clear_window(self, keep_main_buttons=False, keep_labels=False):
+        widgets_to_keep = [self.search_button] + self.buttons if keep_main_buttons else []
+        if keep_labels:
+            widgets_to_keep.extend([self.text_high, self.text_low])
         for widget in self.findChildren(QtWidgets.QWidget):
             if widget not in widgets_to_keep:
                 widget.deleteLater()
