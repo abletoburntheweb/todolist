@@ -74,6 +74,23 @@ def tasks_button_style():
             background-color: #ADD8E6;
         }
     """
+def subtasks_button_style():
+    return """
+        QPushButton {
+            background-color: #0057fa;  
+            text-align: left;
+            padding-left: 15px;  
+            border-radius: 10px;  
+            font-size: 14px;  
+            color: white; 
+        }
+        QPushButton:hover {
+            background-color: #0047e5;  
+        }
+        QPushButton:pressed {
+            background-color: #0037d1;  
+        }
+    """
 def day_button_style(active=False):
     if active:
         return """
@@ -220,7 +237,15 @@ def get_task_group_styles():
                 background-color: #22a4f5;
             }
         """,
-
+        "add_subtask_button_style": """
+                QPushButton {
+                    background-color: #90EE90;
+                    border-radius: 15px;
+                }
+                QPushButton:hover {
+                    background-color: #32CD32;
+                }
+            """
     }
 
 

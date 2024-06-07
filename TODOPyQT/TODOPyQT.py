@@ -7,6 +7,7 @@ from PyQt5.QtCore import Qt
 from note_page import NotePage
 from HowToUse import HelpDialog
 from daily_tasks_page import DailyTasksPage
+from long_term_tasks_page import LongTermTasksPage
 from text_wrapping import wrap_text
 from styles import search_input_style, day_button_style, main_window_style, settings_style, \
     get_task_group_styles, add_tasks_button_style, tasks_button_style, results_list_style
@@ -24,7 +25,10 @@ class MainWin(QMainWindow):
         self.daily_tasks = []
 
         self.current_button_index = 1
+
         self.daily_tasks_page = DailyTasksPage(self)
+        self.long_term_tasks_page = LongTermTasksPage(self)
+
         self.search_button = QPushButton("Поиск", self)
         self.search_button.setGeometry(370, 60, 100, 30)
         self.search_button.clicked.connect(self.search_button_clicked)
@@ -270,12 +274,18 @@ class MainWin(QMainWindow):
         button_x = self.width() - button_width - 10  # Отступ от правого края
         button_y = self.height() - button_height - 70  # Отступ от нижнего края
         self.daily_tasks_button.setGeometry(button_x, button_y, button_width, button_height)
-        self.daily_tasks_button.setStyleSheet(button_style)
+        self.daily_tasks_button.setStyleSheet(main_window_style())
         self.daily_tasks_button.clicked.connect(self.show_daily_tasks_page)
-
-        self.text_high.show()
-        self.text_low.show()
         self.daily_tasks_button.show()
+
+        # Кнопка "Долгосрочные задачи"
+        self.long_term_tasks_button = QPushButton("Долгосрочные задачи", self)
+        button_x = self.width() - button_width - 10  # Отступ от правого края
+        button_y = self.daily_tasks_button.geometry().y() - 50  # Отступ вверх от кнопки "Ежедневные задачи"
+        self.long_term_tasks_button.setGeometry(button_x, button_y, button_width, button_height)
+        self.long_term_tasks_button.setStyleSheet(main_window_style())
+        self.long_term_tasks_button.clicked.connect(self.show_long_term_tasks_page)
+        self.long_term_tasks_button.show()
 
         setup_ui_elements(self)
 
@@ -299,7 +309,12 @@ class MainWin(QMainWindow):
 
     def show_daily_tasks_page(self):
         self.clear_window()
-        self.daily_tasks_page.setup_ui()  # Показ страницы с ежедневными задачами
+        self.daily_tasks_page.setup_ui()
+        setup_ui_elements(self)
+
+    def show_long_term_tasks_page(self):
+        self.clear_window()
+        self.long_term_tasks_page.setup_ui()
         setup_ui_elements(self)
 
     def settings_page(self):

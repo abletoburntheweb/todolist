@@ -15,7 +15,7 @@
         "tasks_high_priority": [
             {
                 "name": "Сверстать этот TODO List",
-                "completed": false
+                "completed": true
             },
             {
                 "name": "Начать делать задачу",
@@ -23,7 +23,7 @@
             },
             {
                 "name": "Доделать отчет по УП 05",
-                "completed": true
+                "completed": false
             }
         ],
         "tasks_low_priority": [
