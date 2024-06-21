@@ -58,6 +58,14 @@
             {
                 "name": "Задача",
                 "completed": true
+            },
+            {
+                "name": "Провести время без электронных устройств",
+                "completed": false
+            },
+            {
+                "name": "Послушать вышедшие муз. релизы в прошедшую пятницу",
+                "completed": false
             }
         ],
         "tasks_low_priority": []
@@ -75,8 +83,26 @@
                 "completed": false
             }
         ],
-        "tasks_high_priority": [],
-        "tasks_low_priority": []
+        "tasks_high_priority": [
+            {
+                "name": "Прочитать главу книги",
+                "completed": false
+            },
+            {
+                "name": "Оплатить коммунальные счета",
+                "completed": true
+            }
+        ],
+        "tasks_low_priority": [
+            {
+                "name": "Купить продукты на неделю",
+                "completed": false
+            },
+            {
+                "name": "Сходить на матч Зенита",
+                "completed": false
+            }
+        ]
     },
     "4": {
         "important_tasks": [
@@ -91,8 +117,26 @@
                 "completed": false
             }
         ],
-        "tasks_high_priority": [],
-        "tasks_low_priority": []
+        "tasks_high_priority": [
+            {
+                "name": "Заняться физическими упражнениями",
+                "completed": false
+            },
+            {
+                "name": "Обновить резюме и профиль в LinkedIn",
+                "completed": false
+            },
+            {
+                "name": "Посмотреть документальный фильм",
+                "completed": false
+            }
+        ],
+        "tasks_low_priority": [
+            {
+                "name": "Посетить музей",
+                "completed": true
+            }
+        ]
     },
     "5": {
         "important_tasks": [
@@ -107,8 +151,26 @@
                 "completed": false
             }
         ],
-        "tasks_high_priority": [],
-        "tasks_low_priority": []
+        "tasks_high_priority": [
+            {
+                "name": "Выбрать новый язык для изучения",
+                "completed": true
+            },
+            {
+                "name": "Отсортировать выбранные ",
+                "completed": false
+            },
+            {
+                "name": "Выявить плюсы и минусы",
+                "completed": true
+            }
+        ],
+        "tasks_low_priority": [
+            {
+                "name": "Посадить новые цветы",
+                "completed": false
+            }
+        ]
     },
     "6": {
         "important_tasks": [
@@ -144,11 +206,24 @@
                 "completed": false
             }
         ],
-        "tasks_high_priority": [],
+        "tasks_high_priority": [
+            {
+                "name": "Провести уборку в доме",
+                "completed": false
+            },
+            {
+                "name": "Провести вечер за настольной игрой с друзьями",
+                "completed": false
+            }
+        ],
         "tasks_low_priority": [
             {
                 "name": "Задача",
                 "completed": false
+            },
+            {
+                "name": "Прочитать статью по обновлению React'a",
+                "completed": true
             }
         ]
     }

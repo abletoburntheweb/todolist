@@ -1,6 +1,7 @@
 import json
 
 from PyQt5 import QtWidgets, QtCore
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QInputDialog, \
     QMessageBox, QLineEdit, QListWidget, QListWidgetItem, QComboBox, QWidget
 from PyQt5.QtCore import Qt
@@ -18,6 +19,7 @@ class MainWin(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle('TODO List')
+        self.setWindowIcon(QIcon('TODO List icon.ico'))
         self.setGeometry(750, 250, 500, 700)
         self._note_page = NotePage(self)
         self.buttons = []
@@ -69,6 +71,7 @@ class MainWin(QMainWindow):
                 settings = json.load(file)
                 self.completed_tasks_count = settings.get("completed_tasks_count", 0)
         except Exception as e:
+            print(f"Ошибка при загрузке настроек: {e}")
             self.completed_tasks_count = 0
 
     def save_settings(self):
@@ -78,10 +81,8 @@ class MainWin(QMainWindow):
         try:
             with open("settings.json", "w", encoding="utf-8") as file:
                 json.dump(settings, file, ensure_ascii=False, indent=4)
-        except IOError as e:
-            QMessageBox.warning(self, 'Error', f'Произошла ошибка: {e}')
         except Exception as e:
-            QMessageBox.warning(self, 'Error', f'Произошла ошибка: {e}')
+            QMessageBox.warning(self, 'Error', f'Произошла ошибка при сохранении настроек: {e}')
 
     def load_tasks(self):
         try:
@@ -164,8 +165,8 @@ class MainWin(QMainWindow):
         else:
             if self.completed_tasks_count > 0:
                 self.completed_tasks_count -= 1
-
         self.save_tasks_to_file()
+        self.save_settings()
 
     def reset_completed_tasks_count(self):
         self.completed_tasks_count = 0
@@ -189,6 +190,12 @@ class MainWin(QMainWindow):
 
         self.style_day_buttons(active_index=button_index)
 
+        self.text_high = QtWidgets.QLabel("Важные задачи", self)
+        self.text_high.setGeometry(20, 100, 460, 40)
+
+        self.text_low = QtWidgets.QLabel("Обычные задачи", self)
+        self.text_low.setGeometry(20, 350, 460, 40)
+
         self.search_input = QLineEdit(self)
         self.search_input.setPlaceholderText("Поиск задачи...")
         self.search_input.setGeometry(20, 60, 340, 30)
@@ -200,11 +207,6 @@ class MainWin(QMainWindow):
         self.search_button.clicked.connect(lambda: self.search_tasks(button_index))
         self.search_button.show()
 
-        self.text_high = QtWidgets.QLabel("Важные задачи", self)
-        self.text_high.setGeometry(20, 100, 460, 40)
-
-        self.text_low = QtWidgets.QLabel("Обычные задачи", self)
-        self.text_low.setGeometry(20, 350, 460, 40)
 
         self.daily_tasks_button = QPushButton("Ежедневные задачи", self)
         button_width = 180

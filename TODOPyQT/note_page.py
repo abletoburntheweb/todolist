@@ -17,36 +17,36 @@ class NotePage:
         self.setup_note_page_ui()
 
     def setup_note_page_ui(self):
-
         self.note_title_edit.setPlaceholderText("Название заметки")
         self.note_title_edit.setGeometry(170, 10, 320, 30)
 
         self.sidebar_list_widget.setStyleSheet(sidebar_list_widget_style())
-        self.sidebar_list_widget.setGeometry(10, 10, 150, 650)
+        self.sidebar_list_widget.setGeometry(10, 10, 150, 550)
+        self.sidebar_list_widget.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.sidebar_list_widget.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
 
         self.notes_text_edit.setPlaceholderText("Напишите что-нибудь...")
-        self.notes_text_edit.setGeometry(170, 50, 320, 610)
+        self.notes_text_edit.setGeometry(170, 50, 320, 510)
 
         self.note_title_edit.setStyleSheet(notes_title_edit_style())
         self.note_title_edit.setGeometry(170, 10, 320, 30)
 
         self.notes_text_edit.setStyleSheet(notes_text_edit_style())
-
-        self.notes_text_edit.setGeometry(170, 50, 320, 610)
+        self.notes_text_edit.setGeometry(170, 50, 320, 510)
 
         save_notes_button = QPushButton("Сохранить заметку", self.main_win)
         save_notes_button.setStyleSheet(notes_button_style())
-        save_notes_button.setGeometry(340, 600, 150, 30)
+        save_notes_button.setGeometry(340, 570, 150, 30)
         save_notes_button.clicked.connect(self.save_notes_to_file)
 
         delete_note_button = QPushButton("Удалить заметку", self.main_win)
         delete_note_button.setStyleSheet(notes_button_style())
-        delete_note_button.setGeometry(190, 600, 150, 30)
+        delete_note_button.setGeometry(190, 570, 150, 30)
         delete_note_button.clicked.connect(self.delete_current_note)
 
         new_note_button = QPushButton("Создать заметку", self.main_win)
         new_note_button.setStyleSheet(notes_button_style())
-        new_note_button.setGeometry(10, 600, 150, 30)
+        new_note_button.setGeometry(10, 570, 150, 30)
         new_note_button.clicked.connect(self.create_new_note)
 
         self.sidebar_list_widget.show()
@@ -97,11 +97,15 @@ class NotePage:
         print("Удаление заметки...")
         title = self.note_title_edit.text()
         if title in self.notes:
-            reply = QMessageBox.question(self.main_win, 'Подтверждение удаления',
-                                         f'Вы действительно хотите удалить заметку "{title}"?',
-                                         QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            msg_box = QMessageBox(self.main_win)
+            msg_box.setWindowTitle('Подтверждение удаления')
+            msg_box.setText(f'Вы действительно хотите удалить заметку "{title}"?')
+            yes_button = msg_box.addButton("Да", QMessageBox.YesRole)
+            no_button = msg_box.addButton("Нет", QMessageBox.NoRole)
 
-            if reply == QMessageBox.Yes:
+            msg_box.exec_()
+
+            if msg_box.clickedButton() == yes_button:
                 del self.notes[title]
                 self.note_title_edit.clear()
                 self.notes_text_edit.clear()
