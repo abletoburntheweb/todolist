@@ -36,17 +36,17 @@ class NotePage:
 
         save_notes_button = QPushButton("Сохранить заметку", self.main_win)
         save_notes_button.setStyleSheet(notes_button_style())
-        save_notes_button.setGeometry(340, 570, 150, 30)
+        save_notes_button.setGeometry(340, 600, 150, 30)
         save_notes_button.clicked.connect(self.save_notes_to_file)
 
         delete_note_button = QPushButton("Удалить заметку", self.main_win)
         delete_note_button.setStyleSheet(notes_button_style())
-        delete_note_button.setGeometry(190, 570, 150, 30)
+        delete_note_button.setGeometry(190, 600, 150, 30)
         delete_note_button.clicked.connect(self.delete_current_note)
 
         new_note_button = QPushButton("Создать заметку", self.main_win)
         new_note_button.setStyleSheet(notes_button_style())
-        new_note_button.setGeometry(10, 570, 150, 30)
+        new_note_button.setGeometry(10, 600, 150, 30)
         new_note_button.clicked.connect(self.create_new_note)
 
         self.sidebar_list_widget.show()

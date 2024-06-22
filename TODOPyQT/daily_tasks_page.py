@@ -1,11 +1,31 @@
 import json
 from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtWidgets import QPushButton, QLabel, QInputDialog, QMessageBox, QCheckBox
+from PyQt5.QtWidgets import QPushButton, QLabel, QInputDialog, QMessageBox, QCheckBox, QDialog, QVBoxLayout, QLineEdit, QDialogButtonBox
 from ui_elements import setup_ui_elements
 from styles import get_task_group_styles, main_window_style, add_tasks_button_style, tasks_button_style
 
 MAX_TASK_LENGTH = 150
 MAX_DAILY_TASKS_COUNT = 10
+
+
+class EditTaskDialog(QDialog):
+    def __init__(self, initial_text, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Редактировать задачу")
+
+        layout = QVBoxLayout(self)
+        self.line_edit = QLineEdit(self)
+        self.line_edit.setText(initial_text)
+        layout.addWidget(self.line_edit)
+
+        self.button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
+        self.button_box.button(QDialogButtonBox.Cancel).setText("Отменить")
+        self.button_box.accepted.connect(self.accept)
+        self.button_box.rejected.connect(self.reject)
+        layout.addWidget(self.button_box)
+
+    def get_text(self):
+        return self.line_edit.text()
 
 
 class DailyTasksPage:
@@ -115,9 +135,9 @@ class DailyTasksPage:
         self.setup_ui()
 
     def edit_task(self, task):
-        new_name, ok = QInputDialog.getText(self.main_win, 'Редактировать задачу', 'Введите новое название задачи:',
-                                            text=task['name'])
-        if ok and new_name:
+        dialog = EditTaskDialog(task['name'], self.main_win)
+        if dialog.exec_() == QDialog.Accepted:
+            new_name = dialog.get_text()
             if len(new_name) > MAX_TASK_LENGTH:
                 QMessageBox.warning(self.main_win, 'Ошибка', 'Название задачи должно быть не более 150 символов.')
                 return
@@ -128,19 +148,10 @@ class DailyTasksPage:
             self.save_daily_tasks_to_file()
             self.add_task_group()
 
-    def show_daily_tasks(self):
-        self.daily_tasks_page.setup_ui()
-        self.daily_tasks_page.load_daily_tasks_from_file()
-        self.daily_tasks_page.add_task_group()
-        setup_ui_elements(self)
-
     def delete_task(self, task):
         try:
-
             self.daily_tasks = [t for t in self.daily_tasks if t['name'] != task['name']]
-
             self.save_daily_tasks_to_file()
-
             self.setup_ui()
         except Exception as e:
             QMessageBox.warning(self.main_win, 'Ошибка', 'Задача не найдена для удаления.')

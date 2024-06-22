@@ -1,6 +1,6 @@
 import json
 from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtWidgets import QPushButton, QLabel, QInputDialog, QMessageBox, QCheckBox
+from PyQt5.QtWidgets import QPushButton, QLabel, QInputDialog, QMessageBox, QCheckBox, QDialog, QVBoxLayout, QLineEdit, QDialogButtonBox
 from ui_elements import setup_ui_elements
 from styles import get_task_group_styles, main_window_style, add_tasks_button_style, tasks_button_style, \
     subtasks_button_style
@@ -8,6 +8,26 @@ from styles import get_task_group_styles, main_window_style, add_tasks_button_st
 MAX_TASK_LENGTH = 150
 MAX_LONG_TERM_TASKS_COUNT = 2
 MAX_SUBTASKS_COUNT = 4
+
+
+class EditTaskDialog(QDialog):
+    def __init__(self, initial_text, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Редактировать задачу")
+
+        layout = QVBoxLayout(self)
+        self.line_edit = QLineEdit(self)
+        self.line_edit.setText(initial_text)
+        layout.addWidget(self.line_edit)
+
+        self.button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
+        self.button_box.button(QDialogButtonBox.Cancel).setText("Отменить")
+        self.button_box.accepted.connect(self.accept)
+        self.button_box.rejected.connect(self.reject)
+        layout.addWidget(self.button_box)
+
+    def get_text(self):
+        return self.line_edit.text()
 
 
 class LongTermTasksPage:
@@ -158,7 +178,7 @@ class LongTermTasksPage:
                         lambda state, t=subtask: self.toggle_task_completed(t, state == QtCore.Qt.Checked))
                     sub_checkbox.show()
 
-                    # X координаты кнопок редактирования и удаления подзадачи выровнены с кнопками основной задачи
+
                     sub_edit_button = QPushButton("✎", self.main_win)
                     sub_edit_button.setGeometry(edit_btn_x, y_start, 30, 30)
                     sub_edit_button.setStyleSheet(styles["edit_button_style"])
@@ -174,36 +194,37 @@ class LongTermTasksPage:
                     y_start += task_button_height + button_spacing
 
     def toggle_task_completed(self, task, completed):
-        # Устанавливаем состояние выполнения для основной задачи
         task['completed'] = completed
-        # Если основная задача отмечена как выполненная, отмечаем все подзадачи тоже
-        if 'subtasks' in task:
-            for subtask in task['subtasks']:
-                subtask['completed'] = completed
         self.save_long_term_tasks_to_file()
         self.setup_ui()
 
-
     def edit_task(self, task):
-        new_name, ok = QInputDialog.getText(self.main_win, 'Редактировать задачу', 'Введите новое название задачи:',
-                                            text=task['name'])
-        if ok and new_name:
+        dialog = EditTaskDialog(task['name'], self.main_win)
+        if dialog.exec_() == QDialog.Accepted:
+            new_name = dialog.get_text()
             if len(new_name) > MAX_TASK_LENGTH:
                 QMessageBox.warning(self.main_win, 'Ошибка', 'Название задачи должно быть не более 150 символов.')
                 return
-            task['name'] = new_name
+            for t in self.long_term_tasks:
+                if t['name'] == task['name']:
+                    t['name'] = new_name
+                    break
             self.save_long_term_tasks_to_file()
-            self.setup_ui()
-
+            self.add_task_group()
 
     def delete_task(self, task):
-        self.long_term_tasks = [t for t in self.long_term_tasks if t['name'] != task['name']]
-        self.save_long_term_tasks_to_file()
-        self.setup_ui()
+        try:
+            self.long_term_tasks = [t for t in self.long_term_tasks if t['name'] != task['name']]
+            self.save_long_term_tasks_to_file()
+            self.setup_ui()
+        except Exception as e:
+            QMessageBox.warning(self.main_win, 'Ошибка', 'Задача не найдена для удаления.')
+            print(f'Ошибка', f'Ошибка при удалении задачи: {e}')
 
     def delete_subtask(self, parent_task, subtask_to_delete):
         parent_task['subtasks'] = [subtask for subtask in parent_task['subtasks'] if subtask != subtask_to_delete]
         self.save_long_term_tasks_to_file()
         self.setup_ui()
+
     def show_task_full_title(self, task):
         QMessageBox.information(self.main_win, 'Полное название задачи', task['name'])

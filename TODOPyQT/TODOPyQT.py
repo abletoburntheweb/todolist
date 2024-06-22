@@ -501,16 +501,23 @@ class MainWin(QMainWindow):
             btn.show()
 
     def edit_task(self, task, button_index):
-        new_name, ok = QInputDialog.getText(self, 'Редактировать задачу', 'Введите новое название задачи:',
-                                            text=task['name'])
-        if ok and new_name:
-            if len(new_name) > self.MAX_TASK_LENGTH:
-                QMessageBox.warning(self, 'Ошибка', 'Название задачи должно быть не более 150 символов.')
-                return
+        dialog = QInputDialog(self)
+        dialog.setWindowTitle('Редактировать задачу')
+        dialog.setLabelText('Введите новое название задачи:')
+        dialog.setTextValue(task['name'])
+        dialog.setOkButtonText('OK')
+        dialog.setCancelButtonText('Отменить')
 
-            task['name'] = new_name
-            self.save_tasks_to_file()
-            self.handle_button_click(button_index)
+        if dialog.exec_() == QInputDialog.Accepted:
+            new_name = dialog.textValue()
+            if new_name:
+                if len(new_name) > self.MAX_TASK_LENGTH:
+                    QMessageBox.warning(self, 'Ошибка', 'Название задачи должно быть не более 150 символов.')
+                    return
+
+                task['name'] = new_name
+                self.save_tasks_to_file()
+                self.handle_button_click(button_index)
 
     def delete_task(self, task, button_index):
         try:
