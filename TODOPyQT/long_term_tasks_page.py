@@ -119,7 +119,7 @@ class LongTermTasksPage:
         add_subtask_btn_x = checkbox_x + checkbox_width + button_spacing
         edit_btn_x = add_subtask_btn_x + 30 + button_spacing
         delete_btn_x = edit_btn_x + 30 + button_spacing
-        subtask_indentation = 25  # Добавляем отступ для подзадач
+        subtask_indentation = 25  # Отступ для подзадач
 
         for i, task in enumerate(self.long_term_tasks):
             task_name = task['name']

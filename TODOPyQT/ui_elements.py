@@ -9,7 +9,7 @@ def setup_ui_elements(main_window):
     button_width = 50
     button_height = 50
     tabbar_width = 500
-    buttons_spacing = (tabbar_width - (3 * button_width)) // 4  # Расстояние между кнопками и краями TabBar
+    buttons_spacing = (tabbar_width - (3 * button_width)) // 4  # Расстояние между кнопками и краями
 
     # Расположение кнопок на равном расстоянии друг от друга
     button1 = QPushButton(main_window)

@@ -31,7 +31,6 @@ class EditTaskDialog(QDialog):
 class DailyTasksPage:
     def __init__(self, main_win):
         self.main_win = main_win
-        self.daily_tasks = []
 
         self.load_daily_tasks_from_file()
 
@@ -80,7 +79,6 @@ class DailyTasksPage:
             QMessageBox.warning(self.main_win, 'Ошибка', 'Вы не можете добавить более 10 ежедневных задач.')
             return
 
-            # Если предел не достигнут, спрашиваем у пользователя название новой задачи
         text, ok = QInputDialog.getText(self.main_win, 'Добавить ежедневную задачу', 'Введите название задачи:')
         if ok and text:
             if len(text) > MAX_TASK_LENGTH:

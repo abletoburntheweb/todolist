@@ -12,7 +12,6 @@ class NotePage:
         self.sidebar_list_widget.itemClicked.connect(self.on_note_selected)
         self.note_title_edit = QLineEdit(main_win)
         self.notes_text_edit = QTextEdit(main_win)
-        self.notes = {}
         self.load_notes_from_file()
         self.setup_note_page_ui()
 
