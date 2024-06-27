@@ -36,7 +36,7 @@ class DailyTasksPage:
 
     def setup_ui(self):
         self.main_win.clear_window(keep_main_buttons=True)
-        self.main_win.setFixedSize(500, 700)
+        self.main_win.setFixedSize(1280, 720)
         add_task_style = add_tasks_button_style()
 
         self.daily_tasks_label = QLabel("Ежедневные задачи", self.main_win)

@@ -55,6 +55,7 @@ def add_tasks_button_style():
         QPushButton {
             background-color: #84cdfa;
             text-align: left;
+            font-size: 18px;  
             padding-left: 10px;
             border-radius: 15px;
         }
@@ -68,6 +69,7 @@ def tasks_button_style():
         QPushButton {
             text-align: left;
             padding-left: 10px;
+            font-size: 18px;  
             border-radius: 15px;
         }
         QPushButton:hover {

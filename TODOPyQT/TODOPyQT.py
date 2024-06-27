@@ -3,7 +3,7 @@ import json
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QInputDialog, \
-    QMessageBox, QLineEdit, QListWidget, QListWidgetItem, QWidget, QScrollArea, QVBoxLayout
+    QMessageBox, QLineEdit, QListWidget, QListWidgetItem, QWidget, QScrollArea, QVBoxLayout, QHBoxLayout
 from PyQt5.QtCore import Qt
 from note_page import NotePage
 from HowToUse import HelpDialog
@@ -170,47 +170,40 @@ class MainWin(QMainWindow):
         self.scroll_area.setWidget(tasks_widget)
 
         return tasks_layout
+
     def main_screen(self, button_index=None):
         if button_index is None:
             button_index = self.current_button_index
         else:
             self.current_button_index = button_index
 
-        self.clear_window(keep_main_buttons=True)  # Очистить окно, оставив основные кнопки
+        self.clear_window(keep_main_buttons=True)
 
-        self.setFixedSize(1280, 720)  # Установить фиксированный размер окна
-        self.setup_main_buttons()  # Установить основные кнопки
-        self.apply_main_window_style()  # Применить стиль окна
-        self.style_day_buttons(active_index=button_index)  # Стилизовать кнопки дней
+        self.setFixedSize(1280, 720)
+        self.setup_main_buttons()
+        self.apply_main_window_style()
+        self.style_day_buttons(active_index=button_index)
 
-        # Создаем область прокрутки для задач
-        scroll_area = QScrollArea(self)
-        scroll_area.setGeometry(20, 140, self.width() - 40, 500)  # Уменьшаем высоту области прокрутки
-        scroll_area.setWidgetResizable(True)
-        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.scroll_area = QScrollArea(self)
+        self.scroll_area.setGeometry(20, 140, self.width() - 40, 500)
+        self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
-        # Виджет для расположения задач внутри области прокрутки
         tasks_widget = QWidget()
         layout = QVBoxLayout(tasks_widget)
 
-        # Кнопка для добавления новой задачи в верхней части layout
         self.add_task_button = QPushButton("Добавить задачу")
         self.add_task_button.setStyleSheet(add_tasks_button_style())
         self.add_task_button.clicked.connect(self.add_new_task)
         layout.addWidget(self.add_task_button)
 
-        # Загрузка и отображение задач для выбранного дня
         button_tasks = self.tasks_data.get(str(button_index), {"tasks": []})
         self.add_tasks_to_layout(layout, button_tasks["tasks"], None, button_index)
 
-        # Добавляем tasks_widget в scroll_area
-        scroll_area.setWidget(tasks_widget)
+        self.scroll_area.setWidget(tasks_widget)
+        self.scroll_area.move((self.width() - self.scroll_area.width()) // 2, 100)
 
-        # Перемещаем scroll_area в центр окна
-        scroll_area.move((self.width() - scroll_area.width()) // 2, 100)
-
-        # Поисковый ввод и кнопка
         self.search_input = QLineEdit(self)
         self.search_input.setPlaceholderText("Поиск задачи...")
         self.search_input.setGeometry(20, 60, self.width() - 150, 30)
@@ -222,7 +215,6 @@ class MainWin(QMainWindow):
         self.search_button.clicked.connect(self.search_button_clicked)
         self.search_button.show()
 
-        # Кнопки для перехода на страницы ежедневных и долгосрочных задач
         self.daily_tasks_button = QPushButton("Ежедневные задачи", self)
         button_width = 180
         button_height = 40
@@ -394,61 +386,50 @@ class MainWin(QMainWindow):
         text, ok = QInputDialog.getText(self, 'Добавить задачу', 'Введите название задачи:')
         if ok and text:
             if len(text) > self.MAX_TASK_LENGTH:
-                QMessageBox.warning(self, 'Ошибка', 'Название задачи должно быть не более 150 символов.')
+                QMessageBox.warning(self, 'Ошибка', 'Название задачи должно быть не более 450 символов.')
                 return
             new_task = {"name": text, "completed": False}
             self.tasks_data[str(self.current_button_index)]["tasks"].append(new_task)
             self.save_tasks_to_file()
-            self.main_screen(self.current_button_index)
-
+            self.update_task_layout()
 
     def add_tasks_to_layout(self, layout, tasks, is_important, button_index):
         tasks_style = tasks_button_style()
         add_task_style = add_tasks_button_style()
         styles = get_task_group_styles()
 
-        for i, task in enumerate(tasks):
+        for task in tasks:
             task_name = task['name']
+            task_widget = QWidget(self)
+            task_layout = QHBoxLayout(task_widget)
+
             btn = QtWidgets.QPushButton(task_name, self)
-            btn_width = 300 + 50
-            btn.setFixedSize(btn_width, 40)
-            btn.setStyleSheet(add_task_style)
+            btn.setStyleSheet(tasks_style)
+            btn.setFixedSize(800, 50)
+            btn.clicked.connect(lambda _, name=task_name: self.show_task_full_title(name))
 
-            if task_name not in ["Добавить важных дел", "Добавить дел"]:
-                btn.clicked.connect(lambda _, name=task_name: self.show_task_full_title(name))
-                btn.setEnabled(True)
-                btn.setStyleSheet(tasks_style)
+            checkbox = QtWidgets.QCheckBox(self)
+            checkbox.setChecked(task.get('completed', False))
+            checkbox.setStyleSheet(styles["checkbox_style"])
+            checkbox.toggled.connect(
+                lambda checked, t=task, b_index=button_index: self.toggle_task_completed(t, b_index, checked))
 
-                checkbox = QtWidgets.QCheckBox(self)
-                checkbox.setChecked(task.get('completed', False))
-                checkbox.setStyleSheet(styles["checkbox_style"])
-                checkbox.toggled.connect(
-                    lambda checked, t=task, b_index=button_index: self.toggle_task_completed(t, b_index, checked))
+            edit_btn = QtWidgets.QPushButton("✎", self)
+            edit_btn.setFixedSize(30, 30)
+            edit_btn.setStyleSheet(styles["edit_button_style"])
+            edit_btn.clicked.connect(lambda _, t=task, b_index=button_index: self.edit_task(t, b_index))
 
-                edit_btn = QtWidgets.QPushButton("✎", self)
-                edit_btn.setFixedSize(30, 30)
-                edit_btn.setStyleSheet(styles["edit_button_style"])
-                edit_btn.clicked.connect(lambda _, t=task, b_index=button_index: self.edit_task(t, b_index))
+            delete_btn = QtWidgets.QPushButton("✖", self)
+            delete_btn.setFixedSize(30, 30)
+            delete_btn.setStyleSheet(styles["delete_button_style"])
+            delete_btn.clicked.connect(lambda _, t=task, b_index=button_index: self.delete_task(t, b_index))
 
-                delete_btn = QtWidgets.QPushButton("✖", self)
-                delete_btn.setFixedSize(30, 30)
-                delete_btn.setStyleSheet(styles["delete_button_style"])
-                delete_btn.clicked.connect(lambda _, t=task, b_index=button_index: self.delete_task(t, b_index))
+            task_layout.addWidget(btn)
+            task_layout.addWidget(checkbox)
+            task_layout.addWidget(edit_btn)
+            task_layout.addWidget(delete_btn)
 
-                task_layout = QtWidgets.QHBoxLayout()
-                task_layout.addWidget(btn)
-                task_layout.addWidget(checkbox)
-                task_layout.addWidget(edit_btn)
-                task_layout.addWidget(delete_btn)
-                layout.addLayout(task_layout)
-            else:
-                btn.setEnabled(True)
-                if task_name == "Добавить важных дел":
-                    btn.clicked.connect(lambda _, b_index=button_index: self.add_important_task_input(b_index))
-                else:
-                    btn.clicked.connect(lambda _, b_index=button_index: self.add_additional_task_input(b_index))
-
-                layout.addWidget(btn)
+            layout.addWidget(task_widget)
 
     def edit_task(self, task, button_index):
         dialog = QInputDialog(self)
@@ -462,7 +443,7 @@ class MainWin(QMainWindow):
             new_name = dialog.textValue()
             if new_name:
                 if len(new_name) > self.MAX_TASK_LENGTH:
-                    QMessageBox.warning(self, 'Ошибка', 'Название задачи должно быть не более 150 символов.')
+                    QMessageBox.warning(self, 'Ошибка', 'Название задачи должно быть не более 450 символов.')
                     return
 
                 for t in self.tasks_data[str(button_index)]["tasks"]:
@@ -471,7 +452,7 @@ class MainWin(QMainWindow):
                         break
 
                 self.save_tasks_to_file()
-                self.main_screen(button_index)
+                self.update_task_layout()
 
     def delete_task(self, task, button_index):
         try:
@@ -479,7 +460,7 @@ class MainWin(QMainWindow):
                 t for t in self.tasks_data[str(button_index)]["tasks"] if t['name'] != task['name']
             ]
             self.save_tasks_to_file()
-            self.main_screen(button_index)
+            self.update_task_layout()
         except Exception as e:
             QMessageBox.warning(self, 'Ошибка', f'Ошибка при удалении задачи: {e}')
 
@@ -504,6 +485,18 @@ class MainWin(QMainWindow):
             else:
                 QMessageBox.information(self, 'Сообщение',
                                         f'Вы уже добавили максимальное количество задач ({self.MAX_TASKS_COUNT})!')
+
+    def update_task_layout(self):
+        layout = self.scroll_area.widget().layout()  # Get the layout from the scroll area widget
+        self.clear_layout(layout)  # Clear the current task layout
+
+        self.add_task_button = QPushButton("Добавить задачу")
+        self.add_task_button.setStyleSheet(add_tasks_button_style())
+        self.add_task_button.clicked.connect(self.add_new_task)
+        layout.addWidget(self.add_task_button)
+
+        button_tasks = self.tasks_data.get(str(self.current_button_index), {"tasks": []})
+        self.add_tasks_to_layout(layout, button_tasks["tasks"], None, self.current_button_index)
 
     def clear_window(self, keep_main_buttons=False, keep_labels=False):
         widgets_to_keep = [self.search_button] + self.buttons if keep_main_buttons else []
