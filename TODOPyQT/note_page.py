@@ -16,44 +16,50 @@ class NotePage:
         self.setup_note_page_ui()
 
     def setup_note_page_ui(self):
-        self.note_title_edit.setPlaceholderText("Название заметки")
-        self.note_title_edit.setGeometry(170, 10, 320, 30)
+        sidebar_width = 200
+        sidebar_height = self.main_win.height() - 130
+        note_edit_width = self.main_win.width() - sidebar_width - 40
+        note_edit_height = self.main_win.height() - 170
+        button_width = 180
+        right_padding = 5
+        button_height = 40
+        button_spacing = 5
 
+        self.sidebar_list_widget.setGeometry(10, 10, sidebar_width, sidebar_height)
         self.sidebar_list_widget.setStyleSheet(sidebar_list_widget_style())
-        self.sidebar_list_widget.setGeometry(10, 10, 150, 550)
-        self.sidebar_list_widget.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.sidebar_list_widget.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
 
-        self.notes_text_edit.setPlaceholderText("Напишите что-нибудь...")
-        self.notes_text_edit.setGeometry(170, 50, 320, 510)
-
+        self.note_title_edit.setGeometry(sidebar_width + 20, 10, note_edit_width, 30)
         self.note_title_edit.setStyleSheet(notes_title_edit_style())
-        self.note_title_edit.setGeometry(170, 10, 320, 30)
 
+        self.notes_text_edit.setGeometry(sidebar_width + 20, 50, note_edit_width, note_edit_height)
         self.notes_text_edit.setStyleSheet(notes_text_edit_style())
-        self.notes_text_edit.setGeometry(170, 50, 320, 510)
 
-        save_notes_button = QPushButton("Сохранить заметку", self.main_win)
-        save_notes_button.setStyleSheet(notes_button_style())
-        save_notes_button.setGeometry(340, 600, 150, 30)
-        save_notes_button.clicked.connect(self.save_notes_to_file)
-
-        delete_note_button = QPushButton("Удалить заметку", self.main_win)
-        delete_note_button.setStyleSheet(notes_button_style())
-        delete_note_button.setGeometry(190, 600, 150, 30)
-        delete_note_button.clicked.connect(self.delete_current_note)
+        buttons_y_position = self.main_win.height() - button_height - 70
 
         new_note_button = QPushButton("Создать заметку", self.main_win)
+        new_note_button.setGeometry(10, buttons_y_position, button_width, button_height)
         new_note_button.setStyleSheet(notes_button_style())
-        new_note_button.setGeometry(10, 600, 150, 30)
         new_note_button.clicked.connect(self.create_new_note)
+
+        delete_note_button = QPushButton("Удалить заметку", self.main_win)
+
+        delete_note_button.setGeometry(self.main_win.width() - button_width * 2 - button_spacing - right_padding,
+                                       buttons_y_position, button_width, button_height)
+        delete_note_button.setStyleSheet(notes_button_style())
+        delete_note_button.clicked.connect(self.delete_current_note)
+
+        save_notes_button = QPushButton("Сохранить заметку", self.main_win)
+        save_notes_button.setGeometry(self.main_win.width() - button_width - right_padding,
+                                      buttons_y_position, button_width, button_height)
+        save_notes_button.setStyleSheet(notes_button_style())
+        save_notes_button.clicked.connect(self.save_notes_to_file)
 
         self.sidebar_list_widget.show()
         self.note_title_edit.show()
         self.notes_text_edit.show()
-        save_notes_button.show()
-        delete_note_button.show()
         new_note_button.show()
+        delete_note_button.show()
+        save_notes_button.show()
         setup_ui_elements(self.main_win)
 
     def load_notes_from_file(self):

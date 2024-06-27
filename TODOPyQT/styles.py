@@ -255,7 +255,7 @@ def sidebar_list_widget_style():
             background-color: #F2FAFD;
             border: none;
             color: #333;
-            font-size: 14px;
+            font-size: 18px;
         }
         QListWidget::item:selected {
             background-color: #89CFF0;
@@ -269,7 +269,7 @@ def notes_button_style():
                 color: white;
                 border-radius: 4px;
                 padding: 5px;
-                font-size: 14px;
+                font-size: 18px;
                 border: none;
             }
             QPushButton:pressed {
@@ -285,6 +285,7 @@ def notes_title_edit_style():
                 border: 1px solid #ccc;
                 padding: 5px;
                 border-radius: 4px;
+                font-size: 18px;
             }
             QLineEdit:focus {
                 border-color: #6CA6CD;
@@ -296,7 +297,7 @@ def notes_text_edit_style():
                 border: 1px solid #ccc;
                 padding: 5px;
                 border-radius: 4px;
-                font-size: 14px;
+                font-size: 18px;
                 color: #555;
             }
             QTextEdit:focus {

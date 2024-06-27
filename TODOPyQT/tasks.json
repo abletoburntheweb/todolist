@@ -1,18 +1,6 @@
 {
     "1": {
-        "important_tasks": [
-            {
-                "name": "Добавить важных дел",
-                "completed": false
-            }
-        ],
-        "additional_tasks": [
-            {
-                "name": "Добавить дел",
-                "completed": false
-            }
-        ],
-        "tasks_high_priority": [
+        "tasks": [
             {
                 "name": "Сверстать этот TODO List",
                 "completed": true
@@ -24,33 +12,43 @@
             {
                 "name": "Доделать отчет по УП 05",
                 "completed": false
-            }
-        ],
-        "tasks_low_priority": [
+            },
             {
-                "name": "Задача",
+                "name": "d",
                 "completed": false
             },
             {
-                "name": "Техническое задание (ТЗ) определяет цели, требования и ожидания к проекту. Оно включает в себя",
+                "name": "4",
+                "completed": false
+            },
+            {
+                "name": "ввв",
+                "completed": false
+            },
+            {
+                "name": "вфывфыв",
+                "completed": false
+            },
+            {
+                "name": "1",
+                "completed": false
+            },
+            {
+                "name": "2",
+                "completed": false
+            },
+            {
+                "name": "3",
+                "completed": false
+            },
+            {
+                "name": "вфывфыв",
                 "completed": false
             }
         ]
     },
     "2": {
-        "important_tasks": [
-            {
-                "name": "Добавить важных дел",
-                "completed": false
-            }
-        ],
-        "additional_tasks": [
-            {
-                "name": "Добавить дел",
-                "completed": false
-            }
-        ],
-        "tasks_high_priority": [
+        "tasks": [
             {
                 "name": "Задача",
                 "completed": true
@@ -59,23 +57,10 @@
                 "name": "Провести время без электронных устройств",
                 "completed": false
             }
-        ],
-        "tasks_low_priority": []
+        ]
     },
     "3": {
-        "important_tasks": [
-            {
-                "name": "Добавить важных дел",
-                "completed": false
-            }
-        ],
-        "additional_tasks": [
-            {
-                "name": "Добавить дел",
-                "completed": false
-            }
-        ],
-        "tasks_high_priority": [
+        "tasks": [
             {
                 "name": "Прочитать главу книги",
                 "completed": false
@@ -84,32 +69,10 @@
                 "name": "Оплатить коммунальные счета",
                 "completed": true
             }
-        ],
-        "tasks_low_priority": [
-            {
-                "name": "Купить продукты на неделю",
-                "completed": false
-            },
-            {
-                "name": "Сходить на матч Зенита",
-                "completed": false
-            }
         ]
     },
     "4": {
-        "important_tasks": [
-            {
-                "name": "Добавить важных дел",
-                "completed": false
-            }
-        ],
-        "additional_tasks": [
-            {
-                "name": "Добавить дел",
-                "completed": false
-            }
-        ],
-        "tasks_high_priority": [
+        "tasks": [
             {
                 "name": "Заняться физическими упражнениями",
                 "completed": false
@@ -117,88 +80,23 @@
             {
                 "name": "Обновить резюме и профиль в LinkedIn",
                 "completed": false
-            },
-            {
-                "name": "Посмотреть документальный фильм",
-                "completed": false
-            }
-        ],
-        "tasks_low_priority": [
-            {
-                "name": "Посетить музей",
-                "completed": true
             }
         ]
     },
     "5": {
-        "important_tasks": [
-            {
-                "name": "Добавить важных дел",
-                "completed": false
-            }
-        ],
-        "additional_tasks": [
-            {
-                "name": "Добавить дел",
-                "completed": false
-            }
-        ],
-        "tasks_high_priority": [
+        "tasks": [
             {
                 "name": "Выбрать новый язык для изучения",
                 "completed": true
             },
             {
-                "name": "Отсортировать выбранные ",
-                "completed": false
-            },
-            {
-                "name": "Выявить плюсы и минусы",
-                "completed": true
-            }
-        ],
-        "tasks_low_priority": [
-            {
-                "name": "Посадить новые цветы",
+                "name": "Отсортировать выбранные ресурсы",
                 "completed": false
             }
         ]
     },
     "6": {
-        "important_tasks": [
-            {
-                "name": "Добавить важных дел",
-                "completed": false
-            }
-        ],
-        "additional_tasks": [
-            {
-                "name": "Добавить дел",
-                "completed": false
-            }
-        ],
-        "tasks_high_priority": [
-            {
-                "name": "Задача",
-                "completed": false
-            }
-        ],
-        "tasks_low_priority": []
-    },
-    "7": {
-        "important_tasks": [
-            {
-                "name": "Добавить важных дел",
-                "completed": false
-            }
-        ],
-        "additional_tasks": [
-            {
-                "name": "Добавить дел",
-                "completed": false
-            }
-        ],
-        "tasks_high_priority": [
+        "tasks": [
             {
                 "name": "Провести уборку в доме",
                 "completed": false
@@ -207,15 +105,17 @@
                 "name": "Провести вечер за настольной игрой с друзьями",
                 "completed": false
             }
-        ],
-        "tasks_low_priority": [
+        ]
+    },
+    "7": {
+        "tasks": [
             {
-                "name": "Задача",
-                "completed": false
+                "name": "Посетить музей",
+                "completed": true
             },
             {
-                "name": "Прочитать статью по обновлению React'a",
-                "completed": true
+                "name": "Сходить на матч любимой команды",
+                "completed": false
             }
         ]
     }

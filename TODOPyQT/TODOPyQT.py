@@ -3,7 +3,7 @@ import json
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QInputDialog, \
-    QMessageBox, QLineEdit, QListWidget, QListWidgetItem, QWidget
+    QMessageBox, QLineEdit, QListWidget, QListWidgetItem, QWidget, QScrollArea, QVBoxLayout
 from PyQt5.QtCore import Qt
 from note_page import NotePage
 from HowToUse import HelpDialog
@@ -20,8 +20,7 @@ class MainWin(QMainWindow):
         super().__init__()
         self.setWindowTitle('TODO List')
         self.setWindowIcon(QIcon('TODO List icon.ico'))
-        self.setGeometry(750, 250, 500, 700)
-
+        self.setGeometry(100, 100, 1280, 720)
 
         self.current_button_index = 1
 
@@ -33,12 +32,6 @@ class MainWin(QMainWindow):
         self.search_button.clicked.connect(self.search_button_clicked)
         self.search_button.show()
 
-        self.text_high = QtWidgets.QLabel("Важные задачи", self)
-        self.text_high.setGeometry(20, 100, 460, 40)
-
-        self.text_low = QtWidgets.QLabel("Обычные задачи", self)
-        self.text_low.setGeometry(20, 350, 460, 40)
-
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
 
@@ -47,29 +40,25 @@ class MainWin(QMainWindow):
         self.save_settings()
         self.setup_main_buttons()
         self.load_tasks()
+        self.scroll_area = None
 
         self.main_screen()
-
-        with open("tasks.json", "r", encoding="utf-8") as file:
-            tasks_data = json.load(file)
-            self.tasks_high_priority = tasks_data.get("tasks_high_priority", [])
-            self.tasks_low_priority = tasks_data.get("tasks_low_priority", [])
 
         with open("notes.json", "r", encoding="utf-8") as file:
             notes_data = json.load(file)
             self.notes = notes_data.get("notes", {})
 
-    MAX_TASKS_COUNT = 3
-    MAX_TASK_LENGTH = 150
+    MAX_TASKS_COUNT = 90
+    MAX_TASK_LENGTH = 450
 
     def save_tasks_to_file(self):
         with open("tasks.json", "w", encoding="utf-8") as file:
             json.dump(self.tasks_data, file, ensure_ascii=False, indent=4)
 
     def load_settings(self):
-            with open("settings.json", "r", encoding="utf-8") as file:
-                settings = json.load(file)
-                self.completed_tasks_count = settings.get("completed_tasks_count", 0)
+        with open("settings.json", "r", encoding="utf-8") as file:
+            settings = json.load(file)
+            self.completed_tasks_count = settings.get("completed_tasks_count", 0)
 
     def save_settings(self):
         settings = {
@@ -83,10 +72,10 @@ class MainWin(QMainWindow):
             with open("tasks.json", "r", encoding="utf-8") as file:
                 self.tasks_data = json.load(file)
         except FileNotFoundError:
-            self.tasks_data = {str(i): {
-                "tasks_high_priority": [],
-                "tasks_low_priority": []
-            } for i in range(1, 8)}
+            self.tasks_data = {str(i): {"tasks": []} for i in range(1, 8)}
+        except json.JSONDecodeError:
+            QMessageBox.warning(self, 'Ошибка', 'Файл поврежден. Начинаем с пустого списка.')
+            self.tasks_data = {str(i): {"tasks": []} for i in range(1, 8)}
 
     def style_search_input(self):
         self.search_input.setStyleSheet(search_input_style())
@@ -104,9 +93,9 @@ class MainWin(QMainWindow):
         return settings_style()
 
     def setup_main_buttons(self):
-        button_width = 60
+        button_width = 100  # Измените ширину кнопок, если необходимо
         button_height = 40
-        button_spacing = 10
+        button_spacing = 20  # Измените расстояние между кнопками, если необходимо
 
         total_width = (button_width * 7) + (button_spacing * (7 - 1))
 
@@ -134,18 +123,13 @@ class MainWin(QMainWindow):
 
     def toggle_task_completed(self, task, button_index, checked):
         task['completed'] = checked
-        if task in self.tasks_data[str(button_index)]["tasks_high_priority"]:
-            category = "tasks_high_priority"
-        elif task in self.tasks_data[str(button_index)]["tasks_low_priority"]:
-            category = "tasks_low_priority"
-        else:
-            QMessageBox.warning(self, 'Ошибка', 'Не удалось найти задачу в списках.')
-            return
-
-        for i, t in enumerate(self.tasks_data[str(button_index)][category]):
-            if t['name'] == task['name']:
-                self.tasks_data[str(button_index)][category][i]['completed'] = checked
-                break
+        for day, tasks_info in self.tasks_data.items():
+            if day == str(button_index):
+                tasks = tasks_info["tasks"]
+                for t in tasks:
+                    if t['name'] == task['name']:
+                        t['completed'] = checked
+                        break
         if checked:
             self.completed_tasks_count += 1
         else:
@@ -165,64 +149,92 @@ class MainWin(QMainWindow):
     def handle_button_click(self, button_index):
         self.main_screen(button_index)
 
+    def clear_layout(self, layout):
+        while layout.count():
+            child = layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+
+    def recreate_task_scroll_area(self):
+        if self.scroll_area is not None:
+            self.scroll_area.deleteLater()
+
+        self.scroll_area = QScrollArea(self)
+        self.scroll_area.setGeometry(20, 140, self.width() - 40, 500)
+        self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+
+        tasks_widget = QWidget()
+        tasks_layout = QVBoxLayout(tasks_widget)
+        self.scroll_area.setWidget(tasks_widget)
+
+        return tasks_layout
     def main_screen(self, button_index=None):
         if button_index is None:
             button_index = self.current_button_index
         else:
             self.current_button_index = button_index
 
-        self.clear_window(keep_main_buttons=True, keep_labels=True)
-        self.setFixedSize(500, 700)
-        self.setup_main_buttons()
-        self.apply_main_window_style()
-        self.style_day_buttons(active_index=button_index)
+        self.clear_window(keep_main_buttons=True)  # Очистить окно, оставив основные кнопки
 
-        self.text_high = QtWidgets.QLabel("Важные задачи", self)
-        self.text_high.setGeometry(20, 100, 460, 40)
-        self.text_high.show()
+        self.setFixedSize(1280, 720)  # Установить фиксированный размер окна
+        self.setup_main_buttons()  # Установить основные кнопки
+        self.apply_main_window_style()  # Применить стиль окна
+        self.style_day_buttons(active_index=button_index)  # Стилизовать кнопки дней
 
-        self.text_low = QtWidgets.QLabel("Обычные задачи", self)
-        self.text_low.setGeometry(20, 350, 460, 40)
-        self.text_low.show()
+        # Создаем область прокрутки для задач
+        scroll_area = QScrollArea(self)
+        scroll_area.setGeometry(20, 140, self.width() - 40, 500)  # Уменьшаем высоту области прокрутки
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
-        # Загрузка задач для выбранного дня
-        button_tasks = self.tasks_data.get(str(button_index), {
-            "tasks_high_priority": [],
-            "tasks_low_priority": []
-        })
+        # Виджет для расположения задач внутри области прокрутки
+        tasks_widget = QWidget()
+        layout = QVBoxLayout(tasks_widget)
 
-        # Отображение задач
-        self.add_task_group(button_tasks["important_tasks"], 140, True, button_index)
-        self.add_task_group(button_tasks["tasks_high_priority"], 190, True, button_index)
-        self.add_task_group(button_tasks["additional_tasks"], 390, False, button_index)
-        self.add_task_group(button_tasks["tasks_low_priority"], 440, False, button_index)
+        # Кнопка для добавления новой задачи в верхней части layout
+        self.add_task_button = QPushButton("Добавить задачу")
+        self.add_task_button.setStyleSheet(add_tasks_button_style())
+        self.add_task_button.clicked.connect(self.add_new_task)
+        layout.addWidget(self.add_task_button)
 
+        # Загрузка и отображение задач для выбранного дня
+        button_tasks = self.tasks_data.get(str(button_index), {"tasks": []})
+        self.add_tasks_to_layout(layout, button_tasks["tasks"], None, button_index)
+
+        # Добавляем tasks_widget в scroll_area
+        scroll_area.setWidget(tasks_widget)
+
+        # Перемещаем scroll_area в центр окна
+        scroll_area.move((self.width() - scroll_area.width()) // 2, 100)
+
+        # Поисковый ввод и кнопка
         self.search_input = QLineEdit(self)
         self.search_input.setPlaceholderText("Поиск задачи...")
-        self.search_input.setGeometry(20, 60, 340, 30)
+        self.search_input.setGeometry(20, 60, self.width() - 150, 30)
         self.style_search_input()
         self.search_input.show()
 
         self.search_button = QPushButton("Поиск", self)
-        self.search_button.setGeometry(370, 60, 100, 30)
-        self.search_button.clicked.connect(self.search_tasks)
+        self.search_button.setGeometry(self.width() - 120, 60, 100, 30)
+        self.search_button.clicked.connect(self.search_button_clicked)
         self.search_button.show()
 
+        # Кнопки для перехода на страницы ежедневных и долгосрочных задач
         self.daily_tasks_button = QPushButton("Ежедневные задачи", self)
         button_width = 180
         button_height = 40
-        button_x = self.width() - button_width - 10  # Отступ от правого края
-        button_y = self.height() - button_height - 70  # Отступ от нижнего края
+        button_x = self.width() - button_width - 10
+        button_y = self.height() - button_height - 70
         self.daily_tasks_button.setGeometry(button_x, button_y, button_width, button_height)
         self.daily_tasks_button.setStyleSheet(main_window_style())
         self.daily_tasks_button.clicked.connect(self.show_daily_tasks_page)
         self.daily_tasks_button.show()
 
         self.long_term_tasks_button = QPushButton("Долгосрочные задачи", self)
-        button_width = 180
-        button_height = 40
-        button_x = self.width() - button_width - 195  # Отступ от правого края
-        button_y = self.height() - button_height - 70  # Отступ от нижнего края
+        button_x = self.width() - button_width - 195
         self.long_term_tasks_button.setGeometry(button_x, button_y, button_width, button_height)
         self.long_term_tasks_button.setStyleSheet(main_window_style())
         self.long_term_tasks_button.clicked.connect(self.show_long_term_tasks_page)
@@ -233,7 +245,7 @@ class MainWin(QMainWindow):
     def main_page(self):
         print("Кнопка 1")
         self.clear_window()
-        self.setFixedSize(500, 700)
+        self.setFixedSize(1280, 720)
         self.main_screen()
         setup_ui_elements(self)
 
@@ -262,7 +274,7 @@ class MainWin(QMainWindow):
 
     def settings_page(self):
         self.clear_window()
-        self.setFixedSize(500, 700)
+        self.setFixedSize(1280, 720)
         print("Кнопка 3")
 
         styles = self.get_settings_style()
@@ -299,42 +311,44 @@ class MainWin(QMainWindow):
         setup_ui_elements(self)
 
     def show_help_dialog(self):
-            print("Справка")
-            help_dialog = HelpDialog(self)
-            help_dialog.exec_()
+        print("Справка")
+        help_dialog = HelpDialog(self)
+        help_dialog.exec_()
 
     def show_task_full_title(self, task_name):
-        wrapped_task_name = wrap_text(task_name, 25)
+        wrapped_task_name = wrap_text(task_name, 100)
         QMessageBox.information(self, 'Полное название задачи', wrapped_task_name)
 
     def search_tasks(self, button_index=None):
-        print("Вызван поиска")
+        try:
+            print("Вызван поиск")
 
-        if hasattr(self, 'results_list') and self.results_list is not None:
-            try:
-                self.results_list.deleteLater()
-            except RuntimeError:
-                pass
-            self.results_list = None
+            if hasattr(self, 'results_list') and self.results_list is not None:
+                try:
+                    self.results_list.deleteLater()
+                except RuntimeError:
+                    pass
+                self.results_list = None
 
-        search_text = self.search_input.text().lower()
-        if len(search_text.strip()) < 3:
-            QMessageBox.information(self, 'Поиск', 'Введите минимум 3 символа для поиска.')
-            return
+            search_text = self.search_input.text().lower()
+            if len(search_text.strip()) < 3:
+                QMessageBox.information(self, 'Поиск', 'Введите минимум 3 символа для поиска.')
+                return
 
-        search_results = []
-        for day, tasks in self.tasks_data.items():
-            for category in ['tasks_high_priority', 'tasks_low_priority']:
-                for task in tasks[category]:
+            search_results = []
+            for day, tasks_info in self.tasks_data.items():
+                tasks = tasks_info.get("tasks", [])
+                for task in tasks:
                     if search_text in task['name'].lower():
-                        search_results.append((day, category, task['name']))
+                        search_results.append((day, task['name']))
 
-        if search_results:
-
-            self.clear_window(keep_main_buttons=True)
-            self.show_search_results(search_results)
-        else:
-            QMessageBox.information(self, 'Поиск', 'Задачи с таким названием не найдены.')
+            if search_results:
+                self.clear_window(keep_main_buttons=True)
+                self.show_search_results(search_results)
+            else:
+                QMessageBox.information(self, 'Поиск', 'Задачи с таким названием не найдены.')
+        except Exception as e:
+            QMessageBox.critical(self, 'Ошибка', f'Произошла ошибка при поиске: {e}')
 
     def search_button_clicked(self):
         try:
@@ -350,17 +364,17 @@ class MainWin(QMainWindow):
         self.results_list.setGeometry(20, 100, 460, 590)
         self.results_list.setStyleSheet(results_list_style())
 
-        for day, category, task_name in search_results:
-
-            for task in self.tasks_data[day][category]:
+        for day, task_name in search_results:
+            tasks = self.tasks_data[day]["tasks"]
+            for task in tasks:
                 if task['name'] == task_name:
                     completed_status = "Выполнено" if task.get('completed', False) else "Не выполнено"
-                    priority = "Важная задача" if category in ["important_tasks",
-                                                               "tasks_high_priority"] else "Обычная задача"
+                    priority = "Важная задача" if task.get('priority', False) else "Обычная задача"
                     item_text = f"{day}: {task_name} - {priority} - {completed_status}"
                     item = QListWidgetItem(item_text)
                     self.results_list.addItem(item)
                     break
+
         self.results_list.itemClicked.connect(self.go_to_task_detail)
         self.results_list.show()
 
@@ -376,7 +390,19 @@ class MainWin(QMainWindow):
         # Переходим к нужному дню, используя сохранённые значения
         self.handle_button_click(self.selected_day)
 
-    def add_task_group(self, tasks, y_start, is_important, button_index):
+    def add_new_task(self):
+        text, ok = QInputDialog.getText(self, 'Добавить задачу', 'Введите название задачи:')
+        if ok and text:
+            if len(text) > self.MAX_TASK_LENGTH:
+                QMessageBox.warning(self, 'Ошибка', 'Название задачи должно быть не более 150 символов.')
+                return
+            new_task = {"name": text, "completed": False}
+            self.tasks_data[str(self.current_button_index)]["tasks"].append(new_task)
+            self.save_tasks_to_file()
+            self.main_screen(self.current_button_index)
+
+
+    def add_tasks_to_layout(self, layout, tasks, is_important, button_index):
         tasks_style = tasks_button_style()
         add_task_style = add_tasks_button_style()
         styles = get_task_group_styles()
@@ -385,11 +411,7 @@ class MainWin(QMainWindow):
             task_name = task['name']
             btn = QtWidgets.QPushButton(task_name, self)
             btn_width = 300 + 50
-            btn.setGeometry(25, y_start + i * 50, btn_width, 40)
-            checkbox_x = 330 + 50
-            edit_btn_x = 360 + 50
-            delete_btn_x = 400 + 50
-
+            btn.setFixedSize(btn_width, 40)
             btn.setStyleSheet(add_task_style)
 
             if task_name not in ["Добавить важных дел", "Добавить дел"]:
@@ -399,23 +421,26 @@ class MainWin(QMainWindow):
 
                 checkbox = QtWidgets.QCheckBox(self)
                 checkbox.setChecked(task.get('completed', False))
-                checkbox.setGeometry(checkbox_x, y_start + i * 50 + 10, 20, 20)
                 checkbox.setStyleSheet(styles["checkbox_style"])
                 checkbox.toggled.connect(
                     lambda checked, t=task, b_index=button_index: self.toggle_task_completed(t, b_index, checked))
-                checkbox.show()
 
                 edit_btn = QtWidgets.QPushButton("✎", self)
-                edit_btn.setGeometry(edit_btn_x, y_start + i * 50, 30, 30)
+                edit_btn.setFixedSize(30, 30)
                 edit_btn.setStyleSheet(styles["edit_button_style"])
                 edit_btn.clicked.connect(lambda _, t=task, b_index=button_index: self.edit_task(t, b_index))
-                edit_btn.show()
 
                 delete_btn = QtWidgets.QPushButton("✖", self)
-                delete_btn.setGeometry(delete_btn_x, y_start + i * 50, 30, 30)
+                delete_btn.setFixedSize(30, 30)
                 delete_btn.setStyleSheet(styles["delete_button_style"])
                 delete_btn.clicked.connect(lambda _, t=task, b_index=button_index: self.delete_task(t, b_index))
-                delete_btn.show()
+
+                task_layout = QtWidgets.QHBoxLayout()
+                task_layout.addWidget(btn)
+                task_layout.addWidget(checkbox)
+                task_layout.addWidget(edit_btn)
+                task_layout.addWidget(delete_btn)
+                layout.addLayout(task_layout)
             else:
                 btn.setEnabled(True)
                 if task_name == "Добавить важных дел":
@@ -423,7 +448,7 @@ class MainWin(QMainWindow):
                 else:
                     btn.clicked.connect(lambda _, b_index=button_index: self.add_additional_task_input(b_index))
 
-            btn.show()
+                layout.addWidget(btn)
 
     def edit_task(self, task, button_index):
         dialog = QInputDialog(self)
@@ -440,64 +465,45 @@ class MainWin(QMainWindow):
                     QMessageBox.warning(self, 'Ошибка', 'Название задачи должно быть не более 150 символов.')
                     return
 
-                task['name'] = new_name
+                for t in self.tasks_data[str(button_index)]["tasks"]:
+                    if t['name'] == task['name']:
+                        t['name'] = new_name
+                        break
+
                 self.save_tasks_to_file()
-                self.handle_button_click(button_index)
+                self.main_screen(button_index)
 
     def delete_task(self, task, button_index):
         try:
-            category = None
-            for cat in ["tasks_high_priority", "tasks_low_priority"]:
-                for t in self.tasks_data[str(button_index)][cat]:
-                    if t['name'] == task['name']:
-                        category = cat
-                        break
-                if category:
-                    break
-
-            if category:
-                self.tasks_data[str(button_index)][category] = [
-                    t for t in self.tasks_data[str(button_index)][category] if t['name'] != task['name']
-                ]
-                self.save_tasks_to_file()
-                self.handle_button_click(button_index)
-            else:
-                QMessageBox.warning(self, 'Ошибка', 'Задача не найдена для удаления.')
-
+            self.tasks_data[str(button_index)]["tasks"] = [
+                t for t in self.tasks_data[str(button_index)]["tasks"] if t['name'] != task['name']
+            ]
+            self.save_tasks_to_file()
+            self.main_screen(button_index)
         except Exception as e:
             QMessageBox.warning(self, 'Ошибка', f'Ошибка при удалении задачи: {e}')
 
-    def add_important_task_input(self, button_index):
-        print("Добавляем важную задачу...")
+    def add_task_input(self, button_index, task_type):
+        print(f"Добавляем задачу ({task_type})...")
         button_index = int(button_index)
-        text, ok = QInputDialog.getText(self, 'Добавить важных дел', 'Введите название задачи:')
+        task_type_map = {
+            "important": "Важных дел",
+            "additional": "Дополнительных дел"
+        }
+        dialog_title = f'Добавить {task_type_map.get(task_type, "Задачу")}'
+        text, ok = QInputDialog.getText(self, dialog_title, 'Введите название задачи:')
         if ok and text:
             if len(text) > self.MAX_TASK_LENGTH:
                 QMessageBox.warning(self, 'Ошибка', 'Название задачи должно быть не более 150 символов.')
                 return
-            if len(self.tasks_data[str(button_index)]["tasks_high_priority"]) < self.MAX_TASKS_COUNT:
+            if len(self.tasks_data[str(button_index)]["tasks"]) < self.MAX_TASKS_COUNT:
                 new_task = {"name": text, "completed": False}
-                self.tasks_data[str(button_index)]["tasks_high_priority"].append(new_task)
+                self.tasks_data[str(button_index)]["tasks"].append(new_task)
                 self.save_tasks_to_file()
                 self.handle_button_click(button_index)
             else:
-                QMessageBox.information(self, 'Сообщение', 'Вы уже добавили три важных задачи!')
-
-    def add_additional_task_input(self, button_index):
-        print("Добавляем обычную задачу...")
-        button_index = int(button_index)
-        text, ok = QInputDialog.getText(self, 'Добавить дел', 'Введите название задачи:')
-        if ok and text:
-            if len(text) > self.MAX_TASK_LENGTH:
-                QMessageBox.warning(self, 'Ошибка', 'Название задачи должно быть не более 150 символов.')
-                return
-            if len(self.tasks_data[str(button_index)]["tasks_low_priority"]) < self.MAX_TASKS_COUNT:
-                new_task = {"name": text, "completed": False}
-                self.tasks_data[str(button_index)]["tasks_low_priority"].append(new_task)
-                self.save_tasks_to_file()
-                self.handle_button_click(button_index)
-            else:
-                QMessageBox.information(self, 'Сообщение', 'Вы уже добавили три дополнительные задачи!')
+                QMessageBox.information(self, 'Сообщение',
+                                        f'Вы уже добавили максимальное количество задач ({self.MAX_TASKS_COUNT})!')
 
     def clear_window(self, keep_main_buttons=False, keep_labels=False):
         widgets_to_keep = [self.search_button] + self.buttons if keep_main_buttons else []
