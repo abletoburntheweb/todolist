@@ -14,10 +14,6 @@
                 "completed": false
             },
             {
-                "name": "d",
-                "completed": false
-            },
-            {
                 "name": "В",
                 "completed": false
             },
@@ -27,6 +23,10 @@
             },
             {
                 "name": "3",
+                "completed": false
+            },
+            {
+                "name": "4",
                 "completed": false
             }
         ]

@@ -157,16 +157,21 @@ class MainWin(QMainWindow):
 
     def recreate_task_scroll_area(self):
         if self.scroll_area is not None:
-            self.scroll_area.deleteLater()
+            self.scroll_area.deleteLater()  # Remove the existing scroll area
 
+        # Create a new scroll area and configure it
         self.scroll_area = QScrollArea(self)
         self.scroll_area.setGeometry(20, 140, self.width() - 40, 500)
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
+        # Create a container widget and layout for the tasks
         tasks_widget = QWidget()
         tasks_layout = QVBoxLayout(tasks_widget)
+        tasks_widget.setLayout(tasks_layout)  # Set the layout to the container widget
+
+        # Set the container widget as the scrollable area
         self.scroll_area.setWidget(tasks_widget)
 
         return tasks_layout
@@ -177,18 +182,28 @@ class MainWin(QMainWindow):
         else:
             self.current_button_index = button_index
 
-        self.clear_window(keep_main_buttons=True)
+        print(f"Основной экран, индекс кнопки: {button_index}")
+
+        # Скрываем область с задачами, если она существует
+        if hasattr(self, 'scroll_area') and self.scroll_area is not None:
+            print("Скрываем область с задачами")
+            self.scroll_area.hide()
 
         self.setFixedSize(1280, 720)
         self.setup_main_buttons()
         self.apply_main_window_style()
         self.style_day_buttons(active_index=button_index)
 
-        self.scroll_area = QScrollArea(self)
-        self.scroll_area.setGeometry(20, 140, self.width() - 40, 500)
-        self.scroll_area.setWidgetResizable(True)
-        self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-        self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        # Если область с задачами не была создана, создаем её
+        if not hasattr(self, 'scroll_area') or self.scroll_area is None:
+            print("Создаем область с задачами")
+            self.scroll_area = QScrollArea(self)
+            self.scroll_area.setGeometry(20, 140, self.width() - 40, 500)
+            self.scroll_area.setWidgetResizable(True)
+            self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+            self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        else:
+            print("Область с задачами уже существует")
 
         tasks_widget = QWidget()
         layout = QVBoxLayout(tasks_widget)
@@ -199,6 +214,7 @@ class MainWin(QMainWindow):
         layout.addWidget(self.add_task_button)
 
         button_tasks = self.tasks_data.get(str(button_index), {"tasks": []})
+        print(f"Добавляем задачи для кнопки с индексом {button_index}: {button_tasks['tasks']}")
         self.add_tasks_to_layout(layout, button_tasks["tasks"], None, button_index)
 
         self.scroll_area.setWidget(tasks_widget)
@@ -232,7 +248,12 @@ class MainWin(QMainWindow):
         self.long_term_tasks_button.clicked.connect(self.show_long_term_tasks_page)
         self.long_term_tasks_button.show()
 
+        # Показываем область с задачами в нужном месте
+        print("Показываем область с задачами")
+        self.scroll_area.show()
+
         setup_ui_elements(self)
+        print("Настройка UI завершена")
 
     def main_page(self):
         print("Кнопка 1")
@@ -243,14 +264,31 @@ class MainWin(QMainWindow):
 
     def show_note_page(self, selected_note=None):
         try:
-            print("Кнопка 2")
+            print("Кнопка 2: Переход на страницу заметок")
+            print("Очищаем окно")
             self.clear_window()
+
+            print("Создаем страницу заметок")
             self._note_page = NotePage(self)
-            self._note_page.note_title_edit.setText(selected_note or "")
-            self._note_page.notes_text_edit.setText(self.notes.get(selected_note, ""))
+
+            if selected_note:
+                print(f"Устанавливаем заголовок заметки: {selected_note}")
+                self._note_page.note_title_edit.setText(selected_note)
+                note_text = self.notes.get(selected_note, "")
+                print(f"Устанавливаем текст заметки: {note_text}")
+                self._note_page.notes_text_edit.setText(note_text)
+            else:
+                print("Нет выбранной заметки, оставляем заголовок и текст пустыми")
+                self._note_page.note_title_edit.setText("")
+                self._note_page.notes_text_edit.setText("")
+
+            print("Настраиваем UI страницы заметок")
             self._note_page.setup_note_page_ui()
+            print("Страница заметок успешно показана")
         except Exception as e:
-            QMessageBox.warning(self, 'Ошибка', f'Произошла ошибка при показе страницы заметок: {e}')
+            error_message = f"Произошла ошибка при показе страницы заметок: {e}"
+            print(error_message)
+            QMessageBox.warning(self, 'Ошибка', error_message)
 
     def show_daily_tasks_page(self):
         self.clear_window()
@@ -392,6 +430,9 @@ class MainWin(QMainWindow):
             self.tasks_data[str(self.current_button_index)]["tasks"].append(new_task)
             self.save_tasks_to_file()
             self.update_task_layout()
+
+            # Показываем область с задачами после обновления
+            self.scroll_area.show()
 
     def add_tasks_to_layout(self, layout, tasks, is_important, button_index):
         tasks_style = tasks_button_style()
