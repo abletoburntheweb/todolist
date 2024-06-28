@@ -7,8 +7,6 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QInp
 from PyQt5.QtCore import Qt
 from note_page import NotePage
 from HowToUse import HelpDialog
-from daily_tasks_page import DailyTasksPage
-from long_term_tasks_page import LongTermTasksPage
 from text_wrapping import wrap_text
 from styles import search_input_style, day_button_style, main_window_style, settings_style, \
     get_task_group_styles, add_tasks_button_style, tasks_button_style, results_list_style
@@ -23,9 +21,6 @@ class MainWin(QMainWindow):
         self.setGeometry(100, 100, 1280, 720)
 
         self.current_button_index = 1
-
-        self.daily_tasks_page = DailyTasksPage(self)
-        self.long_term_tasks_page = LongTermTasksPage(self)
 
         self.search_button = QPushButton("Поиск", self)
         self.search_button.setGeometry(370, 60, 100, 30)
@@ -236,23 +231,6 @@ class MainWin(QMainWindow):
         self.search_button.clicked.connect(self.search_button_clicked)
         self.search_button.show()
 
-        self.daily_tasks_button = QPushButton("Ежедневные задачи", self)
-        button_width = 180
-        button_height = 40
-        button_x = self.width() - button_width - 10
-        button_y = self.height() - button_height - 70
-        self.daily_tasks_button.setGeometry(button_x, button_y, button_width, button_height)
-        self.daily_tasks_button.setStyleSheet(main_window_style())
-        self.daily_tasks_button.clicked.connect(self.show_daily_tasks_page)
-        self.daily_tasks_button.show()
-
-        self.long_term_tasks_button = QPushButton("Долгосрочные задачи", self)
-        button_x = self.width() - button_width - 195
-        self.long_term_tasks_button.setGeometry(button_x, button_y, button_width, button_height)
-        self.long_term_tasks_button.setStyleSheet(main_window_style())
-        self.long_term_tasks_button.clicked.connect(self.show_long_term_tasks_page)
-        self.long_term_tasks_button.show()
-
         # Показываем область с задачами в нужном месте
         print("Показываем область с задачами")
         self.scroll_area.show()
@@ -294,18 +272,6 @@ class MainWin(QMainWindow):
             error_message = f"Произошла ошибка при показе страницы заметок: {e}"
             print(error_message)
             QMessageBox.warning(self, 'Ошибка', error_message)
-
-    def show_daily_tasks_page(self):
-        self.clear_window()
-        print("Ежедневные задачи")
-        self.daily_tasks_page.setup_ui()
-        setup_ui_elements(self)
-
-    def show_long_term_tasks_page(self):
-        self.clear_window()
-        print("Долгосрочные задачи")
-        self.long_term_tasks_page.setup_ui()
-        setup_ui_elements(self)
 
     def settings_page(self):
         self.clear_window()
