@@ -186,8 +186,13 @@ class MainWin(QMainWindow):
 
         # Скрываем область с задачами, если она существует
         if hasattr(self, 'scroll_area') and self.scroll_area is not None:
-            print("Скрываем область с задачами")
-            self.scroll_area.hide()
+            try:
+                print("Скрываем область с задачами")
+                self.scroll_area.hide()
+            except RuntimeError:
+                # The scroll area has been deleted, so we set it to None.
+                self.scroll_area = None
+                print("Область с задачами была удалена")
 
         self.setFixedSize(1280, 720)
         self.setup_main_buttons()
@@ -546,6 +551,13 @@ class MainWin(QMainWindow):
         for widget in self.findChildren(QtWidgets.QWidget):
             if widget not in widgets_to_keep:
                 widget.deleteLater()
+
+        # Переместить вызов метода hide() сюда
+        if hasattr(self, 'scroll_area') and self.scroll_area is not None:
+            try:
+                self.scroll_area.hide()
+            except RuntimeError:
+                pass
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Escape:
