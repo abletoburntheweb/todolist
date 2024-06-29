@@ -2,11 +2,6 @@
     "1": {
         "tasks": [
             {
-                "name": "ВВ",
-                "completed": false,
-                "daily": true
-            },
-            {
                 "name": "Сверстать этот TODO List",
                 "completed": true
             },

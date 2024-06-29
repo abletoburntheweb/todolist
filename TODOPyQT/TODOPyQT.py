@@ -478,7 +478,16 @@ class MainWin(QMainWindow):
                 QMessageBox.warning(self, 'Ошибка', 'Название задачи должно быть не более 450 символов.')
                 return
             new_task = {"name": text, "completed": False, "daily": True}
-            self.tasks_data[str(self.current_button_index)]["tasks"].insert(0, new_task)
+
+            # Find the index of the last daily task
+            daily_task_index = 0
+            tasks = self.tasks_data[str(self.current_button_index)]["tasks"]
+            for index, task in enumerate(tasks):
+                if task.get('daily', False):
+                    daily_task_index = index + 1
+
+            # Insert the new task after the last daily task
+            self.tasks_data[str(self.current_button_index)]["tasks"].insert(daily_task_index, new_task)
             self.save_tasks_to_file()
             self.update_task_layout()
             self.scroll_area.show()
