@@ -15,6 +15,7 @@ def search_input_style():
         }
    """
 
+
 def results_list_style():
     return """
      QListWidget {
@@ -50,32 +51,67 @@ def results_list_style():
     }
     """
 
+
 def add_tasks_button_style():
     return """
+         QPushButton {
+               background-color: #54b9f7;
+                color: white;
+                font-size: 16px;
+                border-radius: 5px;
+                padding: 10px;
+            }
+            QPushButton:hover {
+               background-color: #0b8bdb;
+            }
+    """
+def add_daily_tasks_button_style():
+    return """
         QPushButton {
-            background-color: #84cdfa;
-            text-align: left;
-            font-size: 18px;  
-            padding-left: 10px;
-            border-radius: 15px;
+            background-color: #a594ff;  
+            color: white;
+            font-size: 16px;
+            border-radius: 5px;
+            padding: 10px;
         }
         QPushButton:hover {
-            background-color: #ADD8E6;
+            background-color: #7b61ff; 
         }
     """
 
 def tasks_button_style():
     return """
+            QPushButton {
+                background-color: #22a4f5;
+                text-align: left;
+                padding-left: 10px;
+                font-size: 18px;  
+                border-radius: 15px;
+            }
+            QPushButton:hover {
+                background-color: #75c1ff;
+            }
+            QPushButton:pressed {
+                background-color: #2a00fa;
+            }
+        """
+def daily_task_button_style():
+    return """
         QPushButton {
+            background-color: #7b61ff;
             text-align: left;
             padding-left: 10px;
             font-size: 18px;  
             border-radius: 15px;
         }
         QPushButton:hover {
-            background-color: #ADD8E6;
+            background-color: #a694ff;
+        }
+        QPushButton:pressed {
+            background-color: #2a00fa;
         }
     """
+
 def subtasks_button_style():
     return """
         QPushButton {
@@ -93,6 +129,8 @@ def subtasks_button_style():
             background-color: #0037d1;  
         }
     """
+
+
 def day_button_style(active=False):
     if active:
         return """
@@ -264,6 +302,8 @@ def sidebar_list_widget_style():
             color: black;
         }
     """
+
+
 def notes_button_style():
     return """""
             QPushButton {
@@ -281,8 +321,10 @@ def notes_button_style():
                 background-color: #8DBDD8;
             }
         """
+
+
 def notes_title_edit_style():
-    return("""
+    return ("""
             QLineEdit {
                 border: 1px solid #ccc;
                 padding: 5px;
@@ -293,6 +335,8 @@ def notes_title_edit_style():
                 border-color: #6CA6CD;
             }
         """)
+
+
 def notes_text_edit_style():
     return ("""
             QTextEdit {

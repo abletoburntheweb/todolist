@@ -9,7 +9,8 @@ from note_page import NotePage
 from HowToUse import HelpDialog
 from text_wrapping import wrap_text
 from styles import search_input_style, day_button_style, main_window_style, settings_style, \
-    get_task_group_styles, add_tasks_button_style, tasks_button_style, results_list_style
+    get_task_group_styles, add_tasks_button_style, tasks_button_style, results_list_style, add_daily_tasks_button_style, \
+    daily_task_button_style
 from ui_elements import setup_ui_elements
 
 
@@ -22,10 +23,7 @@ class MainWin(QMainWindow):
 
         self.current_button_index = 1
 
-        self.search_button = QPushButton("Поиск", self)
-        self.search_button.setGeometry(370, 60, 100, 30)
-        self.search_button.clicked.connect(self.search_button_clicked)
-        self.search_button.show()
+
 
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
@@ -33,7 +31,7 @@ class MainWin(QMainWindow):
         self.completed_tasks_count = 0
         self.load_settings()
         self.save_settings()
-        self.setup_main_buttons()
+
         self.load_tasks()
         self.scroll_area = None
 
@@ -87,34 +85,7 @@ class MainWin(QMainWindow):
     def get_settings_style(self):
         return settings_style()
 
-    def setup_main_buttons(self):
-        button_width = 100  # Измените ширину кнопок, если необходимо
-        button_height = 40
-        button_spacing = 20  # Измените расстояние между кнопками, если необходимо
 
-        total_width = (button_width * 7) + (button_spacing * (7 - 1))
-
-        start_x = (self.width() - total_width) // 2  # Центрирование
-        start_y = 10
-
-        self.buttons = []
-        for i in range(1, 8):
-            btn = QPushButton(f"{i}", self)  # Создание кнопки с номером дня
-            x_position = start_x + (i - 1) * (button_width + button_spacing)
-
-            btn.setGeometry(x_position, start_y, button_width, button_height)
-
-            if i == self.current_button_index:
-                active_style = day_button_style(active=True)
-                btn.setStyleSheet(active_style)
-            else:
-                inactive_style = day_button_style(active=False)
-                btn.setStyleSheet(inactive_style)
-
-            btn.clicked.connect(
-                lambda checked, index=i: self.handle_button_click(index))
-            btn.show()
-            self.buttons.append(btn)
 
     def toggle_task_completed(self, task, button_index, checked):
         task['completed'] = checked
@@ -171,34 +142,24 @@ class MainWin(QMainWindow):
 
         return tasks_layout
 
-    def main_screen(self, button_index=None):
-        if button_index is None:
-            button_index = self.current_button_index
-        else:
-            self.current_button_index = button_index
+    def main_screen(self):
+        print("Основной экран")
 
-        print(f"Основной экран, индекс кнопки: {button_index}")
-
-        # Скрываем область с задачами, если она существует
         if hasattr(self, 'scroll_area') and self.scroll_area is not None:
             try:
                 print("Скрываем область с задачами")
                 self.scroll_area.hide()
             except RuntimeError:
-                # The scroll area has been deleted, so we set it to None.
                 self.scroll_area = None
                 print("Область с задачами была удалена")
 
         self.setFixedSize(1280, 720)
-        self.setup_main_buttons()
         self.apply_main_window_style()
-        self.style_day_buttons(active_index=button_index)
 
-        # Если область с задачами не была создана, создаем её
         if not hasattr(self, 'scroll_area') or self.scroll_area is None:
             print("Создаем область с задачами")
             self.scroll_area = QScrollArea(self)
-            self.scroll_area.setGeometry(20, 140, self.width() - 40, 500)
+            self.scroll_area.setGeometry(20, 160, self.width() - 40, 500)
             self.scroll_area.setWidgetResizable(True)
             self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
             self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -208,30 +169,36 @@ class MainWin(QMainWindow):
         tasks_widget = QWidget()
         layout = QVBoxLayout(tasks_widget)
 
-        self.add_task_button = QPushButton("Добавить задачу")
-        self.add_task_button.setStyleSheet(add_tasks_button_style())
-        self.add_task_button.clicked.connect(self.add_new_task)
-        layout.addWidget(self.add_task_button)
-
-        button_tasks = self.tasks_data.get(str(button_index), {"tasks": []})
-        print(f"Добавляем задачи для кнопки с индексом {button_index}: {button_tasks['tasks']}")
-        self.add_tasks_to_layout(layout, button_tasks["tasks"], None, button_index)
-
-        self.scroll_area.setWidget(tasks_widget)
-        self.scroll_area.move((self.width() - self.scroll_area.width()) // 2, 100)
-
         self.search_input = QLineEdit(self)
         self.search_input.setPlaceholderText("Поиск задачи...")
-        self.search_input.setGeometry(20, 60, self.width() - 150, 30)
+        self.search_input.setGeometry(20, 20, self.width() - 150, 30)
         self.style_search_input()
         self.search_input.show()
 
         self.search_button = QPushButton("Поиск", self)
-        self.search_button.setGeometry(self.width() - 120, 60, 100, 30)
+        self.search_button.setGeometry(self.width() - 120, 20, 100, 30)
         self.search_button.clicked.connect(self.search_button_clicked)
         self.search_button.show()
 
-        # Показываем область с задачами в нужном месте
+        self.add_task_button = QPushButton("Добавить задачу", self)
+        self.add_task_button.setGeometry(20, 70, 180, 40)
+        self.add_task_button.setStyleSheet(add_tasks_button_style())
+        self.add_task_button.clicked.connect(self.add_new_task)
+        self.add_task_button.show()
+
+        # Create "Добавить ежедневную задачу" button
+        self.add_daily_task_button = QPushButton("Добавить ежедневную задачу", self)
+        self.add_daily_task_button.setGeometry(220, 70, 250, 40)
+        self.add_daily_task_button.setStyleSheet(add_daily_tasks_button_style())
+        self.add_daily_task_button.clicked.connect(self.add_new_daily_task)
+        self.add_daily_task_button.show()
+
+        button_tasks = self.tasks_data.get(str(self.current_button_index), {"tasks": []})
+        self.add_tasks_to_layout(layout, button_tasks["tasks"], None, self.current_button_index)
+
+        self.scroll_area.setWidget(tasks_widget)
+        self.scroll_area.move((self.width() - self.scroll_area.width()) // 2, 160)
+
         print("Показываем область с задачами")
         self.scroll_area.show()
 
@@ -405,9 +372,12 @@ class MainWin(QMainWindow):
             # Показываем область с задачами после обновления
             self.scroll_area.show()
 
+    def handle_button_click(self, button_index=None):
+        self.main_screen()
+
     def add_tasks_to_layout(self, layout, tasks, is_important, button_index):
         tasks_style = tasks_button_style()
-        add_task_style = add_tasks_button_style()
+        daily_tasks_style = daily_task_button_style()  # Add this line
         styles = get_task_group_styles()
 
         for task in tasks:
@@ -415,8 +385,11 @@ class MainWin(QMainWindow):
             task_widget = QWidget(self)
             task_layout = QHBoxLayout(task_widget)
 
+            # Choose style based on whether the task is daily
+            btn_style = daily_tasks_style if task.get('daily', False) else tasks_style
+
             btn = QtWidgets.QPushButton(task_name, self)
-            btn.setStyleSheet(tasks_style)
+            btn.setStyleSheet(btn_style)
             btn.setFixedSize(800, 50)
             btn.clicked.connect(lambda _, name=task_name: self.show_task_full_title(name))
 
@@ -498,14 +471,21 @@ class MainWin(QMainWindow):
                 QMessageBox.information(self, 'Сообщение',
                                         f'Вы уже добавили максимальное количество задач ({self.MAX_TASKS_COUNT})!')
 
+    def add_new_daily_task(self):
+        text, ok = QInputDialog.getText(self, 'Добавить ежедневную задачу', 'Введите название ежедневной задачи:')
+        if ok and text:
+            if len(text) > self.MAX_TASK_LENGTH:
+                QMessageBox.warning(self, 'Ошибка', 'Название задачи должно быть не более 450 символов.')
+                return
+            new_task = {"name": text, "completed": False, "daily": True}
+            self.tasks_data[str(self.current_button_index)]["tasks"].insert(0, new_task)
+            self.save_tasks_to_file()
+            self.update_task_layout()
+            self.scroll_area.show()
+
     def update_task_layout(self):
         layout = self.scroll_area.widget().layout()  # Get the layout from the scroll area widget
         self.clear_layout(layout)  # Clear the current task layout
-
-        self.add_task_button = QPushButton("Добавить задачу")
-        self.add_task_button.setStyleSheet(add_tasks_button_style())
-        self.add_task_button.clicked.connect(self.add_new_task)
-        layout.addWidget(self.add_task_button)
 
         button_tasks = self.tasks_data.get(str(self.current_button_index), {"tasks": []})
         self.add_tasks_to_layout(layout, button_tasks["tasks"], None, self.current_button_index)
