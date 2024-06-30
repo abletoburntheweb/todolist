@@ -2,6 +2,11 @@
     "1": {
         "tasks": [
             {
+                "name": "dadsdad",
+                "completed": false,
+                "daily": true
+            },
+            {
                 "name": "Сверстать этот TODO List",
                 "completed": true
             },
@@ -24,6 +29,11 @@
             {
                 "name": "4",
                 "completed": false
+            },
+            {
+                "name": "вфыв",
+                "completed": false,
+                "date": "2025-05-12"
             }
         ]
     },

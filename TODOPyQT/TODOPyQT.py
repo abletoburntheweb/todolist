@@ -1,9 +1,10 @@
 import json
+import datetime
 
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QInputDialog, \
-    QMessageBox, QLineEdit, QListWidget, QListWidgetItem, QWidget, QScrollArea, QVBoxLayout, QHBoxLayout
+    QMessageBox, QLineEdit, QListWidget, QListWidgetItem, QWidget, QScrollArea, QVBoxLayout, QHBoxLayout, QDialog
 from PyQt5.QtCore import Qt
 from note_page import NotePage
 from HowToUse import HelpDialog
@@ -22,8 +23,6 @@ class MainWin(QMainWindow):
         self.setGeometry(100, 100, 1280, 720)
 
         self.current_button_index = 1
-
-
 
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
@@ -85,8 +84,6 @@ class MainWin(QMainWindow):
     def get_settings_style(self):
         return settings_style()
 
-
-
     def toggle_task_completed(self, task, button_index, checked):
         task['completed'] = checked
         for day, tasks_info in self.tasks_data.items():
@@ -123,21 +120,18 @@ class MainWin(QMainWindow):
 
     def recreate_task_scroll_area(self):
         if self.scroll_area is not None:
-            self.scroll_area.deleteLater()  # Remove the existing scroll area
+            self.scroll_area.deleteLater()
 
-        # Create a new scroll area and configure it
         self.scroll_area = QScrollArea(self)
         self.scroll_area.setGeometry(20, 140, self.width() - 40, 500)
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
-        # Create a container widget and layout for the tasks
         tasks_widget = QWidget()
         tasks_layout = QVBoxLayout(tasks_widget)
-        tasks_widget.setLayout(tasks_layout)  # Set the layout to the container widget
+        tasks_widget.setLayout(tasks_layout)
 
-        # Set the container widget as the scrollable area
         self.scroll_area.setWidget(tasks_widget)
 
         return tasks_layout
@@ -157,9 +151,13 @@ class MainWin(QMainWindow):
         self.apply_main_window_style()
 
         if not hasattr(self, 'scroll_area') or self.scroll_area is None:
-            print("Создаем область с задачами")
             self.scroll_area = QScrollArea(self)
-            self.scroll_area.setGeometry(20, 160, self.width() - 40, 500)
+            scroll_area_x = 20
+            scroll_area_y = 180
+            scroll_area_width = self.width() - 40
+            scroll_area_height = self.height() - scroll_area_y - 100
+
+            self.scroll_area.setGeometry(scroll_area_x, scroll_area_y, scroll_area_width, scroll_area_height)
             self.scroll_area.setWidgetResizable(True)
             self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
             self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -186,12 +184,16 @@ class MainWin(QMainWindow):
         self.add_task_button.clicked.connect(self.add_new_task)
         self.add_task_button.show()
 
-        # Create "Добавить ежедневную задачу" button
         self.add_daily_task_button = QPushButton("Добавить ежедневную задачу", self)
         self.add_daily_task_button.setGeometry(220, 70, 250, 40)
         self.add_daily_task_button.setStyleSheet(add_daily_tasks_button_style())
         self.add_daily_task_button.clicked.connect(self.add_new_daily_task)
         self.add_daily_task_button.show()
+
+        self.choose_month_button = QPushButton("Выбрать месяц", self)
+        self.choose_month_button.setGeometry(self.width() - 220, self.height() - 110, 200, 40)
+        self.choose_month_button.clicked.connect(self.show_month_selector)
+        self.choose_month_button.show()
 
         button_tasks = self.tasks_data.get(str(self.current_button_index), {"tasks": []})
         self.add_tasks_to_layout(layout, button_tasks["tasks"], None, self.current_button_index)
@@ -327,7 +329,7 @@ class MainWin(QMainWindow):
 
     def show_search_results(self, search_results):
         print("Результаты поиска")
-        self.search_button.hide()  # Скрываем кнопку "Поиск"
+        self.search_button.hide()
         self.results_list = QListWidget(self)
         self.results_list.setGeometry(20, 100, 460, 590)
         self.results_list.setStyleSheet(results_list_style())
@@ -351,12 +353,62 @@ class MainWin(QMainWindow):
         details = item.text().split(": ")
         day = details[0]
         task_name = details[1]
-        # Сохраняем информацию о задаче перед очисткой окна
+
         self.selected_day = int(day)
         self.selected_task_name = task_name
         self.clear_window(keep_main_buttons=True)
-        # Переходим к нужному дню, используя сохранённые значения
+
         self.handle_button_click(self.selected_day)
+
+    def show_month_selector(self):
+        month_counts = self.calculate_task_counts_per_month()
+
+        self.month_dialog = QDialog(self)
+        self.month_dialog.setWindowTitle("Выбрать месяц")
+        layout = QVBoxLayout(self.month_dialog)
+
+        month_names = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+                       'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь']
+
+        for i, count in enumerate(month_counts, start=1):
+            month_button = QPushButton(f"{month_names[i - 1]}: {count} задач")
+            month_button.clicked.connect(lambda checked, month=i: self.show_tasks_by_month(month))
+            layout.addWidget(month_button)
+
+        self.month_dialog.setLayout(layout)
+        self.month_dialog.exec_()
+
+    def calculate_task_counts_per_month(self):
+        month_counts = [0] * 12
+
+        for tasks_info in self.tasks_data.values():
+            for task in tasks_info["tasks"]:
+                task_date = task.get('date')
+                if task_date:
+                    month = datetime.datetime.fromisoformat(task_date).month
+                    month_counts[month - 1] += 1
+
+        return month_counts
+
+    def show_tasks_by_month(self, month):
+        self.month_dialog.accept()
+        tasks_layout = self.recreate_task_scroll_area()
+
+        tasks_for_month = []
+        for day, day_tasks in self.tasks_data.items():
+            for task in day_tasks["tasks"]:
+                task_date = task.get('date')
+                if task_date and datetime.datetime.strptime(task_date, '%Y-%m-%d').month == month:
+                    tasks_for_month.append(task)
+        if tasks_for_month:
+            self.add_tasks_to_layout(tasks_layout, tasks_for_month, None, self.current_button_index)
+
+            self.choose_month_button.hide()
+        else:
+
+            QMessageBox.information(self, 'Задачи', 'На этот месяц задач нет.')
+
+        self.scroll_area.show()
 
     def add_new_task(self):
         text, ok = QInputDialog.getText(self, 'Добавить задачу', 'Введите название задачи:')
@@ -364,12 +416,23 @@ class MainWin(QMainWindow):
             if len(text) > self.MAX_TASK_LENGTH:
                 QMessageBox.warning(self, 'Ошибка', 'Название задачи должно быть не более 450 символов.')
                 return
-            new_task = {"name": text, "completed": False}
+
+            date, ok = QInputDialog.getText(self, 'Добавить дату', 'Введите дату в формате ДД.ММ.ГГ:')
+            if not ok or not date:
+                return
+
+            try:
+
+                task_date = datetime.datetime.strptime(date, '%d.%m.%y').date()
+                iso_date = task_date.isoformat()
+            except ValueError:
+                QMessageBox.warning(self, 'Ошибка', 'Неверный формат даты. Используйте ДД.ММ.ГГ.')
+                return
+
+            new_task = {"name": text, "completed": False, "date": iso_date}
             self.tasks_data[str(self.current_button_index)]["tasks"].append(new_task)
             self.save_tasks_to_file()
             self.update_task_layout()
-
-            # Показываем область с задачами после обновления
             self.scroll_area.show()
 
     def handle_button_click(self, button_index=None):
@@ -377,18 +440,28 @@ class MainWin(QMainWindow):
 
     def add_tasks_to_layout(self, layout, tasks, is_important, button_index):
         tasks_style = tasks_button_style()
-        daily_tasks_style = daily_task_button_style()  # Add this line
+        daily_tasks_style = daily_task_button_style()
         styles = get_task_group_styles()
 
         for task in tasks:
             task_name = task['name']
+            task_date = task.get('date', '')
+
+
+            if task_date:
+                try:
+                    formatted_date = datetime.datetime.strptime(task_date, '%Y-%m-%d').strftime('%d.%m.%y')
+                except ValueError:
+                    formatted_date = 'Неверный формат даты'
+            else:
+                formatted_date = 'Нет даты'
+
             task_widget = QWidget(self)
             task_layout = QHBoxLayout(task_widget)
 
-            # Choose style based on whether the task is daily
             btn_style = daily_tasks_style if task.get('daily', False) else tasks_style
 
-            btn = QtWidgets.QPushButton(task_name, self)
+            btn = QtWidgets.QPushButton(f"{task_name} ({formatted_date})", self)
             btn.setStyleSheet(btn_style)
             btn.setFixedSize(800, 50)
             btn.clicked.connect(lambda _, name=task_name: self.show_task_full_title(name))
@@ -431,9 +504,24 @@ class MainWin(QMainWindow):
                     QMessageBox.warning(self, 'Ошибка', 'Название задачи должно быть не более 450 символов.')
                     return
 
+                date, ok = QInputDialog.getText(self, 'Изменить дату', 'Введите новую дату (ДД.ММ.ГГ):',
+                                                text=task.get('date', ''))
+                if not ok:
+                    return
+
+                if date:
+                    try:
+                        task_date = datetime.datetime.strptime(date, '%d.%m.%y').date()
+                    except ValueError:
+                        QMessageBox.warning(self, 'Ошибка', 'Неверный формат даты. Используйте ДД.ММ.ГГ.')
+                        return
+                else:
+                    task_date = ''
+
                 for t in self.tasks_data[str(button_index)]["tasks"]:
                     if t['name'] == task['name']:
                         t['name'] = new_name
+                        t['date'] = task_date.isoformat() if task_date else ''   
                         break
 
                 self.save_tasks_to_file()
@@ -479,22 +567,20 @@ class MainWin(QMainWindow):
                 return
             new_task = {"name": text, "completed": False, "daily": True}
 
-            # Find the index of the last daily task
             daily_task_index = 0
             tasks = self.tasks_data[str(self.current_button_index)]["tasks"]
             for index, task in enumerate(tasks):
                 if task.get('daily', False):
                     daily_task_index = index + 1
 
-            # Insert the new task after the last daily task
             self.tasks_data[str(self.current_button_index)]["tasks"].insert(daily_task_index, new_task)
             self.save_tasks_to_file()
             self.update_task_layout()
             self.scroll_area.show()
 
     def update_task_layout(self):
-        layout = self.scroll_area.widget().layout()  # Get the layout from the scroll area widget
-        self.clear_layout(layout)  # Clear the current task layout
+        layout = self.scroll_area.widget().layout()
+        self.clear_layout(layout)
 
         button_tasks = self.tasks_data.get(str(self.current_button_index), {"tasks": []})
         self.add_tasks_to_layout(layout, button_tasks["tasks"], None, self.current_button_index)
@@ -507,7 +593,6 @@ class MainWin(QMainWindow):
             if widget not in widgets_to_keep:
                 widget.deleteLater()
 
-        # Переместить вызов метода hide() сюда
         if hasattr(self, 'scroll_area') and self.scroll_area is not None:
             try:
                 self.scroll_area.hide()
