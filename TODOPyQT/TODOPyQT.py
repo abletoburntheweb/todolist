@@ -169,23 +169,23 @@ class MainWin(QMainWindow):
 
         self.search_input = QLineEdit(self)
         self.search_input.setPlaceholderText("Поиск задачи...")
-        self.search_input.setGeometry(20, 20, self.width() - 150, 30)
+        self.search_input.setGeometry(20, 60, self.width() - 150, 30)
         self.style_search_input()
         self.search_input.show()
 
         self.search_button = QPushButton("Поиск", self)
-        self.search_button.setGeometry(self.width() - 120, 20, 100, 30)
+        self.search_button.setGeometry(self.width() - 120, 60, 100, 30)
         self.search_button.clicked.connect(self.search_button_clicked)
         self.search_button.show()
 
         self.add_task_button = QPushButton("Добавить задачу", self)
-        self.add_task_button.setGeometry(20, 70, 180, 40)
+        self.add_task_button.setGeometry(20, 110, 180, 40)
         self.add_task_button.setStyleSheet(add_tasks_button_style())
         self.add_task_button.clicked.connect(self.add_new_task)
         self.add_task_button.show()
 
         self.add_daily_task_button = QPushButton("Добавить ежедневную задачу", self)
-        self.add_daily_task_button.setGeometry(220, 70, 250, 40)
+        self.add_daily_task_button.setGeometry(220, 110, 250, 40)
         self.add_daily_task_button.setStyleSheet(add_daily_tasks_button_style())
         self.add_daily_task_button.clicked.connect(self.add_new_daily_task)
         self.add_daily_task_button.show()
@@ -521,7 +521,7 @@ class MainWin(QMainWindow):
                 for t in self.tasks_data[str(button_index)]["tasks"]:
                     if t['name'] == task['name']:
                         t['name'] = new_name
-                        t['date'] = task_date.isoformat() if task_date else ''   
+                        t['date'] = task_date.isoformat() if task_date else ''
                         break
 
                 self.save_tasks_to_file()
