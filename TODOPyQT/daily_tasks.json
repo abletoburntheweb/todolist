@@ -1,26 +1,7 @@
-[
-    {
-        "name": "Проснуться",
-        "completed": false
-    },
-    {
-        "name": "Выгулять собаку",
-        "completed": false
-    },
-    {
-        "name": "Покормить животных",
-        "completed": false
-    },
-    {
-        "name": "Сделать себе завтрак",
-        "completed": false
-    },
-    {
-        "name": "Посмотреть утренние новости",
-        "completed": false
-    },
-    {
-        "name": "Собраться и поехать на учебу",
-        "completed": false
+{
+    "Ежедневная задача": {
+        "name": "Ежедневная задача",
+        "completed": false,
+        "start_date": "03.07.2024"
     }
-]
+}
