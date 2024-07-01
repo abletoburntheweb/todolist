@@ -23,6 +23,8 @@ class MainWin(QMainWindow):
         self.setGeometry(100, 100, 1280, 720)
 
         self.current_button_index = 1
+        self.current_week_start = datetime.date.today()
+        self.current_week_end = self.current_week_start + datetime.timedelta(days=6)
 
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
@@ -32,6 +34,7 @@ class MainWin(QMainWindow):
         self.save_settings()
 
         self.load_tasks()
+
         self.scroll_area = None
 
         self.main_screen()
@@ -64,10 +67,11 @@ class MainWin(QMainWindow):
             with open("tasks.json", "r", encoding="utf-8") as file:
                 self.tasks_data = json.load(file)
         except FileNotFoundError:
-            self.tasks_data = {str(i): {"tasks": []} for i in range(1, 8)}
+            self.tasks_data = {}
         except json.JSONDecodeError:
             QMessageBox.warning(self, 'Ошибка', 'Файл поврежден. Начинаем с пустого списка.')
-            self.tasks_data = {str(i): {"tasks": []} for i in range(1, 8)}
+            self.tasks_data = {}
+
 
     def style_search_input(self):
         self.search_input.setStyleSheet(search_input_style())
@@ -166,6 +170,21 @@ class MainWin(QMainWindow):
 
         tasks_widget = QWidget()
         layout = QVBoxLayout(tasks_widget)
+
+        self.week_label = QLabel(self)
+        self.week_label.setGeometry(20, 20, 200, 30)
+        self.update_week_label()
+        self.week_label.show()
+
+        self.previous_week_button = QPushButton("<", self)
+        self.previous_week_button.setGeometry(240, 20, 50, 30)
+        self.previous_week_button.clicked.connect(self.previous_week)
+        self.previous_week_button.show()
+
+        self.next_week_button = QPushButton(">", self)
+        self.next_week_button.setGeometry(300, 20, 50, 30)
+        self.next_week_button.clicked.connect(self.next_week)
+        self.next_week_button.show()
 
         self.search_input = QLineEdit(self)
         self.search_input.setPlaceholderText("Поиск задачи...")
@@ -289,6 +308,21 @@ class MainWin(QMainWindow):
         wrapped_task_name = wrap_text(task_name, 100)
         QMessageBox.information(self, 'Полное название задачи', wrapped_task_name)
 
+    def update_week_label(self):
+        week_str = f"{self.current_week_start.strftime('%d.%m')} - {self.current_week_end.strftime('%d.%m')}"
+        self.week_label.setText(f"Неделя: {week_str}")
+
+    def previous_week(self):
+        self.current_week_start -= datetime.timedelta(days=7)
+        self.current_week_end -= datetime.timedelta(days=7)
+        self.update_week_label()
+        self.update_task_layout()
+
+    def next_week(self):
+        self.current_week_start += datetime.timedelta(days=7)
+        self.current_week_end += datetime.timedelta(days=7)
+        self.update_week_label()
+        self.update_task_layout()
     def search_tasks(self, button_index=None):
         try:
             print("Вызван поиск")
@@ -370,23 +404,26 @@ class MainWin(QMainWindow):
         month_names = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
                        'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь']
 
-        for i, count in enumerate(month_counts, start=1):
-            month_button = QPushButton(f"{month_names[i - 1]}: {count} задач")
-            month_button.clicked.connect(lambda checked, month=i: self.show_tasks_by_month(month))
+        for i, count in enumerate(month_counts):
+            month_button = QPushButton(f"{month_names[i]}: {count} задач")
+            month_button.clicked.connect(lambda checked, month=i + 1: self.show_tasks_by_month(month))
             layout.addWidget(month_button)
 
         self.month_dialog.setLayout(layout)
         self.month_dialog.exec_()
 
     def calculate_task_counts_per_month(self):
-        month_counts = [0] * 12
+        month_counts = [0] * 12 
 
-        for tasks_info in self.tasks_data.values():
-            for task in tasks_info["tasks"]:
-                task_date = task.get('date')
-                if task_date:
-                    month = datetime.datetime.fromisoformat(task_date).month
-                    month_counts[month - 1] += 1
+        for year, months in self.tasks_data.items():
+            for month_name, month_data in months.items():
+                tasks = month_data.get("tasks", [])
+                for task in tasks:
+                    task_date = task.get('date')
+                    if task_date:
+
+                        month = datetime.datetime.strptime(task_date, '%d.%m.%Y').month
+                        month_counts[month - 1] += 1
 
         return month_counts
 
@@ -395,21 +432,25 @@ class MainWin(QMainWindow):
         tasks_layout = self.recreate_task_scroll_area()
 
         tasks_for_month = []
-        for day, day_tasks in self.tasks_data.items():
-            for task in day_tasks["tasks"]:
-                task_date = task.get('date')
-                if task_date and datetime.datetime.strptime(task_date, '%Y-%m-%d').month == month:
-                    tasks_for_month.append(task)
+        for year, months in self.tasks_data.items():
+            for month_name, month_data in months.items():
+                if month_name == self.get_month_name(month):
+                    for task in month_data.get("tasks", []):
+                        task_date = task.get('date')
+                        if task_date and datetime.datetime.strptime(task_date, '%d.%m.%Y').month == month:
+                            tasks_for_month.append(task)
+
         if tasks_for_month:
             self.add_tasks_to_layout(tasks_layout, tasks_for_month, None, self.current_button_index)
-
-            self.choose_month_button.hide()
         else:
-
             QMessageBox.information(self, 'Задачи', 'На этот месяц задач нет.')
 
         self.scroll_area.show()
 
+    def get_month_name(self, month_number):
+        month_names = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь',
+                       'Ноябрь', 'Декабрь']
+        return month_names[month_number - 1]
     def add_new_task(self):
         text, ok = QInputDialog.getText(self, 'Добавить задачу', 'Введите название задачи:')
         if ok and text:
@@ -422,20 +463,20 @@ class MainWin(QMainWindow):
                 return
 
             try:
-
                 task_date = datetime.datetime.strptime(date, '%d.%m.%y').date()
-                iso_date = task_date.isoformat()
+                formatted_date = task_date.strftime('%d.%m.%y')
             except ValueError:
                 QMessageBox.warning(self, 'Ошибка', 'Неверный формат даты. Используйте ДД.ММ.ГГ.')
                 return
 
-            new_task = {"name": text, "completed": False, "date": iso_date}
-            self.tasks_data[str(self.current_button_index)]["tasks"].append(new_task)
+            new_task = {"name": text, "completed": False, "date": formatted_date}
+            self.tasks_data.setdefault(str(self.current_button_index), {"tasks": []})["tasks"].append(new_task)
             self.save_tasks_to_file()
             self.update_task_layout()
             self.scroll_area.show()
 
     def handle_button_click(self, button_index=None):
+        self.current_button_index = button_index
         self.main_screen()
 
     def add_tasks_to_layout(self, layout, tasks, is_important, button_index):
@@ -582,8 +623,18 @@ class MainWin(QMainWindow):
         layout = self.scroll_area.widget().layout()
         self.clear_layout(layout)
 
-        button_tasks = self.tasks_data.get(str(self.current_button_index), {"tasks": []})
-        self.add_tasks_to_layout(layout, button_tasks["tasks"], None, self.current_button_index)
+        tasks_in_current_week = []
+        current_year = str(self.current_week_start.year)
+        if current_year in self.tasks_data:
+            for month, month_data in self.tasks_data[current_year].items():
+                for task in month_data["tasks"]:
+                    task_date = task.get('date')
+                    if task_date:
+                        task_date_obj = datetime.datetime.fromisoformat(task_date).date()
+                        if self.current_week_start <= task_date_obj <= self.current_week_end:
+                            tasks_in_current_week.append(task)
+
+        self.add_tasks_to_layout(layout, tasks_in_current_week, None, self.current_button_index)
 
     def clear_window(self, keep_main_buttons=False, keep_labels=False):
         widgets_to_keep = [self.search_button] + self.buttons if keep_main_buttons else []
