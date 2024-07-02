@@ -92,13 +92,6 @@ class MainWin(QMainWindow):
 
     def style_search_input(self):
         self.search_input.setStyleSheet(search_input_style())
-
-    def style_day_buttons(self, active_index=None):
-        if active_index is not None:
-            active_index = int(active_index)
-        for index, btn in enumerate(self.buttons):
-            btn.setStyleSheet(day_button_style(active=(index == active_index - 1)))
-
     def apply_main_window_style(self):
         self.setStyleSheet(main_window_style())
 
@@ -106,20 +99,37 @@ class MainWin(QMainWindow):
         return settings_style()
 
     def toggle_task_completed(self, task, button_index, checked):
-        task['completed'] = checked
-        for day, tasks_info in self.tasks_data.items():
-            if day == str(button_index):
-                tasks = tasks_info["tasks"]
-                for t in tasks:
-                    if t['name'] == task['name']:
-                        t['completed'] = checked
-                        break
-        if checked:
-            self.completed_tasks_count += 1
+        task_name = task['name']
+        task_date = task.get('date')
+
+        if task.get('daily', False):
+            if checked:
+                if 'completed_dates' not in self.daily_tasks_data[task_name]:
+                    self.daily_tasks_data[task_name]['completed_dates'] = []
+                self.daily_tasks_data[task_name]['completed_dates'].append(task_date)
+            else:
+                if 'completed_dates' in self.daily_tasks_data[task_name]:
+                    self.daily_tasks_data[task_name]['completed_dates'] = [
+                        date for date in self.daily_tasks_data[task_name]['completed_dates'] if date != task_date]
+
+            self.save_daily_tasks_to_file()
         else:
-            if self.completed_tasks_count > 0:
-                self.completed_tasks_count -= 1
-        self.save_tasks_to_file()
+            task['completed'] = checked
+            for day, tasks_info in self.tasks_data.items():
+                if day == str(button_index):
+                    tasks = tasks_info["tasks"]
+                    for t in tasks:
+                        if t['name'] == task['name']:
+                            t['completed'] = checked
+                            break
+
+            if checked:
+                self.completed_tasks_count += 1
+            else:
+                if self.completed_tasks_count > 0:
+                    self.completed_tasks_count -= 1
+            self.save_tasks_to_file()
+
         self.save_settings()
 
     def reset_completed_tasks_count(self):
@@ -360,10 +370,13 @@ class MainWin(QMainWindow):
                 return
 
             search_results = []
-            for month, tasks in self.tasks_data.items():
-                for task in tasks:
-                    if search_text in task['name'].lower():
-                        search_results.append((month, task['name']))
+            for year_name, months in self.tasks_data.items():
+                for month_name, month_data in months.items():
+                    for task in month_data.get("tasks", []):
+                        if search_text in task['name'].lower():
+                            date = task.get('date', 'Нет даты')
+                            formatted_date = date if date else 'Нет даты'
+                            search_results.append((f"{year_name} - {month_name}", task['name'], formatted_date))
 
             if search_results:
                 self.clear_window(keep_main_buttons=True)
@@ -382,25 +395,52 @@ class MainWin(QMainWindow):
 
     def show_search_results(self, search_results):
         print("Результаты поиска")
+
+        if hasattr(self, 'results_widget') and self.results_widget is not None:
+            self.results_widget.deleteLater()
+            self.results_widget = None
+
+        if hasattr(self, 'scroll_area') and self.scroll_area is not None:
+            self.scroll_area.deleteLater()
+            self.scroll_area = None
+
         self.search_button.hide()
-        self.results_list = QListWidget(self)
-        self.results_list.setGeometry(20, 100, 460, 590)
+
+        results_widget = QWidget()
+        self.results_widget = results_widget
+        results_layout = QVBoxLayout(results_widget)
+
+        title_label = QLabel("Результаты поиска", self)
+        title_label.setStyleSheet("font-size: 18px; margin: 10px;")
+        results_layout.addWidget(title_label)
+
+        scroll_area = QScrollArea(results_widget)
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.scroll_area = scroll_area
+
+        results_container = QWidget()
+        results_list_layout = QVBoxLayout(results_container)
+
+        self.results_list = QListWidget()
         self.results_list.setStyleSheet(results_list_style())
 
-        for month, task_name in search_results:
-            tasks = self.tasks_data[month]
-            for task in tasks:
-                if task['name'] == task_name:
-                    completed_status = "Выполнено" if task.get('completed', False) else "Не выполнено"
-                    priority = "Важная задача" if task.get('priority', False) else "Обычная задача"
-                    item_text = f"{month}: {task_name} - {priority} - {completed_status}"
-                    item = QListWidgetItem(item_text)
-                    self.results_list.addItem(item)
-                    break
+        for year_month, task_name, task_date in search_results:
+            item_text = f"{year_month}: {task_name} ({task_date})"
+            item = QListWidgetItem(item_text)
+            self.results_list.addItem(item)
 
-        self.results_list.itemClicked.connect(self.go_to_task_detail)
-        self.results_list.show()
+        self.results_list.itemClicked.connect(lambda item: self.go_to_task_detail(item))
+        results_list_layout.addWidget(self.results_list)
+        results_container.setLayout(results_list_layout)
+        scroll_area.setWidget(results_container)
 
+        results_layout.addWidget(scroll_area)
+        results_widget.setLayout(results_layout)
+        self.setCentralWidget(results_widget)
+        results_widget.show()
+        setup_ui_elements(self)
     def go_to_task_detail(self, item):
         print("Переход к результатам поиска")
         details = item.text().split(": ")
@@ -713,6 +753,8 @@ class MainWin(QMainWindow):
 
         for task_name, task in self.daily_tasks_data.items():
             start_date_str = task.get('start_date')
+            completed_dates = task.get('completed_dates', [])
+
             if start_date_str:
                 try:
                     start_date = datetime.datetime.strptime(start_date_str, '%d.%m.%Y').date()
@@ -721,6 +763,7 @@ class MainWin(QMainWindow):
                         daily_task = task.copy()
                         daily_task['date'] = current_date.strftime('%d.%m.%Y')
                         daily_task['daily'] = True
+                        daily_task['completed'] = daily_task['date'] in completed_dates
                         week_tasks[current_date].insert(0, daily_task)
                         print(f"Ежедневная задача добавлена: {daily_task}")
                         current_date += datetime.timedelta(days=1)
@@ -742,6 +785,7 @@ class MainWin(QMainWindow):
                                 print(f"Задача добавлена: {task}")
                         except ValueError:
                             print(f"Некорректный формат даты для задачи: {task_date}")
+
         tasks_in_current_week = []
         for day, tasks in week_tasks.items():
             tasks_in_current_week.extend(tasks)
@@ -755,15 +799,16 @@ class MainWin(QMainWindow):
         widgets_to_keep = [self.search_button] + self.buttons if keep_main_buttons else []
         if keep_labels:
             widgets_to_keep.extend([self.text_high, self.text_low])
+
         for widget in self.findChildren(QtWidgets.QWidget):
             if widget not in widgets_to_keep:
+                widget.hide()
                 widget.deleteLater()
 
         if hasattr(self, 'scroll_area') and self.scroll_area is not None:
-            try:
-                self.scroll_area.hide()
-            except RuntimeError:
-                pass
+            self.scroll_area.hide()
+            self.scroll_area.deleteLater()
+            self.scroll_area = None
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Escape:
