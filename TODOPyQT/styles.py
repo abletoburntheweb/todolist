@@ -65,6 +65,8 @@ def add_tasks_button_style():
                background-color: #0b8bdb;
             }
     """
+
+
 def add_daily_tasks_button_style():
     return """
         QPushButton {
@@ -78,6 +80,22 @@ def add_daily_tasks_button_style():
             background-color: #7b61ff; 
         }
     """
+
+
+def add_weekly_tasks_button_style():
+    return """
+        QPushButton {
+            background-color: #ffa861;  
+            color: white;
+            font-size: 16px;
+            border-radius: 5px;
+            padding: 10px;
+        }
+        QPushButton:hover {
+            background-color: #f48647; 
+        }
+    """
+
 
 def tasks_button_style():
     return """
@@ -95,10 +113,12 @@ def tasks_button_style():
                 background-color: #2a00fa;
             }
         """
+
+
 def daily_task_button_style():
     return """
         QPushButton {
-            background-color: #7b61ff;
+                background-color: #7b61ff;
             text-align: left;
             padding-left: 10px;
             font-size: 18px;  
@@ -111,6 +131,24 @@ def daily_task_button_style():
             background-color: #2a00fa;
         }
     """
+
+def weekly_tasks_button_style():
+    return """
+        QPushButton {
+            background-color: #ffa861;
+            color: white;
+            font-size: 16px;
+            border-radius: 5px;
+            padding: 10px;
+        }
+        QPushButton:hover {
+            background-color: #f48647;
+        }
+        QPushButton:pressed {
+            background-color: #b35900;
+        }
+    """
+
 
 def subtasks_button_style():
     return """
@@ -127,6 +165,108 @@ def subtasks_button_style():
         }
         QPushButton:pressed {
             background-color: #0037d1;  
+        }
+    """
+
+
+def task_name_input_style():
+    return """
+        QLineEdit {
+            border: 2px solid #bdbdbd;
+            border-radius: 10px;
+            padding: 10px;
+            font-size: 16px;
+            color: #212121;
+        }
+        QLineEdit:focus {
+            border: 2px solid #42a5f5;
+        }
+        QLineEdit:hover {
+            border: 2px solid #64b5f6;
+        }
+    """
+
+
+def date_input_style():
+    return """
+        QLineEdit {
+            border: 2px solid #bdbdbd;
+            border-radius: 10px;
+            padding: 10px;
+            font-size: 16px;
+            color: #212121;
+        }
+        QLineEdit:focus {
+            border: 2px solid #42a5f5;
+        }
+        QLineEdit:hover {
+            border: 2px solid #64b5f6;
+        }
+    """
+
+
+def tag_selector_style():
+    return """
+        QComboBox {
+            padding: 10px;
+            border: 2px solid #bdbdbd;
+            border-radius: 10px;
+            font-size: 16px;
+            color: #212121;
+            background-color: #ffffff;
+        }
+        QComboBox:focus {
+            border: 2px solid #42a5f5;
+        }
+        QComboBox:hover {
+            border: 2px solid #64b5f6;
+        }
+        QComboBox::drop-down {
+            border-left: 2px solid #bdbdbd;
+        }
+        QComboBox::down-arrow {
+            image: url(down-arrow.png);  
+        }
+        QComboBox QAbstractItemView {
+            border: 2px solid #42a5f5;
+            selection-background-color: #42a5f5;
+            selection-color: #ffffff;
+        }
+    """
+
+
+def dialog_button_box_style():
+    return """
+        QPushButton {
+            padding: 10px 20px;
+            border: 2px solid #bdbdbd;
+            border-radius: 10px;
+            background-color: #3498db;
+            color: white;
+            font-size: 16px;
+        }
+        QPushButton:hover {
+            background-color: #2980b9;
+        }
+        QPushButton:pressed {
+            background-color: #1c6ea4;
+        }
+    """
+
+
+def tag_button_style():
+    return """
+        QPushButton {
+                background-color: #009e79; 
+            color: #ffffff; 
+            font-size: 16px;
+            border-radius: 15px; 
+            padding: 10px 15px; 
+            min-width: 60px; 
+            min-height: 30px; 
+        }
+        QPushButton:hover {
+            background-color: #128264; 
         }
     """
 
@@ -288,7 +428,65 @@ def get_task_group_styles():
             """
     }
 
-
+def calendar_styles():
+    return """
+        QCalendarWidget QToolButton {
+            color: white;
+            background-color: #ffa861;
+            font-size: 16px;
+            border: none;
+            margin: 10px;
+            padding: 10px;
+        }
+        QCalendarWidget QToolButton:hover {
+            background-color: #f48647;
+        }
+        QCalendarWidget QToolButton#qt_calendar_prevmonth {
+            qproperty-text: "<";
+            width: 30px;
+        }
+        QCalendarWidget QToolButton#qt_calendar_nextmonth {
+            qproperty-text: ">";
+            width: 30px;
+        }
+        QCalendarWidget QMenu {
+            width: 150px;
+            color: white;
+            background-color: #ffa861;
+        }
+        QCalendarWidget QSpinBox {
+            width: 100px;
+            font-size: 16px;
+        }
+        QCalendarWidget QSpinBox::up-button {
+            subcontrol-origin: border;
+            subcontrol-position: top right;
+        }
+        QCalendarWidget QSpinBox::down-button {
+            subcontrol-origin: border;
+            subcontrol-position: bottom right;
+        }
+        QCalendarWidget QSpinBox::up-arrow, QCalendarWidget QSpinBox::down-arrow {
+            width: 15px;
+            height: 15px;
+        }
+        QCalendarWidget QWidget#qt_calendar_navigationbar {
+            background-color: #ffa861;
+        }
+        QCalendarWidget QTableView {
+            font-size: 16px;
+            color: #333;
+        }
+        QCalendarWidget QTableView:selected {
+            background-color: #ffa861;
+            color: white;
+        }
+        QCalendarWidget QTableView QHeaderView::section {
+            background-color: #ffa861;
+            color: white;
+            font-size: 14px;
+        }
+    """
 def sidebar_list_widget_style():
     return """
         QListWidget {

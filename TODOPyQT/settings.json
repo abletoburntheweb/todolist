@@ -1,3 +1,17 @@
 {
-    "completed_tasks_count": 45
+    "completed_tasks_count": 46,
+    "completed_tasks_history": [
+        {
+            "name": "Посетить выставку искусств",
+            "completed_date": "03.07.2024"
+        },
+        {
+            "name": "Посетить выставку искусств",
+            "completed_date": "03.07.2024"
+        },
+        {
+            "name": "Посетить выставку искусств",
+            "completed_date": "03.07.2024"
+        }
+    ]
 }

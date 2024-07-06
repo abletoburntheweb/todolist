@@ -2,7 +2,8 @@
     "Ежедневная задача": {
         "name": "Ежедневная задача",
         "completed": false,
-        "start_date": "03.07.2024",
-        "completed_dates": []
+        "start_date": "05.07.2024",
+        "completed_dates": [],
+        "tag": ""
     }
 }

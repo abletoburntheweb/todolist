@@ -6,12 +6,15 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QInputDialog, \
     QMessageBox, QLineEdit, QListWidget, QListWidgetItem, QWidget, QScrollArea, QVBoxLayout, QHBoxLayout, QDialog
 from PyQt5.QtCore import Qt
+
+from add_weekly_task_dialog import AddWeeklyTaskDialog
 from note_page import NotePage
 from HowToUse import HelpDialog
 from text_wrapping import wrap_text
+from add_task_dialog import AddTaskDialog
 from styles import search_input_style, day_button_style, main_window_style, settings_style, \
     get_task_group_styles, add_tasks_button_style, tasks_button_style, results_list_style, add_daily_tasks_button_style, \
-    daily_task_button_style
+    daily_task_button_style, tag_button_style, add_weekly_tasks_button_style
 from ui_elements import setup_ui_elements
 
 
@@ -23,7 +26,7 @@ class MainWin(QMainWindow):
         self.setGeometry(100, 100, 1280, 720)
 
         self.current_button_index = 1
-        self.set_current_week()  # Устанавливаем текущую неделю
+        self.set_current_week()
 
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
@@ -34,6 +37,9 @@ class MainWin(QMainWindow):
 
         self.load_tasks()
         self.load_daily_tasks()
+
+        self.weekly_tasks_data = {}
+        self.load_weekly_tasks()
 
         self.scroll_area = None
         self.buttons = []
@@ -46,6 +52,8 @@ class MainWin(QMainWindow):
 
         self.update_task_layout()
 
+        self.tags = ["Работа📄", "Дом🏚", "Личное🎸", "Учёба✍️"]
+
     MAX_TASKS_COUNT = 90
     MAX_TASK_LENGTH = 450
 
@@ -57,14 +65,24 @@ class MainWin(QMainWindow):
         with open("daily_tasks.json", "w", encoding="utf-8") as file:
             json.dump(self.daily_tasks_data, file, ensure_ascii=False, indent=4)
 
+    def save_weekly_tasks(self):
+        with open("weekly_tasks.json", "w", encoding="utf-8") as file:
+            json.dump(self.weekly_tasks_data, file, ensure_ascii=False, indent=4)
+
     def load_settings(self):
-        with open("settings.json", "r", encoding="utf-8") as file:
-            settings = json.load(file)
-            self.completed_tasks_count = settings.get("completed_tasks_count", 0)
+        try:
+            with open("settings.json", "r", encoding="utf-8") as file:
+                settings = json.load(file)
+                self.completed_tasks_count = settings.get("completed_tasks_count", 0)
+                self.completed_tasks_history = settings.get("completed_tasks_history", [])
+        except (FileNotFoundError, json.JSONDecodeError):
+            self.completed_tasks_history = []
+            self.completed_tasks_count = 0
 
     def save_settings(self):
         settings = {
-            "completed_tasks_count": self.completed_tasks_count
+            "completed_tasks_count": self.completed_tasks_count,
+            "completed_tasks_history": self.completed_tasks_history
         }
         with open("settings.json", "w", encoding="utf-8") as file:
             json.dump(settings, file, ensure_ascii=False, indent=4)
@@ -79,6 +97,14 @@ class MainWin(QMainWindow):
         except json.JSONDecodeError:
             QMessageBox.warning(self, 'Ошибка', 'Файл daily_tasks.json поврежден. Начинаем с пустого списка.')
             self.daily_tasks_data = {}
+
+    def load_weekly_tasks(self):
+        try:
+            with open("weekly_tasks.json", "r", encoding="utf-8") as file:
+                self.weekly_tasks_data = json.load(file)
+            print(f"Загруженные еженедельные задачи: {self.weekly_tasks_data}")
+        except (FileNotFoundError, json.JSONDecodeError):
+            self.weekly_tasks_data = {}
 
     def load_tasks(self):
         try:
@@ -100,15 +126,35 @@ class MainWin(QMainWindow):
     def get_settings_style(self):
         return settings_style()
 
+    def show_completed_tasks_history(self):
+        try:
+            history_dialog = QDialog(self)
+            history_dialog.setWindowTitle("История выполненных задач")
+            history_layout = QVBoxLayout(history_dialog)
+
+            history_list = QListWidget()
+            history_layout.addWidget(history_list)
+
+            for task in self.completed_tasks_history:
+                task_str = f"{task['name']} - {task['completed_date']}"
+                history_list.addItem(task_str)
+
+            history_dialog.setLayout(history_layout)
+            history_dialog.exec_()
+        except Exception as e:
+            QMessageBox.warning(self, 'Ошибка', f'Произошла ошибка при показе истории выполненных задач: {e}')
+
     def toggle_task_completed(self, task, button_index, checked):
         task_name = task['name']
         task_date = task.get('date')
+        task['daily'] = task.get('daily', False)
 
-        if task.get('daily', False):
+        if task['daily']:
             if checked:
                 if 'completed_dates' not in self.daily_tasks_data[task_name]:
                     self.daily_tasks_data[task_name]['completed_dates'] = []
                 self.daily_tasks_data[task_name]['completed_dates'].append(task_date)
+                self.completed_tasks_history.append({'name': task_name, 'completed_date': task_date})
             else:
                 if 'completed_dates' in self.daily_tasks_data[task_name]:
                     self.daily_tasks_data[task_name]['completed_dates'] = [
@@ -117,12 +163,18 @@ class MainWin(QMainWindow):
             self.save_daily_tasks_to_file()
         else:
             task['completed'] = checked
-            for day, tasks_info in self.tasks_data.items():
-                if day == str(button_index):
-                    tasks = tasks_info["tasks"]
+            for year, months in self.tasks_data.items():
+                for month, month_data in months.items():
+                    tasks = month_data["tasks"]
                     for t in tasks:
                         if t['name'] == task['name']:
                             t['completed'] = checked
+                            if checked:
+                                self.completed_tasks_history.append({'name': task_name, 'completed_date': task_date})
+                            else:
+                                self.completed_tasks_history = [task for task in self.completed_tasks_history if
+                                                                task['name'] != task_name and task[
+                                                                    'completed_date'] != task_date]
                             break
 
             if checked:
@@ -194,11 +246,11 @@ class MainWin(QMainWindow):
             self.scroll_area.setWidgetResizable(True)
             self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
             self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        else:
-            print("Область с задачами уже существует")
 
         tasks_widget = QWidget()
         layout = QVBoxLayout(tasks_widget)
+
+        self.scroll_area.setWidget(tasks_widget)
 
         self.week_label = QLabel(self)
         self.week_label.setGeometry(20, 20, 200, 30)
@@ -218,7 +270,7 @@ class MainWin(QMainWindow):
         self.search_input = QLineEdit(self)
         self.search_input.setPlaceholderText("Поиск задачи...")
         self.search_input.setGeometry(20, 60, self.width() - 150, 30)
-        self.style_search_input()
+        self.search_input.setStyleSheet(search_input_style())
         self.search_input.show()
 
         self.search_button = QPushButton("Поиск", self)
@@ -238,24 +290,22 @@ class MainWin(QMainWindow):
         self.add_daily_task_button.clicked.connect(self.add_new_daily_task)
         self.add_daily_task_button.show()
 
+        self.add_weekly_task_button = QPushButton("Добавить еженедельную задачу", self)
+        self.add_weekly_task_button.setGeometry(480, 110, 250, 40)
+        self.add_weekly_task_button.setStyleSheet(add_weekly_tasks_button_style())
+        self.add_weekly_task_button.clicked.connect(self.add_new_weekly_task)
+        self.add_weekly_task_button.show()
+
         self.choose_month_button = QPushButton("Выбрать месяц", self)
         self.choose_month_button.setGeometry(self.width() - 220, self.height() - 110, 200, 40)
         self.choose_month_button.clicked.connect(self.show_month_selector)
         self.choose_month_button.show()
 
-        button_tasks = self.tasks_data.get(str(self.current_button_index), {"tasks": []})
-        self.add_tasks_to_layout(layout, button_tasks["tasks"], None, self.current_button_index)
-
         self.scroll_area.setWidget(tasks_widget)
-        self.scroll_area.move((self.width() - self.scroll_area.width()) // 2, 160)
-
-        print("Показываем область с задачами")
         self.scroll_area.show()
 
         self.update_task_layout()
-
-        setup_ui_elements(self)
-        print("Настройка UI завершена")
+        print("Показываем область с задачами")
 
     def main_page(self):
         print("Кнопка 1")
@@ -299,35 +349,50 @@ class MainWin(QMainWindow):
 
         styles = self.get_settings_style()
 
-        usage_label = QLabel("Как пользоваться:", self)
-        usage_label.setGeometry(50, 50, 200, 30)
-        usage_label.setStyleSheet(styles["label_style"])
-        usage_label.show()
+        central_widget = QWidget(self)
+        self.setCentralWidget(central_widget)
+        main_layout = QVBoxLayout(central_widget)
+        central_widget.setLayout(main_layout)
 
-        help_button = QPushButton("Справка", self)
-        help_button.setGeometry(250, 50, 200, 40)
+        usage_layout = QHBoxLayout()
+        usage_label = QLabel("Как пользоваться:")
+        usage_label.setStyleSheet(styles["label_style"])
+        usage_layout.addWidget(usage_label)
+
+        help_button = QPushButton("Справка")
         help_button.setStyleSheet(styles["button_style"])
         help_button.clicked.connect(self.show_help_dialog)
-        help_button.show()
+        usage_layout.addWidget(help_button)
+        usage_layout.addStretch()
+        main_layout.addLayout(usage_layout)
 
-        self.completed_tasks_label = QLabel(f"Выполнено задач: {self.completed_tasks_count}", self)
-        self.completed_tasks_label.setGeometry(50, 100, 400, 50)
+        completed_layout = QVBoxLayout()
+        self.completed_tasks_label = QLabel(f"Выполнено задач: {self.completed_tasks_count}")
         self.completed_tasks_label.setStyleSheet(styles["completed_tasks_label_style"])
         self.completed_tasks_label.setAlignment(QtCore.Qt.AlignCenter)
-        self.completed_tasks_label.show()
+        completed_layout.addWidget(self.completed_tasks_label)
 
-        reset_button_width = 200
-        reset_button_height = 40
-        right_margin = 20
-        reset_button_x = self.width() - reset_button_width - right_margin
-        reset_token_button_y = 160
-
-        reset_button = QPushButton("Сбросить", self)
-        reset_button.setGeometry(reset_button_x, reset_token_button_y, reset_button_width, reset_button_height)
+        reset_button = QPushButton("Сбросить")
         reset_button.setStyleSheet(styles["reset_button_style"])
         reset_button.clicked.connect(self.reset_completed_tasks_count)
-        reset_button.show()
+        reset_button.setFixedWidth(200)
+        reset_button.setFixedHeight(30)
+        completed_layout.addWidget(reset_button)
+        completed_layout.setAlignment(reset_button, QtCore.Qt.AlignHCenter)
+        main_layout.addLayout(completed_layout)
 
+        history_layout = QVBoxLayout()
+        history_button = QPushButton("История выполненных задач")
+        history_button.setStyleSheet(styles["button_style"])
+        history_button.clicked.connect(self.show_completed_tasks_history)
+        history_button.setFixedWidth(250)
+        history_button.setFixedHeight(30)
+        history_layout.addWidget(history_button)
+        history_layout.setAlignment(history_button, QtCore.Qt.AlignHCenter)
+        history_layout.addStretch()
+        main_layout.addLayout(history_layout)
+
+        main_layout.addStretch()
         setup_ui_elements(self)
 
     def show_help_dialog(self):
@@ -537,18 +602,22 @@ class MainWin(QMainWindow):
         return None
 
     def add_new_task(self):
-        text, ok = QInputDialog.getText(self, 'Добавить задачу', 'Введите название задачи:')
-        if ok and text:
-            if len(text) > self.MAX_TASK_LENGTH:
-                QMessageBox.warning(self, 'Ошибка', 'Название задачи должно быть не более 450 символов.')
+        dialog = AddTaskDialog(self.tags, self)
+
+        if dialog.exec_() == QDialog.Accepted:
+            task_name, date_str, tag = dialog.get_task_data()
+
+            if not task_name:
+                QMessageBox.warning(self, 'Ошибка', 'Название задачи не может быть пустым.')
                 return
 
-            date, ok = QInputDialog.getText(self, 'Добавить дату', 'Введите дату в формате dd.mm.yyyy:')
-            if not ok or not date:
+            if len(task_name) > self.MAX_TASK_LENGTH:
+                QMessageBox.warning(self, 'Ошибка',
+                                    f"Название задачи должно быть не более {self.MAX_TASK_LENGTH} символов.")
                 return
 
             try:
-                task_date = datetime.datetime.strptime(date, '%d.%m.%Y').date()
+                task_date = datetime.datetime.strptime(date_str, '%d.%m.%Y').date()
                 formatted_date = task_date.strftime('%d.%m.%Y')
             except ValueError:
                 QMessageBox.warning(self, 'Ошибка', 'Неверный формат даты. Используйте dd.mm.yyyy.')
@@ -563,7 +632,7 @@ class MainWin(QMainWindow):
             if month_name not in self.tasks_data[year_name]:
                 self.tasks_data[year_name][month_name] = {"tasks": []}
 
-            new_task = {"name": text, "completed": False, "date": formatted_date}
+            new_task = {"name": task_name, "completed": False, "date": formatted_date, "tag": tag}
             self.tasks_data[year_name][month_name]["tasks"].append(new_task)
             self.save_tasks_to_file()
             self.update_task_layout()
@@ -603,6 +672,43 @@ class MainWin(QMainWindow):
 
         print(f"Добавлена новая ежедневная задача: {new_task}")
 
+    def add_new_weekly_task(self):
+        dialog = AddWeeklyTaskDialog(self.tags, self)
+
+        if dialog.exec_() == QDialog.Accepted:
+            task_name, start_date, days, tags = dialog.get_task_data()
+
+            if not task_name:
+                QMessageBox.warning(self, 'Ошибка', 'Название задачи не может быть пустым.')
+                return
+
+            if len(task_name) > self.MAX_TASK_LENGTH:
+                QMessageBox.warning(self, 'Ошибка',
+                                    f"Название задачи должно быть не более {self.MAX_TASK_LENGTH} символов.")
+                return
+
+            try:
+                task_date = datetime.datetime.strptime(start_date, '%d.%m.%Y').date()
+                formatted_date = task_date.strftime('%d.%m.%Y')
+            except ValueError:
+                QMessageBox.warning(self, 'Ошибка', 'Неверный формат даты. Используйте dd.mm.yyyy.')
+                return
+
+            new_task = {
+                "name": task_name,
+                "completed": False,
+                "start_date": formatted_date,
+                "days": days,
+                "tag": tags
+            }
+
+            self.weekly_tasks_data[task_name] = new_task
+            self.save_weekly_tasks()
+            self.update_task_layout()
+            self.scroll_area.show()
+
+            print(f"Добавлена новая еженедельная задача: {new_task}")
+
     def handle_button_click(self, button_index=None):
         self.current_button_index = button_index
         self.main_screen()
@@ -611,12 +717,14 @@ class MainWin(QMainWindow):
         tasks_style = tasks_button_style()
         daily_tasks_style = daily_task_button_style()
         styles = get_task_group_styles()
+        tag_style = tag_button_style()
 
         print(f"Добавляем задачи в компоновку: {tasks}")
 
         for task in tasks:
             task_name = task['name']
             task_date = task.get('date', '')
+            task_tag = task.get('tag', '')
 
             if task_date:
                 try:
@@ -631,9 +739,9 @@ class MainWin(QMainWindow):
 
             btn_style = daily_tasks_style if task.get('daily', False) else tasks_style
 
-            btn = QtWidgets.QPushButton(f"{task_name} ({formatted_date})", self)
+            btn = QPushButton(f"{task_name} ({formatted_date})", self)
             btn.setStyleSheet(btn_style)
-            btn.setFixedSize(800, 50)
+            btn.setFixedSize(670, 50)
             btn.clicked.connect(lambda _, name=task_name: self.show_task_full_title(name))
 
             checkbox = QtWidgets.QCheckBox(self)
@@ -642,18 +750,25 @@ class MainWin(QMainWindow):
             checkbox.toggled.connect(
                 lambda checked, t=task, b_index=button_index: self.toggle_task_completed(t, b_index, checked))
 
-            edit_btn = QtWidgets.QPushButton("✎", self)
+            tag_button = QPushButton(task_tag, self)
+            tag_button.setStyleSheet(tag_style)
+            tag_button.setFixedSize(130, 50)
+            if not task_tag:
+                tag_button.hide()
+
+            edit_btn = QPushButton("✎", self)
             edit_btn.setFixedSize(30, 30)
             edit_btn.setStyleSheet(styles["edit_button_style"])
             edit_btn.clicked.connect(lambda _, t=task, b_index=button_index: self.edit_task(t, b_index))
 
-            delete_btn = QtWidgets.QPushButton("✖️", self)
+            delete_btn = QPushButton("✖️", self)
             delete_btn.setFixedSize(30, 30)
             delete_btn.setStyleSheet(styles["delete_button_style"])
             delete_btn.clicked.connect(lambda _, t=task, b_index=button_index: self.delete_task(t, b_index))
 
             task_layout.addWidget(btn)
             task_layout.addWidget(checkbox)
+            task_layout.addWidget(tag_button)
             task_layout.addWidget(edit_btn)
             task_layout.addWidget(delete_btn)
 
@@ -661,51 +776,60 @@ class MainWin(QMainWindow):
             print(f"Задача '{task_name}' добавлена в компоновку")
 
     def edit_task(self, task, button_index):
-        dialog = QInputDialog(self)
-        dialog.setWindowTitle('Редактировать задачу')
-        dialog.setLabelText('Введите новое название задачи:')
-        dialog.setTextValue(task['name'])
-        dialog.setOkButtonText('OK')
-        dialog.setCancelButtonText('Отменить')
+        dialog = AddTaskDialog(self.tags, self, task_name=task['name'], task_date=task.get('date', ''),
+                               task_tag=task.get('tag', ''))
 
-        if dialog.exec_() == QInputDialog.Accepted:
-            new_name = dialog.textValue()
-            if new_name:
-                if len(new_name) > self.MAX_TASK_LENGTH:
-                    QMessageBox.warning(self, 'Ошибка', 'Название задачи должно быть не более 450 символов.')
+        if dialog.exec_() == QDialog.Accepted:
+            new_name, new_date, new_tag = dialog.get_task_data()
+
+            if not new_name:
+                QMessageBox.warning(self, 'Ошибка', 'Название задачи не может быть пустым.')
+                return
+
+            if len(new_name) > self.MAX_TASK_LENGTH:
+                QMessageBox.warning(self, 'Ошибка',
+                                    f"Название задачи должно быть не более {self.MAX_TASK_LENGTH} символов.")
+                return
+
+            if new_date:
+                try:
+                    task_date = datetime.datetime.strptime(new_date, '%d.%m.%Y').date()
+                    formatted_date = task_date.strftime('%d.%m.%Y')
+                except ValueError:
+                    QMessageBox.warning(self, 'Ошибка', 'Неверный формат даты. Используйте dd.mm.yyyy.')
                     return
+            else:
+                formatted_date = ''
 
-                date, ok = QInputDialog.getText(self, 'Изменить дату', 'Введите новую дату (dd.mm.yyyy):',
-                                                text=task.get('date', ''))
-                if not ok:
-                    return
-
-                if date:
-                    try:
-                        task_date = datetime.datetime.strptime(date, '%d.%m.%Y').date()
-                    except ValueError:
-                        QMessageBox.warning(self, 'Ошибка', 'Неверный формат даты. Используйте dd.mm.yyyy.')
-                        return
-                else:
-                    task_date = ''
-
-                month_name = task_date.strftime('%B') if task_date else ''
-                task_to_edit = None
-
-                for month, tasks in self.tasks_data.items():
-                    if month == month_name:
-                        for t in tasks:
-                            if t['name'] == task['name']:
-                                task_to_edit = t
-                                break
+            task_to_edit = None
+            for year_name, months in self.tasks_data.items():
+                for month_name, month_data in months.items():
+                    for t in month_data["tasks"]:
+                        if t == task:
+                            task_to_edit = t
+                            break
                     if task_to_edit:
                         break
-
                 if task_to_edit:
-                    task_to_edit['name'] = new_name
-                    task_to_edit['date'] = task_date.strftime('%d.%m.%Y') if task_date else ''
-                    self.save_tasks_to_file()
+                    break
+
+            if task_to_edit:
+                task_to_edit['name'] = new_name
+                task_to_edit['date'] = formatted_date
+                task_to_edit['tag'] = new_tag if new_tag else ''
+                self.save_tasks_to_file()
+                self.update_task_layout()
+                print(f"Задача обновлена: {task_to_edit}")
+
+            elif task.get('daily', False):
+                daily_task = self.daily_tasks_data.get(task['name'])
+                if daily_task:
+                    daily_task['name'] = new_name
+                    daily_task['start_date'] = formatted_date
+                    daily_task['tag'] = new_tag if new_tag else ''
+                    self.save_daily_tasks_to_file()
                     self.update_task_layout()
+                    print(f"Ежедневная задача обновлена: {daily_task}")
 
     def delete_task(self, task, button_index):
         try:
@@ -728,59 +852,6 @@ class MainWin(QMainWindow):
             self.update_task_layout()
         except Exception as e:
             QMessageBox.warning(self, 'Ошибка', f'Ошибка при удалении задачи: {e}')
-
-    def update_task_layout(self):
-        layout = self.scroll_area.widget().layout()
-        self.clear_layout(layout)
-
-        print(f"Текущая неделя: начало {self.current_week_start}, конец {self.current_week_end}")
-        print(f"Текущий индекс кнопки: {self.current_button_index}")
-
-        week_tasks = {self.current_week_start + datetime.timedelta(days=i): [] for i in range(7)}
-
-        for task_name, task in self.daily_tasks_data.items():
-            start_date_str = task.get('start_date')
-            completed_dates = task.get('completed_dates', [])
-
-            if start_date_str:
-                try:
-                    start_date = datetime.datetime.strptime(start_date_str, '%d.%m.%Y').date()
-                    current_date = max(start_date, self.current_week_start)
-                    while current_date <= self.current_week_end:
-                        daily_task = task.copy()
-                        daily_task['date'] = current_date.strftime('%d.%m.%Y')
-                        daily_task['daily'] = True
-                        daily_task['completed'] = daily_task['date'] in completed_dates
-                        week_tasks[current_date].insert(0, daily_task)
-                        print(f"Ежедневная задача добавлена: {daily_task}")
-                        current_date += datetime.timedelta(days=1)
-                except ValueError:
-                    print(f"Некорректный формат даты для ежедневной задачи: {start_date_str}")
-
-        for year_name, months in self.tasks_data.items():
-            for month_name, month_data in months.items():
-                for task in month_data.get("tasks", []):
-                    task_date = task.get('date')
-                    print(f"Обрабатываем задачу: {task}")
-                    if task_date:
-                        try:
-                            task_date_obj = datetime.datetime.strptime(task_date, '%d.%m.%Y').date()
-                            print(
-                                f"Дата задачи: {task_date_obj}, текущая неделя: начало {self.current_week_start}, конец {self.current_week_end}")
-                            if self.current_week_start <= task_date_obj <= self.current_week_end:
-                                week_tasks[task_date_obj].append(task)
-                                print(f"Задача добавлена: {task}")
-                        except ValueError:
-                            print(f"Некорректный формат даты для задачи: {task_date}")
-
-        tasks_in_current_week = []
-        for day, tasks in week_tasks.items():
-            tasks_in_current_week.extend(tasks)
-
-        print(f"Задачи для текущей недели: {tasks_in_current_week}")
-
-        self.add_tasks_to_layout(layout, tasks_in_current_week, None, self.current_button_index)
-        self.scroll_area.show()
 
     def clear_window(self, keep_main_buttons=False, keep_labels=False):
         widgets_to_keep = [self.search_button] + self.buttons if keep_main_buttons else []
@@ -809,6 +880,91 @@ class MainWin(QMainWindow):
         elif event.key() == Qt.Key_E:
             self.clear_window()
             self.settings_page()
+
+    def update_task_layout(self):
+        tasks_widget = self.scroll_area.widget()
+        if tasks_widget is None:
+            print("Ошибка: tasks_widget не существует.")
+            return
+
+        layout = tasks_widget.layout()
+
+        if layout is None:
+            print("Ошибка: layout не существует.")
+            return
+
+        self.clear_layout(layout)
+
+        print(f"Текущая неделя: начало {self.current_week_start}, конец {self.current_week_end}")
+        print(f"Текущий индекс кнопки: {self.current_button_index}")
+
+        week_tasks = {self.current_week_start + datetime.timedelta(days=i): [] for i in range(7)}
+
+        for task_name, task in self.daily_tasks_data.items():
+            start_date_str = task.get('start_date')
+            completed_dates = task.get('completed_dates', [])
+            task_days = task.get('days', [])
+
+            if start_date_str:
+                try:
+                    start_date = datetime.datetime.strptime(start_date_str, '%d.%m.%Y').date()
+                    current_date = max(start_date, self.current_week_start)
+                    while current_date <= self.current_week_end:
+                        daily_task = task.copy()
+                        daily_task['date'] = current_date.strftime('%d.%m.%Y')
+                        daily_task['daily'] = True
+                        daily_task['completed'] = daily_task['date'] in completed_dates
+                        weekday = current_date.strftime('%A')
+                        if not task_days or weekday in task_days:
+                            week_tasks[current_date].append(daily_task)
+                            print(f"Ежедневная задача добавлена: {daily_task}")
+                        current_date += datetime.timedelta(days=1)
+                except ValueError:
+                    print(f"Некорректный формат даты для ежедневной задачи: {start_date_str}")
+
+        for task_name, task in self.weekly_tasks_data.items():
+            start_date_str = task.get('start_date')
+            completed_dates = task.get('completed_dates', [])
+            task_days = task.get('days', [])
+
+            if start_date_str:
+                try:
+                    start_date = datetime.datetime.strptime(start_date_str, '%d.%м.%Y').date()
+                    current_date = max(start_date, self.current_week_start)
+                    while current_date <= self.current_week_end:
+                        weekly_task = task.copy()
+                        weekly_task['date'] = current_date.strftime('%d.%m.%Y')
+                        weekly_task['weekly'] = True
+                        weekly_task['completed'] = weekly_task['date'] in completed_dates
+                        weekday = current_date.strftime('%A')
+                        if not task_days or weekday in task_days:
+                            week_tasks[current_date].append(weekly_task)
+                            print(f"Еженедельная задача добавлена: {weekly_task}")
+                        current_date += datetime.timedelta(days=1)
+                except ValueError:
+                    print(f"Некорректный формат даты для еженедельной задачи: {start_date_str}")
+
+        for year_name, months in self.tasks_data.items():
+            for month_name, month_data in months.items():
+                for task in month_data.get("tasks", []):
+                    task_date = task.get('date')
+                    if task_date:
+                        try:
+                            task_date_obj = datetime.datetime.strptime(task_date, '%d.%m.%Y').date()
+                            if self.current_week_start <= task_date_obj <= self.current_week_end:
+                                week_tasks[task_date_obj].append(task)
+                                print(f"Задача добавлена: {task}")
+                        except ValueError:
+                            print(f"Некорректный формат даты для задачи: {task_date}")
+
+        tasks_in_current_week = []
+        for day, tasks in week_tasks.items():
+            tasks_in_current_week.extend(tasks)
+
+        print(f"Задачи для текущей недели: {tasks_in_current_week}")
+
+        self.add_tasks_to_layout(layout, tasks_in_current_week, None, self.current_button_index)
+        self.scroll_area.show()
 
 
 def run_app():
