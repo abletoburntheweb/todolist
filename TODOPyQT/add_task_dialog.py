@@ -22,11 +22,11 @@ class AddTaskDialog(QDialog):
         self.date_input.setStyleSheet(date_input_style())
         self.date_input.setFont(QFont('Arial', 12))
         self.date_input.setDate(QDate.currentDate())
-        self.date_input.calendarWidget().setStyleSheet(calendar_styles())  # Применить стили к календарю
+        self.date_input.calendarWidget().setStyleSheet(calendar_styles())
 
         self.tag_selector = QComboBox(self)
-        self.tag_selector.setEditable(True)  # Сделаем тег редактируемым, чтобы можно было удалить или ввести новый
-        self.tag_selector.addItem('')  # Добавим пустой элемент в начало
+        self.tag_selector.setEditable(True)
+        self.tag_selector.addItem('')
         self.tag_selector.addItems(tags)
         self.tag_selector.setStyleSheet(tag_selector_style())
         self.tag_selector.setFont(QFont('Arial', 12))

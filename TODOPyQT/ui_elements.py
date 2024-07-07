@@ -1,22 +1,18 @@
 from PyQt5.QtWidgets import QPushButton, QLabel
 
 def setup_ui_elements(main_window):
-    # Задаем новую ширину для нижней панели и кнопок
     bottom_panel_height = 70
     bottom_panel_y_position = main_window.height() - bottom_panel_height
 
-    # Создаем нижнюю панель
     rect_view = QLabel(main_window)
     rect_view.setGeometry(0, bottom_panel_y_position, main_window.width(), bottom_panel_height)
     rect_view.setStyleSheet('background-color: #F2FAFD;')
     rect_view.show()
 
-    # Вычисляем новые позиции для кнопок
     button_width = 50
     button_height = 50
-    buttons_spacing = (main_window.width() - (3 * button_width)) // 4  # Расстояние между кнопками и краями
+    buttons_spacing = (main_window.width() - (3 * button_width)) // 4
 
-    # Располагаем кнопки на нижней панели
     button1 = QPushButton(main_window)
     button1.setGeometry(buttons_spacing, bottom_panel_y_position + 10, button_width, button_height)
     button1.setStyleSheet("background-color: #F2FAFD; border-image: url('listcheck.png');")
@@ -32,7 +28,6 @@ def setup_ui_elements(main_window):
     button3.setStyleSheet("background-color: #F2FAFD; border-image: url('settings.png');")
     button3.clicked.connect(main_window.settings_page)
 
-    # Показываем кнопки
     button1.show()
     button2.show()
     button3.show()

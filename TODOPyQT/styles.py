@@ -134,20 +134,20 @@ def daily_task_button_style():
 
 def weekly_tasks_button_style():
     return """
-        QPushButton {
-            background-color: #ffa861;
-            color: white;
-            font-size: 16px;
-            border-radius: 5px;
-            padding: 10px;
-        }
-        QPushButton:hover {
-            background-color: #f48647;
-        }
-        QPushButton:pressed {
-            background-color: #b35900;
-        }
-    """
+            QPushButton {
+                    background-color: #ffa861;
+                text-align: left;
+                padding-left: 10px;
+                font-size: 18px;  
+                border-radius: 15px;
+            }
+            QPushButton:hover {
+                background-color: #f48647;
+            }
+            QPushButton:pressed {
+                background-color: #b35900;
+            }
+        """
 
 
 def subtasks_button_style():
@@ -360,13 +360,14 @@ def settings_style():
         """,
         "completed_tasks_label_style": """
             QLabel {
-                font-size: 18px;
+                font-size: 14px;
                 color: #2e8b57;
                 padding: 5px;
                 border: 2px solid #2e8b57;
                 border-radius: 8px;
                 margin-top: 20px;
                 background-color: #d9ecd0;
+                text-align: center;
             }
         """,
         "reset_button_style": """

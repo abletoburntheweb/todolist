@@ -24,7 +24,7 @@ class AddWeeklyTaskDialog(QDialog):
         self.date_input.setStyleSheet(date_input_style())
         self.date_input.setFont(QFont('Arial', 12))
         self.date_input.setDate(QDate.currentDate())
-        self.date_input.calendarWidget().setStyleSheet(calendar_styles())  # Применить стили к календарю
+        self.date_input.calendarWidget().setStyleSheet(calendar_styles())
 
         self.tag_selector = QComboBox(self)
         self.tag_selector.setEditable(True)
