@@ -961,27 +961,39 @@ class MainWin(QMainWindow):
 
     def delete_task(self, task, button_index):
         try:
+            task_name = task['name']
+
+            # If it's a daily task
             if task.get('daily'):
-                if task['name'] in self.daily_tasks_data:
-                    del self.daily_tasks_data[task['name']]
-                    print(f"Deleted daily task: {task['name']}")
-
-            elif task.get('weekly'):
-                if task['name'] in self.weekly_tasks_data:
-                    del self.weekly_tasks_data[task['name']]
-                    print(f"Deleted weekly task: {task['name']}")
+                if task_name in self.daily_tasks_data:
+                    del self.daily_tasks_data[task_name]
+                    print(f"Deleted daily task: {task_name}")
                 else:
-                    print(f"Weekly task '{task['name']}' not found in weekly_tasks_data.")
+                    print(f"Daily task '{task_name}' not found in daily_tasks_data.")
 
+            # If it's a weekly task
+            elif task.get('weekly'):
+                if task_name in self.weekly_tasks_data:
+                    del self.weekly_tasks_data[task_name]
+                    print(f"Deleted weekly task: {task_name}")
+                else:
+                    print(f"Weekly task '{task_name}' not found in weekly_tasks_data.")
+
+            # If it's a regular task
             else:
-                tasks_list = self.tasks_data.get(str(button_index), {}).get("tasks", [])
-                self.tasks_data[str(button_index)]["tasks"] = [
-                    t for t in tasks_list if t['name'] != task['name']
-                ]
-                print(f"Deleted regular task: {task['name']}")
+                task_date = task.get('date')
+                if task_date:
+                    for year_name, months in self.tasks_data.items():
+                        for month_name, month_data in months.items():
+                            month_data["tasks"] = [
+                                t for t in month_data["tasks"] if t['name'] != task_name
+                            ]
+                            print(f"Deleted regular task: {task_name}")
 
+            # Save all changes after deletion
             self.save_tasks_to_file()
 
+            # Update the UI to reflect the changes
             self.update_task_layout()
 
         except Exception as e:
@@ -1029,19 +1041,21 @@ class MainWin(QMainWindow):
 
         self.clear_layout(layout)
 
-
         week_tasks = {self.current_week_start + datetime.timedelta(days=i): [] for i in range(7)}
-
         day_of_week_mapping = {
-            'Понедельник': 0,
-            'Вторник': 1,
-            'Среда': 2,
-            'Четверг': 3,
-            'Пятница': 4,
-            'Суббота': 5,
-            'Воскресенье': 6
+            0: "Понедельник",
+            1: "Вторник",
+            2: "Среда",
+            3: "Четверг",
+            4: "Пятница",
+            5: "Суббота",
+            6: "Воскресенье"
         }
 
+        # Конвертируем названия дней в индексы
+        day_name_to_index = {name: index for index, name in day_of_week_mapping.items()}
+
+        # Сбор ежедневных задач
         for task_name, task in self.daily_tasks_data.items():
             start_date_str = task.get('start_date')
             completed_dates = task.get('completed_dates', [])
@@ -1057,49 +1071,67 @@ class MainWin(QMainWindow):
                         daily_task['daily'] = True
                         daily_task['completed'] = daily_task['date'] in completed_dates
                         weekday = current_date.weekday()
-                        if not task_days or weekday in [day_of_week_mapping[day] for day in task_days]:
+                        if not task_days or weekday in task_days:
                             week_tasks[current_date].append(daily_task)
                         current_date += datetime.timedelta(days=1)
                 except ValueError:
                     print(f"Некорректный формат даты для ежедневной задачи: {start_date_str}")
 
+        # Сбор еженедельных задач
         for task_name, task in self.weekly_tasks_data.items():
             start_date_str = task.get('start_date')
-            completed_dates = task.get('completed_dates', [])
+            completed = task.get('completed', False)
             task_days = task.get('days', [])
 
             if start_date_str:
                 try:
                     start_date = datetime.datetime.strptime(start_date_str, '%d.%m.%Y').date()
-                    current_date = max(start_date, self.current_week_start)
-                    while current_date <= self.current_week_end:
-                        weekly_task = task.copy()
-                        weekly_task['date'] = current_date.strftime('%d.%m.%Y')
-                        weekly_task['weekly'] = True
-                        weekly_task['completed'] = weekly_task['date'] in completed_dates
-                        weekday = current_date.weekday()
-                        if not task_days or weekday in [day_of_week_mapping[day] for day in task_days]:
+                    # Перебираем каждую дату в пределах текущей недели
+                    for i in range(7):
+                        current_date = self.current_week_start + datetime.timedelta(days=i)
+
+                        # Определяем название дня текущей даты
+                        current_weekday_name = day_of_week_mapping[current_date.weekday()]
+
+                        # Проверяем, содержится ли название дня в `days`
+                        if current_weekday_name in task_days:
+                            weekly_task = task.copy()
+                            weekly_task['date'] = current_date.strftime('%d.%m.%Y')
+                            weekly_task['weekly'] = True
+                            weekly_task['completed'] = completed
                             week_tasks[current_date].append(weekly_task)
-                        current_date += datetime.timedelta(days=1)
+
                 except ValueError:
                     print(f"Некорректный формат даты для еженедельной задачи: {start_date_str}")
 
-        for year_name, months in self.tasks_data.items():
-            for month_name, month_data in months.items():
-                for task in month_data.get("tasks", []):
-                    task_date = task.get('date')
-                    if task_date:
-                        try:
-                            task_date_obj = datetime.datetime.strptime(task_date, '%d.%m.%Y').date()
-                            if self.current_week_start <= task_date_obj <= self.current_week_end:
-                                week_tasks[task_date_obj].append(task)
-                        except ValueError:
-                            print(f"Некорректный формат даты для задачи: {task_date}")
+        # Создание заголовков и группировка задач для каждого дня недели
+        for i in range(7):
+            day_date = self.current_week_start + datetime.timedelta(days=i)
+            day_tasks = week_tasks[day_date]
 
-        tasks_in_current_week = []
-        for day, tasks in week_tasks.items():
-            tasks_in_current_week.extend(tasks)
-        self.add_tasks_to_layout(layout, tasks_in_current_week, None, self.current_button_index)
+            day_label = QLabel(day_of_week_mapping[i], self)
+            layout.addWidget(day_label)  # Добавление заголовка для дня недели
+
+            # Добавляем обычные задачи за текущий день
+            tasks_for_the_day = []
+            for year_name, months in self.tasks_data.items():
+                for month_name, month_data in months.items():
+                    for task in month_data.get("tasks", []):
+                        task_date = task.get('date')
+                        if task_date:
+                            try:
+                                task_date_obj = datetime.datetime.strptime(task_date, '%d.%m.%Y').date()
+                                if task_date_obj == day_date:
+                                    tasks_for_the_day.append(task)
+                            except ValueError:
+                                print(f"Некорректный формат даты для задачи: {task_date}")
+
+            # Добавление задач для этого дня
+            if day_tasks or tasks_for_the_day:
+                all_tasks_for_the_day = day_tasks + tasks_for_the_day
+                self.add_tasks_to_layout(layout, all_tasks_for_the_day, None, self.current_button_index)
+            else:
+                layout.addWidget(QLabel("Нет задач на этот день", self))
 
 
 def run_app():
