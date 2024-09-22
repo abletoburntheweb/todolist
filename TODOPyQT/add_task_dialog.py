@@ -45,7 +45,7 @@ class AddTaskDialog(QDialog):
         layout = QVBoxLayout()
         layout.addWidget(QLabel("Название задачи:", self))
         layout.addWidget(self.task_name_input)
-        layout.addWidget(QLabel("Дата (dd.MM.yyyy):", self))
+        layout.addWidget(QLabel("Выберите дату:", self))
         layout.addWidget(self.date_input)
         layout.addWidget(QLabel("Тег:", self))
         layout.addWidget(self.tag_selector)

@@ -7,7 +7,7 @@ class HelpDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle('Справка')
-        self.setFixedSize(500, 700)
+        self.setFixedSize(1280, 720)
         layout = QVBoxLayout(self)
 
         try:
@@ -15,7 +15,7 @@ class HelpDialog(QDialog):
             if help_image.isNull():
                 raise IOError("Не удалось загрузить изображение.")
             image_label = QLabel()
-            image_label.setPixmap(help_image.scaled(480, 680, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+            image_label.setPixmap(help_image.scaled(1280, 720, Qt.KeepAspectRatio, Qt.SmoothTransformation))
             layout.addWidget(image_label)
         except Exception as e:
             print(f"Ошибка при загрузке изображения: {e}")

@@ -376,7 +376,7 @@ def settings_style():
                 color: white;
                 border-radius: 6px;
                 padding: 5px;
-                font-size: 12px;
+                font-size: 14px;
                 border: none;
             }
             QPushButton:hover {

@@ -59,14 +59,15 @@ class MainWin(QMainWindow):
     MAX_TASK_LENGTH = 450
 
     def save_tasks_to_file(self):
+        # Сохраняем обычные задачи
         with open("tasks.json", "w", encoding="utf-8") as file:
             json.dump(self.tasks_data, file, ensure_ascii=False, indent=4)
 
-    def save_daily_tasks_to_file(self):
+        # Сохраняем ежедневные задачи
         with open("daily_tasks.json", "w", encoding="utf-8") as file:
             json.dump(self.daily_tasks_data, file, ensure_ascii=False, indent=4)
 
-    def save_weekly_tasks(self):
+        # Сохраняем еженедельные задачи
         with open("weekly_tasks.json", "w", encoding="utf-8") as file:
             json.dump(self.weekly_tasks_data, file, ensure_ascii=False, indent=4)
 
@@ -92,7 +93,10 @@ class MainWin(QMainWindow):
         try:
             with open("daily_tasks.json", "r", encoding="utf-8") as file:
                 self.daily_tasks_data = json.load(file)
-            print(f"Загруженные ежедневные задачи: {self.daily_tasks_data}")
+                # Убедимся, что каждая задача является словарём и добавляем тип для каждой задачи
+                for task in self.daily_tasks_data:
+                    if isinstance(task, dict):
+                        task['type'] = 'daily'
         except FileNotFoundError:
             self.daily_tasks_data = {}
         except json.JSONDecodeError:
@@ -103,7 +107,10 @@ class MainWin(QMainWindow):
         try:
             with open("weekly_tasks.json", "r", encoding="utf-8") as file:
                 self.weekly_tasks_data = json.load(file)
-            print(f"Загруженные еженедельные задачи: {self.weekly_tasks_data}")
+                # Убедимся, что каждая задача является словарём и добавляем тип для каждой задачи
+                for task in self.weekly_tasks_data:
+                    if isinstance(task, dict):
+                        task['type'] = 'weekly'
         except (FileNotFoundError, json.JSONDecodeError):
             self.weekly_tasks_data = {}
 
@@ -111,11 +118,16 @@ class MainWin(QMainWindow):
         try:
             with open("tasks.json", "r", encoding="utf-8") as file:
                 self.tasks_data = json.load(file)
-            print(f"Загруженные задачи: {self.tasks_data}")
+                # Убедимся, что каждая задача является словарём и добавляем тип для каждой обычной задачи
+                for year, months in self.tasks_data.items():
+                    for month, month_data in months.items():
+                        for task in month_data["tasks"]:
+                            if isinstance(task, dict):
+                                task['type'] = 'regular'
         except FileNotFoundError:
             self.tasks_data = {}
         except json.JSONDecodeError:
-            QMessageBox.warning(self, 'Ошибка', 'Файл поврежден. Начинаем с пустого списка.')
+            QMessageBox.warning(self, 'Ошибка', 'Файл tasks.json поврежден. Начинаем с пустого списка.')
             self.tasks_data = {}
 
     def style_search_input(self):
@@ -503,7 +515,7 @@ class MainWin(QMainWindow):
         history_button.clicked.connect(self.show_completed_tasks_history)
         completed_layout.addWidget(history_button, alignment=Qt.AlignCenter)
 
-        reset_button = QPushButton("Сбросить счётчик")
+        reset_button = QPushButton("Сбросить")
         reset_button.setStyleSheet(styles["reset_button_style"])
         reset_button.setFixedSize(230, 40)
         reset_button.setCursor(Qt.PointingHandCursor)
@@ -743,7 +755,7 @@ class MainWin(QMainWindow):
                 task_date = datetime.datetime.strptime(date_str, '%d.%m.%Y').date()
                 formatted_date = task_date.strftime('%d.%m.%Y')
             except ValueError:
-                QMessageBox.warning(self, 'Ошибка', 'Неверный формат даты. Используйте dd.mm.yyyy.')
+                QMessageBox.warning(self, 'Ошибка', 'Неверный формат даты. Используйте дд.мм.гггг.')
                 return
 
             year_name = str(task_date.year)
@@ -761,7 +773,6 @@ class MainWin(QMainWindow):
             self.update_task_layout()
             self.scroll_area.show()
 
-            print(f"Добавлена новая задача: {new_task} в год: {year_name}, месяц: {month_name}")
 
     def add_new_daily_task(self):
         text, ok = QInputDialog.getText(self, 'Добавить ежедневную задачу', 'Введите название ежедневной задачи:')
@@ -772,14 +783,14 @@ class MainWin(QMainWindow):
             QMessageBox.warning(self, 'Ошибка', 'Название задачи должно быть не более 450 символов.')
             return
 
-        date_str, ok = QInputDialog.getText(self, 'Добавить дату', 'Введите дату начала в формате dd.mm.yyyy:')
+        date_str, ok = QInputDialog.getText(self, 'Добавить дату', 'Выберите дату')
         if not ok or not date_str:
             return
 
         try:
             start_date = datetime.datetime.strptime(date_str, '%d.%m.%Y').date()
         except ValueError:
-            QMessageBox.warning(self, 'Ошибка', 'Неверный формат даты. Используйте dd.mm.yyyy.')
+            QMessageBox.warning(self, 'Ошибка', 'Неверный формат даты. Используйте дд.мм.гггг.')
             return
 
         new_task = {
@@ -814,7 +825,7 @@ class MainWin(QMainWindow):
                 task_date = datetime.datetime.strptime(start_date, '%d.%m.%Y').date()
                 formatted_date = task_date.strftime('%d.%m.%Y')
             except ValueError:
-                QMessageBox.warning(self, 'Ошибка', 'Неверный формат даты. Используйте dd.mm.yyyy.')
+                QMessageBox.warning(self, 'Ошибка', 'Неверный формат даты. Используйте дд.мм.гггг.')
                 return
 
             new_task = {
@@ -902,63 +913,52 @@ class MainWin(QMainWindow):
             task_layout.addWidget(delete_btn)
 
             layout.addWidget(task_widget)
-            print(f"Задача '{task_name}' добавлена в компоновку")
 
     def edit_task(self, task, button_index):
-        dialog = AddTaskDialog(self.tags, self, task_name=task['name'], task_date=task.get('date', ''),
-                               task_tag=task.get('tag', ''))
+        dialog = QInputDialog(self)
+        dialog.setWindowTitle('Редактировать задачу')
+        dialog.setLabelText('Введите новое название задачи:')
+        dialog.setTextValue(task['name'])
+        dialog.setOkButtonText('OK')
+        dialog.setCancelButtonText('Отменить')
 
-        if dialog.exec_() == QDialog.Accepted:
-            new_name, new_date, new_tag = dialog.get_task_data()
+        if dialog.exec_() == QInputDialog.Accepted:
+            new_name = dialog.textValue()
 
-            if not new_name:
-                QMessageBox.warning(self, 'Ошибка', 'Название задачи не может быть пустым.')
-                return
+            if new_name:
+                print(f"Редактируемая задача до изменений: {task}")
+                print(f"Новое имя задачи: {new_name}")
 
-            if len(new_name) > self.MAX_TASK_LENGTH:
-                QMessageBox.warning(self, 'Ошибка',
-                                    f"Название задачи должно быть не более {self.MAX_TASK_LENGTH} символов.")
-                return
+                # Обновляем имя задачи
+                old_name = task['name']
+                task['name'] = new_name
 
-            if new_date:
-                try:
-                    task_date = datetime.datetime.strptime(new_date, '%d.%m.%Y').date()
-                    formatted_date = task_date.strftime('%d.%m.%Y')
-                except ValueError:
-                    QMessageBox.warning(self, 'Ошибка', 'Неверный формат даты. Используйте dd.mm.yyyy.')
-                    return
-            else:
-                formatted_date = ''
-
-            task_to_edit = None
-            for year_name, months in self.tasks_data.items():
-                for month_name, month_data in months.items():
-                    for t in month_data["tasks"]:
-                        if t == task:
-                            task_to_edit = t
+                # Проверяем, является ли задача ежедневной или еженедельной
+                if task.get('daily'):
+                    for daily_task in self.daily_tasks_data.values():
+                        if daily_task['name'] == old_name:
+                            daily_task['name'] = new_name
                             break
-                    if task_to_edit:
-                        break
-                if task_to_edit:
-                    break
+                elif task.get('weekly'):
+                    for weekly_task in self.weekly_tasks_data.values():
+                        if weekly_task['name'] == old_name:
+                            weekly_task['name'] = new_name
+                            break
+                else:
+                    for year_name, months in self.tasks_data.items():
+                        for month_name, month_data in months.items():
+                            for t in month_data["tasks"]:
+                                if t['name'] == old_name:
+                                    t['name'] = new_name
+                                    break
 
-            if task_to_edit:
-                task_to_edit['name'] = new_name
-                task_to_edit['date'] = formatted_date
-                task_to_edit['tag'] = new_tag if new_tag else ''
+                # Сохраняем изменения в файл
                 self.save_tasks_to_file()
-                self.update_task_layout()
-                print(f"Задача обновлена: {task_to_edit}")
 
-            elif task.get('daily', False):
-                daily_task = self.daily_tasks_data.get(task['name'])
-                if daily_task:
-                    daily_task['name'] = new_name
-                    daily_task['start_date'] = formatted_date
-                    daily_task['tag'] = new_tag if new_tag else ''
-                    self.save_daily_tasks_to_file()
-                    self.update_task_layout()
-                    print(f"Ежедневная задача обновлена: {daily_task}")
+                # Обновляем интерфейс
+                self.update_task_layout()  # Убедитесь, что этот метод правильно обновляет отображение задач
+
+                print(f"Задача '{old_name}' была успешно изменена на '{new_name}'")
 
     def delete_task(self, task, button_index):
         try:
@@ -1024,8 +1024,6 @@ class MainWin(QMainWindow):
 
         self.clear_layout(layout)
 
-        print(f"Текущая неделя: начало {self.current_week_start}, конец {self.current_week_end}")
-        print(f"Текущий индекс кнопки: {self.current_button_index}")
 
         week_tasks = {self.current_week_start + datetime.timedelta(days=i): [] for i in range(7)}
 
@@ -1056,7 +1054,6 @@ class MainWin(QMainWindow):
                         weekday = current_date.weekday()
                         if not task_days or weekday in [day_of_week_mapping[day] for day in task_days]:
                             week_tasks[current_date].append(daily_task)
-                            print(f"Ежедневная задача добавлена: {daily_task}")
                         current_date += datetime.timedelta(days=1)
                 except ValueError:
                     print(f"Некорректный формат даты для ежедневной задачи: {start_date_str}")
@@ -1078,7 +1075,6 @@ class MainWin(QMainWindow):
                         weekday = current_date.weekday()
                         if not task_days or weekday in [day_of_week_mapping[day] for day in task_days]:
                             week_tasks[current_date].append(weekly_task)
-                            print(f"Еженедельная задача добавлена: {weekly_task}")
                         current_date += datetime.timedelta(days=1)
                 except ValueError:
                     print(f"Некорректный формат даты для еженедельной задачи: {start_date_str}")
@@ -1092,16 +1088,12 @@ class MainWin(QMainWindow):
                             task_date_obj = datetime.datetime.strptime(task_date, '%d.%m.%Y').date()
                             if self.current_week_start <= task_date_obj <= self.current_week_end:
                                 week_tasks[task_date_obj].append(task)
-                                print(f"Задача добавлена: {task}")
                         except ValueError:
                             print(f"Некорректный формат даты для задачи: {task_date}")
 
         tasks_in_current_week = []
         for day, tasks in week_tasks.items():
             tasks_in_current_week.extend(tasks)
-
-        print(f"Задачи для текущей недели: {tasks_in_current_week}")
-
         self.add_tasks_to_layout(layout, tasks_in_current_week, None, self.current_button_index)
 
 
