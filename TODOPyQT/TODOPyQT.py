@@ -59,17 +59,18 @@ class MainWin(QMainWindow):
     MAX_TASK_LENGTH = 450
 
     def save_tasks_to_file(self):
-        # Сохраняем обычные задачи
         with open("tasks.json", "w", encoding="utf-8") as file:
             json.dump(self.tasks_data, file, ensure_ascii=False, indent=4)
 
-        # Сохраняем ежедневные задачи
         with open("daily_tasks.json", "w", encoding="utf-8") as file:
             json.dump(self.daily_tasks_data, file, ensure_ascii=False, indent=4)
 
-        # Сохраняем еженедельные задачи
         with open("weekly_tasks.json", "w", encoding="utf-8") as file:
             json.dump(self.weekly_tasks_data, file, ensure_ascii=False, indent=4)
+
+    def save_daily_tasks_to_file(self):
+        with open("daily_tasks.json", "w", encoding="utf-8") as file:
+            json.dump(self.daily_tasks_data, file, ensure_ascii=False, indent=4)
 
     def load_settings(self):
         try:
@@ -93,7 +94,6 @@ class MainWin(QMainWindow):
         try:
             with open("daily_tasks.json", "r", encoding="utf-8") as file:
                 self.daily_tasks_data = json.load(file)
-                # Убедимся, что каждая задача является словарём и добавляем тип для каждой задачи
                 for task in self.daily_tasks_data:
                     if isinstance(task, dict):
                         task['type'] = 'daily'
@@ -107,7 +107,6 @@ class MainWin(QMainWindow):
         try:
             with open("weekly_tasks.json", "r", encoding="utf-8") as file:
                 self.weekly_tasks_data = json.load(file)
-                # Убедимся, что каждая задача является словарём и добавляем тип для каждой задачи
                 for task in self.weekly_tasks_data:
                     if isinstance(task, dict):
                         task['type'] = 'weekly'
@@ -118,7 +117,6 @@ class MainWin(QMainWindow):
         try:
             with open("tasks.json", "r", encoding="utf-8") as file:
                 self.tasks_data = json.load(file)
-                # Убедимся, что каждая задача является словарём и добавляем тип для каждой обычной задачи
                 for year, months in self.tasks_data.items():
                     for month, month_data in months.items():
                         for task in month_data["tasks"]:
@@ -701,6 +699,7 @@ class MainWin(QMainWindow):
         self.choose_month_button.hide()
         self.add_task_button.hide()
         self.add_daily_task_button.hide()
+        self.add_weekly_task_button.hide()
 
         month_names = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
                        'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь']
@@ -816,6 +815,10 @@ class MainWin(QMainWindow):
                 QMessageBox.warning(self, 'Ошибка', 'Название задачи не может быть пустым.')
                 return
 
+            if not days or len(days) == 0:
+                QMessageBox.warning(self, 'Ошибка', 'Выберите хотя бы один день для еженедельной задачи.')
+                return
+
             if len(task_name) > self.MAX_TASK_LENGTH:
                 QMessageBox.warning(self, 'Ошибка',
                                     f"Название задачи должно быть не более {self.MAX_TASK_LENGTH} символов.")
@@ -838,11 +841,11 @@ class MainWin(QMainWindow):
             }
 
             self.weekly_tasks_data[task_name] = new_task
-            self.save_weekly_tasks()
+            self.save_tasks_to_file()
             self.update_task_layout()
             self.scroll_area.show()
 
-            print(f"Добавлена новая еженедельная задача: {new_task}")
+            print(f"Added new weekly task: {new_task}")
 
     def handle_button_click(self, button_index=None):
         self.current_button_index = button_index
@@ -929,11 +932,9 @@ class MainWin(QMainWindow):
                 print(f"Редактируемая задача до изменений: {task}")
                 print(f"Новое имя задачи: {new_name}")
 
-                # Обновляем имя задачи
                 old_name = task['name']
                 task['name'] = new_name
 
-                # Проверяем, является ли задача ежедневной или еженедельной
                 if task.get('daily'):
                     for daily_task in self.daily_tasks_data.values():
                         if daily_task['name'] == old_name:
@@ -952,33 +953,37 @@ class MainWin(QMainWindow):
                                     t['name'] = new_name
                                     break
 
-                # Сохраняем изменения в файл
                 self.save_tasks_to_file()
 
-                # Обновляем интерфейс
-                self.update_task_layout()  # Убедитесь, что этот метод правильно обновляет отображение задач
+                self.update_task_layout()
 
                 print(f"Задача '{old_name}' была успешно изменена на '{new_name}'")
 
     def delete_task(self, task, button_index):
         try:
-            task_date_str = task.get('date', '')
-            if task_date_str:
-                task_date = datetime.datetime.strptime(task_date_str, '%d.%m.%Y').date()
-                year_name = str(task_date.year)
-                month_name = task_date.strftime('%B')
+            if task.get('daily'):
+                if task['name'] in self.daily_tasks_data:
+                    del self.daily_tasks_data[task['name']]
+                    print(f"Deleted daily task: {task['name']}")
 
-                if year_name in self.tasks_data and month_name in self.tasks_data[year_name]:
-                    self.tasks_data[year_name][month_name]["tasks"] = [
-                        t for t in self.tasks_data[year_name][month_name]["tasks"] if t['name'] != task['name']
-                    ]
+            elif task.get('weekly'):
+                if task['name'] in self.weekly_tasks_data:
+                    del self.weekly_tasks_data[task['name']]
+                    print(f"Deleted weekly task: {task['name']}")
+                else:
+                    print(f"Weekly task '{task['name']}' not found in weekly_tasks_data.")
 
-            if task.get('daily', False):
-                del self.daily_tasks_data[task['name']]
+            else:
+                tasks_list = self.tasks_data.get(str(button_index), {}).get("tasks", [])
+                self.tasks_data[str(button_index)]["tasks"] = [
+                    t for t in tasks_list if t['name'] != task['name']
+                ]
+                print(f"Deleted regular task: {task['name']}")
 
             self.save_tasks_to_file()
-            self.save_daily_tasks_to_file()
+
             self.update_task_layout()
+
         except Exception as e:
             QMessageBox.warning(self, 'Ошибка', f'Ошибка при удалении задачи: {e}')
 
