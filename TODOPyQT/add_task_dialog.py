@@ -3,6 +3,7 @@ from PyQt5.QtGui import QFont
 from PyQt5.QtCore import QDate
 from styles import task_name_input_style, date_input_style, tag_selector_style, dialog_button_box_style, calendar_styles
 
+
 class AddTaskDialog(QDialog):
     def __init__(self, tags, parent=None, task_name='', task_date='', task_tag=''):
         super().__init__(parent)
@@ -39,6 +40,11 @@ class AddTaskDialog(QDialog):
         self.button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         self.button_box.accepted.connect(self.accept)
         self.button_box.rejected.connect(self.reject)
+
+        # Установка текста кнопок на русском языке
+        self.button_box.button(QDialogButtonBox.Ok).setText('ОК')
+        self.button_box.button(QDialogButtonBox.Cancel).setText('Отменить')
+
         self.button_box.button(QDialogButtonBox.Ok).setStyleSheet(dialog_button_box_style())
         self.button_box.button(QDialogButtonBox.Cancel).setStyleSheet(dialog_button_box_style())
 

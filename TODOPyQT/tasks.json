@@ -387,12 +387,6 @@
                     "type": "regular"
                 },
                 {
-                    "name": "Организовать пикник в парке",
-                    "completed": false,
-                    "date": "03.04.2024",
-                    "type": "regular"
-                },
-                {
                     "name": "Сделать генеральную уборку в доме",
                     "completed": false,
                     "date": "04.04.2024",
@@ -707,12 +701,6 @@
                     "type": "regular"
                 },
                 {
-                    "name": "Организовать пикник в парке",
-                    "completed": false,
-                    "date": "04.06.2024",
-                    "type": "regular"
-                },
-                {
                     "name": "Устроить велосипедную прогулку",
                     "completed": false,
                     "date": "06.06.2024",
@@ -1020,7 +1008,9 @@
                     "completed": false,
                     "date": "18.09.2024",
                     "tag": "",
-                    "type": "regular"
+                    "type": "regular",
+                    "daily": false,
+                    "weekly": false
                 },
                 {
                     "name": "Посетить планетарий",
