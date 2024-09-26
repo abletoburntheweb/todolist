@@ -81,6 +81,10 @@ class MainWin(QMainWindow):
         with open("daily_tasks.json", "w", encoding="utf-8") as file:
             json.dump(self.daily_tasks_data, file, ensure_ascii=False, indent=4)
 
+    def save_weekly_tasks_to_file(self):
+        with open("weekly_tasks.json", "w", encoding="utf-8") as file:
+            json.dump(self.weekly_tasks_data, file, ensure_ascii=False, indent=4)
+
     def load_settings(self):
         try:
             with open("settings.json", "r", encoding="utf-8") as file:
@@ -94,9 +98,10 @@ class MainWin(QMainWindow):
             self.default_task_days = 90
 
     def save_days_setting(self):
-        days_value = self.days_input.text()
-        if days_value.isdigit():
-            self.default_task_days = int(days_value)
+        days_value = self.days_spinbox.value()  # Get the value from the spin box
+
+        if days_value >= 1 and days_value <= 365:  # Check if the value is within the valid range
+            self.default_task_days = days_value
             self.save_settings()
             QMessageBox.information(self, "Успешно", "Настройка дней сохранена.")
         else:
@@ -598,9 +603,12 @@ class MainWin(QMainWindow):
         days_layout = QVBoxLayout()
         days_group_box.setLayout(days_layout)
 
+        # Create a horizontal layout for the label, spin box, and button
+        days_horizontal_layout = QHBoxLayout()
+
         days_label = QLabel("Введите количество дней, на которые будет добавлена задача (по умолчанию 90):")
         days_label.setStyleSheet(styles["label_style"])
-        days_layout.addWidget(days_label)
+        days_horizontal_layout.addWidget(days_label)
 
         self.days_spinbox = QSpinBox(self)
         self.days_spinbox.setStyleSheet(styles["spinbox_style"])
@@ -608,14 +616,17 @@ class MainWin(QMainWindow):
         self.days_spinbox.setMaximum(365)
         self.days_spinbox.setValue(self.default_task_days)
         self.days_spinbox.setFixedWidth(100)
-        days_layout.addWidget(self.days_spinbox)
+        days_horizontal_layout.addWidget(self.days_spinbox)
 
         save_button = QPushButton("Сохранить")
         save_button.setStyleSheet(styles["button_style"])
         save_button.setFixedSize(230, 40)
         save_button.setCursor(Qt.PointingHandCursor)
         save_button.clicked.connect(self.save_days_setting)
-        days_layout.addWidget(save_button)
+        days_horizontal_layout.addWidget(save_button)
+
+        # Add the horizontal layout to the days layout
+        days_layout.addLayout(days_horizontal_layout)
 
         main_layout.addWidget(days_group_box)
 
@@ -954,14 +965,10 @@ class MainWin(QMainWindow):
 
             try:
                 start_date = datetime.datetime.strptime(start_date_str, '%d.%m.%Y').date()
-                if end_date_str:
-                    end_date = datetime.datetime.strptime(end_date_str, '%d.%m.%Y').date()
-                else:
-                    end_date = None
 
+                # Calculate end_date based on default_task_days
+                end_date = start_date + datetime.timedelta(days=self.default_task_days - 1)
 
-                if end_date and end_date <= start_date:
-                    end_date = start_date + datetime.timedelta(days=90)
             except ValueError:
                 QMessageBox.warning(self, 'Ошибка', 'Неверный формат даты. Используйте дд.мм.гггг.')
                 return
@@ -970,7 +977,7 @@ class MainWin(QMainWindow):
                 "name": task_name,
                 "completed": False,
                 "start_date": start_date_str,
-                "end_date": end_date.strftime('%d.%m.%Y') if end_date else None,
+                "end_date": end_date.strftime('%d.%m.%Y'),  # Ensure end_date is formatted correctly
                 "tag": tag,
                 "completed_dates": []
             }
@@ -986,7 +993,14 @@ class MainWin(QMainWindow):
         dialog = AddWeeklyTaskDialog(self.tags, self)
 
         if dialog.exec_() == QDialog.Accepted:
-            task_name, start_date_str, end_date_str, selected_days, tag = dialog.get_task_data()
+            task_data = dialog.get_task_data()
+
+            if task_data is None:
+                QMessageBox.warning(self, 'Ошибка',
+                                    'Не удалось получить данные задачи. Пожалуйста, попробуйте еще раз.')
+                return
+
+            task_name, start_date_str, end_date_str, selected_days, tag = task_data
 
             if not task_name:
                 QMessageBox.warning(self, 'Ошибка', 'Название задачи не может быть пустым.')
@@ -998,15 +1012,14 @@ class MainWin(QMainWindow):
                 return
 
             try:
-                start_date = datetime.datetime.strptime(start_date_str, 'dd.MM.yyyy').date()
+                start_date = datetime.datetime.strptime(start_date_str, '%d.%m.%Y').date()  # Correct format
                 if end_date_str:
-                    end_date = datetime.datetime.strptime(end_date_str, 'dd.MM.yyyy').date()
+                    end_date = datetime.datetime.strptime(end_date_str, '%d.%m.%Y').date()  # Correct format
                 else:
-                    end_date = None
+                    end_date = start_date + datetime.timedelta(weeks=self.default_task_days // 7)  # Default to weeks
 
-
-                if end_date and end_date <= start_date:
-                    end_date = start_date + datetime.timedelta(days=90)
+                if end_date <= start_date:
+                    end_date = start_date + datetime.timedelta(weeks=1)  # Ensure at least one week duration
             except ValueError:
                 QMessageBox.warning(self, 'Ошибка', 'Неверный формат даты. Используйте дд.мм.гггг.')
                 return
@@ -1022,7 +1035,7 @@ class MainWin(QMainWindow):
             }
 
             self.weekly_tasks_data[task_name] = new_task
-            self.save_weekly_tasks()
+            self.save_weekly_tasks_to_file()
             self.update_task_layout()
             self.scroll_area.show()
 
