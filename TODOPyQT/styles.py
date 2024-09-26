@@ -132,6 +132,7 @@ def daily_task_button_style():
         }
     """
 
+
 def weekly_tasks_button_style():
     return """
             QPushButton {
@@ -349,7 +350,7 @@ def settings_style():
                 padding: 8px;
                 font-size: 14px;
                 border: 1px solid #5CACEE;
-                min-width: 80px;
+                min-width: 230px;
             }
             QPushButton:hover {
                 background-color: #1E90FF;
@@ -358,6 +359,29 @@ def settings_style():
                 background-color: #4682B4;
             }
         """,
+        "spinbox_style": """
+                QSpinBox {
+                    border: 2px solid #5CACEE;
+                    border-radius: 6px;
+                    padding: 5px;
+                    font-size: 16px;
+                    color: #333;
+                    background-color: #F0F8FF;
+                    min-width: 100px;
+                }
+                QSpinBox::up-button, QSpinBox::down-button {
+                    width: 16px;
+                    background-color: #5CACEE;
+                    border-radius: 3px;
+                }
+                QSpinBox::up-button:hover, QSpinBox::down-button:hover {
+                    background-color: #1E90FF;
+                }
+                QSpinBox::up-arrow, QSpinBox::down-arrow {
+                    width: 12px;
+                    height: 12px;
+                }
+            """,
         "completed_tasks_label_style": """
             QLabel {
                 font-size: 14px;
@@ -385,8 +409,45 @@ def settings_style():
             QPushButton:pressed {
                 background-color: #CD5C5C;
             }
-        """
+        """,
+        "regular_tasks_button_style_info": """
+             QPushButton {
+            background-color: #22a4f5; 
+            color: white;
+            font-size: 16px;
+            border-radius: 5px;
+            padding: 10px;
+        }
+        QPushButton:hover {
+            background-color: #00bfff;
+        }
+    """,
+        "daily_tasks_button_style_info": """
+            QPushButton {
+            background-color: #7b61ff; 
+            color: white;
+            font-size: 16px;
+            border-radius: 5px;
+            padding: 10px;
+        }
+        QPushButton:hover {
+            background-color: #a594ff;
+        }
+    """,
+        "weekly_tasks_button_style_info": """
+             QPushButton {
+            background-color: #ffa861; 
+            color: white;
+            font-size: 16px;
+            border-radius: 5px;
+            padding: 10px;
+        }
+        QPushButton:hover {
+            background-color: #f48647;
+        }
+    """
     }
+
 
 
 def get_task_group_styles():
@@ -428,6 +489,7 @@ def get_task_group_styles():
                 }
             """
     }
+
 
 def calendar_styles():
     return """
@@ -488,6 +550,8 @@ def calendar_styles():
             font-size: 14px;
         }
     """
+
+
 def sidebar_list_widget_style():
     return """
         QListWidget {

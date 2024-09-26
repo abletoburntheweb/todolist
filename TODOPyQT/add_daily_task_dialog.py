@@ -29,8 +29,7 @@ class AddDailyTaskDialog(QDialog):
         self.end_date_input.setDisplayFormat("dd.MM.yyyy")
         self.end_date_input.setStyleSheet(date_input_style())
         self.end_date_input.setFont(QFont('Arial', 12))
-        self.end_date_input.setDate(QDate(2000, 1, 1))  # Сначала пустое значение
-        self.end_date_input.clear()  # Очистка поля даты окончания
+        self.end_date_input.setDate(QDate.currentDate())  # Устанавливаем сегодняшнюю дату по умолчанию
         self.end_date_input.calendarWidget().setStyleSheet(calendar_styles())
 
         self.tag_selector = QComboBox(self)
@@ -61,7 +60,7 @@ class AddDailyTaskDialog(QDialog):
         layout.addWidget(self.task_name_input)
         layout.addWidget(QLabel("Дата начала:", self))
         layout.addWidget(self.start_date_input)
-        layout.addWidget(QLabel("Дата окончания (по желанию):", self))
+        layout.addWidget(QLabel("Дата окончания:", self))
         layout.addWidget(self.end_date_input)
         layout.addWidget(QLabel("Тег:", self))
         layout.addWidget(self.tag_selector)
@@ -72,6 +71,6 @@ class AddDailyTaskDialog(QDialog):
     def get_task_data(self):
         task_name = self.task_name_input.text()
         start_date = self.start_date_input.date().toString('dd.MM.yyyy')
-        end_date = self.end_date_input.date().toString('dd.MM.yyyy') if self.end_date_input.date().isValid() else ""
+        end_date = self.end_date_input.date().toString('dd.MM.yyyy')
         task_tag = self.tag_selector.currentText()
         return task_name, start_date, end_date, task_tag

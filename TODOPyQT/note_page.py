@@ -1,6 +1,7 @@
 import json
 from PyQt5.QtWidgets import QListWidget, QLineEdit, QTextEdit, QPushButton, QMessageBox
 from PyQt5 import QtCore
+from PyQt5.QtCore import Qt
 from styles import sidebar_list_widget_style, notes_button_style, notes_title_edit_style, notes_text_edit_style
 from ui_elements import setup_ui_elements
 
@@ -39,6 +40,7 @@ class NotePage:
         new_note_button = QPushButton("Создать заметку", self.main_win)
         new_note_button.setGeometry(10, buttons_y_position, button_width, button_height)
         new_note_button.setStyleSheet(notes_button_style())
+        new_note_button.setCursor(Qt.PointingHandCursor)
         new_note_button.clicked.connect(self.create_new_note)
 
         delete_note_button = QPushButton("Удалить заметку", self.main_win)
@@ -46,11 +48,13 @@ class NotePage:
         delete_note_button.setGeometry(self.main_win.width() - button_width * 2 - button_spacing - right_padding,
                                        buttons_y_position, button_width, button_height)
         delete_note_button.setStyleSheet(notes_button_style())
+        delete_note_button.setCursor(Qt.PointingHandCursor)
         delete_note_button.clicked.connect(self.delete_current_note)
 
         save_notes_button = QPushButton("Сохранить заметку", self.main_win)
         save_notes_button.setGeometry(self.main_win.width() - button_width - right_padding,
                                       buttons_y_position, button_width, button_height)
+        save_notes_button.setCursor(Qt.PointingHandCursor)
         save_notes_button.setStyleSheet(notes_button_style())
         save_notes_button.clicked.connect(self.save_notes_to_file)
 

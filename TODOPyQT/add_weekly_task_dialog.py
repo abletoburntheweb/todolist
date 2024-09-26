@@ -1,4 +1,5 @@
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QLabel, QLineEdit, QCheckBox, QDialogButtonBox, QDateEdit, QComboBox, QGridLayout
+from PyQt5.QtWidgets import QDialog, QVBoxLayout, QLabel, QLineEdit, QCheckBox, QDialogButtonBox, QDateEdit, QComboBox, \
+    QGridLayout, QMessageBox
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import QDate
 from styles import task_name_input_style, date_input_style, tag_selector_style, dialog_button_box_style, calendar_styles
@@ -8,7 +9,7 @@ class AddWeeklyTaskDialog(QDialog):
     def __init__(self, tags, parent=None, task_name='', task_tags=''):
         super().__init__(parent)
         self.setWindowTitle("Добавить еженедельную задачу")
-        self.setFixedSize(400, 500)  # Увеличено, чтобы вместить новые поля
+        self.setFixedSize(400, 500)
         self.setStyleSheet("background-color: #f5f5f5;")
 
         self.task_name_input = QLineEdit(self)
@@ -30,8 +31,7 @@ class AddWeeklyTaskDialog(QDialog):
         self.end_date_input.setDisplayFormat("dd.MM.yyyy")
         self.end_date_input.setStyleSheet(date_input_style())
         self.end_date_input.setFont(QFont('Arial', 12))
-        self.end_date_input.setDate(QDate(2000, 1, 1))  # Установка пустого значения
-        self.end_date_input.clear()  # Очистка поля даты окончания
+        self.end_date_input.setDate(QDate.currentDate())  # Устанавливаем сегодняшнюю дату по умолчанию
         self.end_date_input.calendarWidget().setStyleSheet(calendar_styles())
 
         self.tag_selector = QComboBox(self)
@@ -75,9 +75,9 @@ class AddWeeklyTaskDialog(QDialog):
         layout.addWidget(QLabel("Название задачи:", self))
         layout.addWidget(self.task_name_input)
         layout.addWidget(QLabel("Дата начала:", self))
-        layout.addWidget(self.start_date_input)  # Поле для даты начала
-        layout.addWidget(QLabel("Дата окончания (по желанию):", self))
-        layout.addWidget(self.end_date_input)  # Поле для даты окончания
+        layout.addWidget(self.start_date_input)
+        layout.addWidget(QLabel("Дата окончания:", self))
+        layout.addWidget(self.end_date_input)
         layout.addWidget(QLabel("Тег:", self))
         layout.addWidget(self.tag_selector)
 
@@ -90,8 +90,20 @@ class AddWeeklyTaskDialog(QDialog):
 
     def get_task_data(self):
         selected_days = [checkbox.text() for checkbox in self.days_checkboxes if checkbox.isChecked()]
-        task_name = self.task_name_input.text()
-        task_start_date = self.start_date_input.date().toString('dd.MM.yyyy')  # Дата начала
-        task_end_date = self.end_date_input.date().toString('dd.MM.yyyy') if self.end_date_input.date().isValid() else ""  # Дата окончания
-        task_tags = self.tag_selector.currentText()
+        task_name = self.task_name_input.text().strip()
+        task_start_date = self.start_date_input.date().toString('dd.MM.yyyy')
+
+        task_end_date = self.end_date_input.date().toString('dd.MM.yyyy') if self.end_date_input.date().isValid() else ""
+
+        task_tags = self.tag_selector.currentText().strip()
+
+        if not task_name:
+            QMessageBox.warning(self, 'Ошибка', 'Название задачи не может быть пустым.')
+            return None
+
+        if not selected_days:
+            QMessageBox.warning(self, 'Ошибка', 'Выберите хотя бы один день для еженедельной задачи.')
+            return None
+
         return task_name, task_start_date, task_end_date, selected_days, task_tags
+
