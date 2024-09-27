@@ -408,23 +408,24 @@ class MainWin(QMainWindow):
         self.setFixedSize(1280, 720)
         self.apply_main_window_style()
 
-        if not hasattr(self, 'scroll_area') or self.scroll_area is None:
-            self.scroll_area = QScrollArea(self)
-            scroll_area_x = 20
-            scroll_area_y = 180
-            scroll_area_width = self.width() - 40
-            scroll_area_height = self.height() - scroll_area_y - 120
+        # Always recreate scroll_area
+        self.scroll_area = QScrollArea(self)
+        scroll_area_x = 20
+        scroll_area_y = 180
+        scroll_area_width = self.width() - 40
+        scroll_area_height = self.height() - scroll_area_y - 120
 
-            self.scroll_area.setGeometry(scroll_area_x, scroll_area_y, scroll_area_width, scroll_area_height)
-            self.scroll_area.setWidgetResizable(True)
-            self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-            self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.scroll_area.setGeometry(scroll_area_x, scroll_area_y, scroll_area_width, scroll_area_height)
+        self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
         tasks_widget = QWidget()
         layout = QVBoxLayout(tasks_widget)
 
         self.scroll_area.setWidget(tasks_widget)
 
+        # Ensure week_label is created
         if not hasattr(self, 'week_label'):
             print("Создаем week_label")
             self.week_label = QLabel(self)
@@ -739,12 +740,12 @@ class MainWin(QMainWindow):
         try:
             print("Вызван поиск")
 
+            # Ensure scroll_area is recreated if it was deleted
+            if self.scroll_area is None:
+                self.scroll_area = self.recreate_task_scroll_area()
+
             if hasattr(self, 'results_list') and self.results_list is not None:
-                try:
-                    self.results_list.deleteLater()
-                except RuntimeError:
-                    pass
-                self.results_list = None
+                self.results_list.clear()  # Clear previous results
 
             search_text = self.search_input.text().lower()
             if len(search_text.strip()) < 3:
@@ -794,6 +795,7 @@ class MainWin(QMainWindow):
             self.results_widget.deleteLater()
             self.results_widget = None
 
+        # Ensure scroll_area is not accessed if it has been deleted
         if hasattr(self, 'scroll_area') and self.scroll_area is not None:
             self.scroll_area.deleteLater()
             self.scroll_area = None
@@ -1215,8 +1217,8 @@ class MainWin(QMainWindow):
         else:
             if hasattr(self, 'week_label'):
                 print("Удаляем week_label")
-                self.week_label.deleteLater()  # Убедитесь, что это вызывается только если вы хотите удалить его
-                del self.week_label  # Удаляем ссылку на объект, чтобы избежать повторного доступа
+                self.week_label.deleteLater()
+                del self.week_label
 
         for widget in self.findChildren(QtWidgets.QWidget):
             if widget not in widgets_to_keep:
@@ -1251,6 +1253,11 @@ class MainWin(QMainWindow):
             5: "Суббота",
             6: "Воскресенье"
         }
+
+        # Check if scroll_area is initialized
+        if self.scroll_area is None:
+            print("Ошибка: scroll_area не инициализирована.")
+            return
 
         tasks_widget = self.scroll_area.widget()
         if tasks_widget is None:
@@ -1318,6 +1325,7 @@ class MainWin(QMainWindow):
 
                 except ValueError:
                     print(f"Некорректный формат даты для задачи '{task_name}': {start_date_str} или {end_date_str}")
+
         for year_name, months in self.tasks_data.items():
             for month_name, month_data in months.items():
                 for task in month_data["tasks"]:
@@ -1332,6 +1340,7 @@ class MainWin(QMainWindow):
                                     week_tasks[task_date_obj].append(regular_task)
                             except ValueError:
                                 print(f"Некорректный формат даты для задачи: {task_date}")
+
         for i in range(7):
             day_date = self.current_week_start + datetime.timedelta(days=i)
             day_tasks = week_tasks[day_date]

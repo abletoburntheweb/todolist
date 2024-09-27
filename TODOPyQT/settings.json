@@ -206,5 +206,5 @@
             "type": "daily"
         }
     ],
-    "default_task_days": 20
+    "default_task_days": 365
 }
