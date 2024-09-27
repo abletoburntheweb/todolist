@@ -98,9 +98,9 @@ class MainWin(QMainWindow):
             self.default_task_days = 90
 
     def save_days_setting(self):
-        days_value = self.days_spinbox.value()  # Get the value from the spin box
+        days_value = self.days_spinbox.value()
 
-        if days_value >= 1 and days_value <= 365:  # Check if the value is within the valid range
+        if days_value >= 1 and days_value <= 365:
             self.default_task_days = days_value
             self.save_settings()
             QMessageBox.information(self, "Успешно", "Настройка дней сохранена.")
@@ -425,8 +425,10 @@ class MainWin(QMainWindow):
 
         self.scroll_area.setWidget(tasks_widget)
 
-        self.week_label = QLabel(self)
-        self.week_label.setGeometry(20, 20, 200, 30)
+        if not hasattr(self, 'week_label'):
+            print("Создаем week_label")
+            self.week_label = QLabel(self)
+            self.week_label.setGeometry(20, 20, 200, 30)
         self.update_week_label()
         self.week_label.show()
 
@@ -599,11 +601,10 @@ class MainWin(QMainWindow):
         task_types_layout.addLayout(task_types_horizontal_layout)
         main_layout.addWidget(task_types_group_box)
 
-        days_group_box = QGroupBox("Настройка дней для автоматической задачи")
+        days_group_box = QGroupBox("Настройка дней, если дата окончания задачи меньше или равна дате начала")
         days_layout = QVBoxLayout()
         days_group_box.setLayout(days_layout)
 
-        # Create a horizontal layout for the label, spin box, and button
         days_horizontal_layout = QHBoxLayout()
 
         days_label = QLabel("Введите количество дней, на которые будет добавлена задача (по умолчанию 90):")
@@ -625,7 +626,6 @@ class MainWin(QMainWindow):
         save_button.clicked.connect(self.save_days_setting)
         days_horizontal_layout.addWidget(save_button)
 
-        # Add the horizontal layout to the days layout
         days_layout.addLayout(days_horizontal_layout)
 
         main_layout.addWidget(days_group_box)
@@ -685,7 +685,6 @@ class MainWin(QMainWindow):
         help_dialog = HelpDialog(self)
         help_dialog.exec_()
 
-
     def show_task_full_title(self, task_name):
         wrapped_task_name = wrap_text(task_name, 100)
         QMessageBox.information(self, 'Полное название задачи', wrapped_task_name)
@@ -698,8 +697,26 @@ class MainWin(QMainWindow):
         self.current_week_end = end_of_week
 
     def update_week_label(self):
-        week_str = f"{self.current_week_start.strftime('%d.%m')} - {self.current_week_end.strftime('%d.%m')}"
-        self.week_label.setText(f"Неделя: {week_str}")
+        if self.week_label:
+            week_str = f"{self.current_week_start.strftime('%d.%m')} - {self.current_week_end.strftime('%d.%m')}"
+            self.week_label.setText(f"Неделя: {week_str}")
+        else:
+            print("Ошибка: week_label не существует.")
+
+    def go_to_week(self, task_date):
+        try:
+            task_date_obj = datetime.datetime.strptime(task_date, '%d.%m.%Y').date()
+
+            self.current_week_start = task_date_obj - datetime.timedelta(days=task_date_obj.weekday())
+            self.current_week_end = self.current_week_start + datetime.timedelta(days=6)
+            if not hasattr(self, 'week_label') or self.week_label is None:
+                self.week_label = QLabel(self)
+                self.week_label.setGeometry(20, 20, 200, 30)
+
+            self.update_week_label()
+            self.update_task_layout()
+        except ValueError:
+            QMessageBox.warning(self, 'Ошибка', 'Некорректный формат даты.')
 
     def previous_week(self):
         self.current_week_start -= datetime.timedelta(days=7)
@@ -966,7 +983,6 @@ class MainWin(QMainWindow):
             try:
                 start_date = datetime.datetime.strptime(start_date_str, '%d.%m.%Y').date()
 
-                # Calculate end_date based on default_task_days
                 end_date = start_date + datetime.timedelta(days=self.default_task_days - 1)
 
             except ValueError:
@@ -977,7 +993,7 @@ class MainWin(QMainWindow):
                 "name": task_name,
                 "completed": False,
                 "start_date": start_date_str,
-                "end_date": end_date.strftime('%d.%m.%Y'),  # Ensure end_date is formatted correctly
+                "end_date": end_date.strftime('%d.%m.%Y'),
                 "tag": tag,
                 "completed_dates": []
             }
@@ -1012,14 +1028,14 @@ class MainWin(QMainWindow):
                 return
 
             try:
-                start_date = datetime.datetime.strptime(start_date_str, '%d.%m.%Y').date()  # Correct format
+                start_date = datetime.datetime.strptime(start_date_str, '%d.%m.%Y').date()
                 if end_date_str:
-                    end_date = datetime.datetime.strptime(end_date_str, '%d.%m.%Y').date()  # Correct format
+                    end_date = datetime.datetime.strptime(end_date_str, '%d.%m.%Y').date()
                 else:
-                    end_date = start_date + datetime.timedelta(weeks=self.default_task_days // 7)  # Default to weeks
+                    end_date = start_date + datetime.timedelta(weeks=self.default_task_days // 7)
 
                 if end_date <= start_date:
-                    end_date = start_date + datetime.timedelta(weeks=1)  # Ensure at least one week duration
+                    end_date = start_date + datetime.timedelta(weeks=1)
             except ValueError:
                 QMessageBox.warning(self, 'Ошибка', 'Неверный формат даты. Используйте дд.мм.гггг.')
                 return
@@ -1040,6 +1056,7 @@ class MainWin(QMainWindow):
             self.scroll_area.show()
 
             print(f"Добавлена новая еженедельная задача: {new_task}")
+
     def handle_button_click(self, button_index=None):
         self.current_button_index = button_index
         self.main_screen()
@@ -1190,9 +1207,16 @@ class MainWin(QMainWindow):
             QMessageBox.warning(self, 'Ошибка', f'Ошибка при удалении задачи: {e}')
 
     def clear_window(self, keep_main_buttons=False, keep_labels=False):
+        print("Очистка окна...")
         widgets_to_keep = [self.search_button] + self.buttons if keep_main_buttons else []
-        if keep_labels:
-            widgets_to_keep.extend([self.text_high, self.text_low])
+
+        if keep_labels and hasattr(self, 'week_label'):
+            print("Сохраняем week_label")
+        else:
+            if hasattr(self, 'week_label'):
+                print("Удаляем week_label")
+                self.week_label.deleteLater()  # Убедитесь, что это вызывается только если вы хотите удалить его
+                del self.week_label  # Удаляем ссылку на объект, чтобы избежать повторного доступа
 
         for widget in self.findChildren(QtWidgets.QWidget):
             if widget not in widgets_to_keep:
