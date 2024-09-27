@@ -361,6 +361,7 @@ class MainWin(QMainWindow):
 
     def reset_completed_tasks_count(self):
         self.completed_tasks_count = 0
+        self.completed_tasks_history = []  
         self.update_completed_tasks_label()
         self.save_settings()
 
