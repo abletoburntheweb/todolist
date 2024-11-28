@@ -29,7 +29,7 @@ class AddDailyTaskDialog(QDialog):
         self.end_date_input.setDisplayFormat("dd.MM.yyyy")
         self.end_date_input.setStyleSheet(date_input_style())
         self.end_date_input.setFont(QFont('Arial', 12))
-        self.end_date_input.setDate(QDate.currentDate())  # Устанавливаем сегодняшнюю дату по умолчанию
+        self.end_date_input.setDate(QDate.currentDate())
         self.end_date_input.calendarWidget().setStyleSheet(calendar_styles())
 
         self.tag_selector = QComboBox(self)
@@ -48,7 +48,6 @@ class AddDailyTaskDialog(QDialog):
         self.button_box.accepted.connect(self.accept)
         self.button_box.rejected.connect(self.reject)
 
-        # Установка текста кнопок на русском языке
         self.button_box.button(QDialogButtonBox.Ok).setText('ОК')
         self.button_box.button(QDialogButtonBox.Cancel).setText('Отменить')
 

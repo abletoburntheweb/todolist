@@ -8,8 +8,12 @@
             "Среда",
             "Пятница"
         ],
-        "completed_dates": [],
-        "type": "weekly"
+        "completed_dates": [
+            "23.09.2024",
+            "25.09.2024"
+        ],
+        "type": "weekly",
+        "completed": false
     },
     "Позвонить маме": {
         "name": "Позвонить маме",
@@ -21,7 +25,9 @@
             "Воскресенье"
         ],
         "tag": "",
-        "completed_dates": [],
+        "completed_dates": [
+            "06.10.2024"
+        ],
         "type": "weekly"
     },
     "Заниматься йогой": {
@@ -33,7 +39,8 @@
             "Четверг"
         ],
         "completed_dates": [],
-        "type": "weekly"
+        "type": "weekly",
+        "completed": false
     },
     "Получить уроки по музыке": {
         "name": "Получить уроки по музыке",
@@ -44,7 +51,8 @@
             "Пятница"
         ],
         "completed_dates": [],
-        "type": "weekly"
+        "type": "weekly",
+        "completed": false
     },
     "Сходить на прогулку": {
         "name": "Сходить на прогулку",
@@ -55,7 +63,8 @@
             "Воскресенье"
         ],
         "completed_dates": [],
-        "type": "weekly"
+        "type": "weekly",
+        "completed": false
     },
     "Читать книгу": {
         "name": "Читать книгу",
@@ -65,7 +74,8 @@
             "Четверг"
         ],
         "completed_dates": [],
-        "type": "weekly"
+        "type": "weekly",
+        "completed": false
     },
     "Готовить новые блюда": {
         "name": "Готовить новые блюда",
@@ -76,7 +86,8 @@
             "Суббота"
         ],
         "completed_dates": [],
-        "type": "weekly"
+        "type": "weekly",
+        "completed": false
     },
     "Посещать спортивные мероприятия": {
         "name": "Посещать спортивные мероприятия",
@@ -86,6 +97,7 @@
             "Пятница"
         ],
         "completed_dates": [],
-        "type": "weekly"
+        "type": "weekly",
+        "completed": false
     }
 }

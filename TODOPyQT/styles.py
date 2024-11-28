@@ -306,7 +306,55 @@ def day_button_style(active=False):
                 background-color: #ADD8E6;
             }
         """
-
+def sort_combo_box_style():
+    return """
+    QComboBox {
+        padding: 10px;
+        border: 2px solid #bdbdbd;
+        border-radius: 10px;
+        font-size: 16px;
+        color: #212121;
+        background-color: #ffffff;
+    }
+    QComboBox:focus {
+        border: 2px solid #42a5f5;
+    }
+    QComboBox:hover {
+        border: 2px solid #64b5f6;
+    }
+    QComboBox::drop-down {
+        subcontrol-origin: padding;
+        subcontrol-position: top right;
+        width: 30px;
+        border-left: 2px solid #bdbdbd;
+        border-top-right-radius: 10px;
+        border-bottom-right-radius: 10px;
+    }
+    QComboBox::down-arrow {
+        image: url(down-arrow.png);  
+        width: 16px;
+        height: 16px;
+    }
+    QComboBox QAbstractItemView {
+        border: 2px solid #42a5f5;
+        selection-background-color: #42a5f5;
+        selection-color: #ffffff;
+        background-color: #ffffff;
+        border-radius: 10px;
+        padding: 5px;
+    }
+    QComboBox QAbstractItemView::item {
+        padding: 10px;
+    }
+    QComboBox QAbstractItemView::item:selected {
+        background-color: #5d8aa8;
+        color: #ffffff;
+    }
+    QComboBox QAbstractItemView::item:hover {
+        background-color: #ecf0f1;
+        color: #2c3e50;
+    }
+    """
 
 def main_window_style():
     return """

@@ -5,7 +5,7 @@ from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtGui import QIcon, QColor, QFont
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QInputDialog, \
     QMessageBox, QLineEdit, QListWidget, QListWidgetItem, QWidget, QScrollArea, QVBoxLayout, QHBoxLayout, QDialog, \
-    QGroupBox, QSpinBox
+    QGroupBox, QSpinBox, QComboBox
 from PyQt5.QtCore import Qt, QSize, QDate
 
 from add_daily_task_dialog import AddDailyTaskDialog
@@ -16,7 +16,8 @@ from text_wrapping import wrap_text
 from add_task_dialog import AddTaskDialog
 from styles import search_input_style, day_button_style, main_window_style, settings_style, \
     get_task_group_styles, add_tasks_button_style, tasks_button_style, results_list_style, add_daily_tasks_button_style, \
-    daily_task_button_style, tag_button_style, add_weekly_tasks_button_style, weekly_tasks_button_style
+    daily_task_button_style, tag_button_style, add_weekly_tasks_button_style, weekly_tasks_button_style, \
+    sort_combo_box_style
 from ui_elements import setup_ui_elements
 
 
@@ -136,11 +137,9 @@ class MainWin(QMainWindow):
         try:
             with open("weekly_tasks.json", "r", encoding="utf-8") as file:
                 self.weekly_tasks_data = json.load(file)
-                print(f"Загруженные еженедельные задачи: {self.weekly_tasks_data}")
                 for task_name, task in self.weekly_tasks_data.items():
-                    if isinstance(task, dict):
-                        task.setdefault('type', 'weekly')
-                        task.setdefault('completed_dates', [])
+                    task.setdefault('completed', False)
+                    task.setdefault('completed_dates', [])
         except (FileNotFoundError, json.JSONDecodeError):
             self.weekly_tasks_data = {}
 
@@ -321,7 +320,7 @@ class MainWin(QMainWindow):
                         t for t in self.completed_tasks_history
                         if not (t['name'] == task_name and t['completed_date'] == task_date)
                     ]
-                self.save_weekly_tasks()
+                self.save_weekly_tasks_to_file()
             else:
                 print(f"Задача '{task_name}' не найдена в weekly_tasks_data.")
                 return
@@ -355,13 +354,15 @@ class MainWin(QMainWindow):
         else:
             if self.completed_tasks_count > 0:
                 self.completed_tasks_count -= 1
-        self.save_tasks_to_file()
 
+        print(f"Количество выполненных задач: {self.completed_tasks_count}")
+
+        self.save_tasks_to_file()
         self.save_settings()
 
     def reset_completed_tasks_count(self):
         self.completed_tasks_count = 0
-        self.completed_tasks_history = []  
+        self.completed_tasks_history = []
         self.update_completed_tasks_label()
         self.save_settings()
 
@@ -409,7 +410,6 @@ class MainWin(QMainWindow):
         self.setFixedSize(1280, 720)
         self.apply_main_window_style()
 
-        # Always recreate scroll_area
         self.scroll_area = QScrollArea(self)
         scroll_area_x = 20
         scroll_area_y = 180
@@ -426,7 +426,6 @@ class MainWin(QMainWindow):
 
         self.scroll_area.setWidget(tasks_widget)
 
-        # Ensure week_label is created
         if not hasattr(self, 'week_label'):
             print("Создаем week_label")
             self.week_label = QLabel(self)
@@ -480,7 +479,7 @@ class MainWin(QMainWindow):
         self.add_weekly_task_button.show()
 
         self.return_to_current_week_button = QPushButton("Текущая неделя", self)
-        self.return_to_current_week_button.setGeometry(1060, 137, 200, 40)
+        self.return_to_current_week_button.setGeometry(830, 610, 200, 40)
         self.return_to_current_week_button.setCursor(Qt.PointingHandCursor)
         self.return_to_current_week_button.clicked.connect(self.return_to_current_week)
         self.return_to_current_week_button.show()
@@ -490,6 +489,13 @@ class MainWin(QMainWindow):
         self.choose_month_button.setCursor(Qt.PointingHandCursor)
         self.choose_month_button.clicked.connect(self.show_month_selector)
         self.choose_month_button.show()
+
+        self.sort_combo_box = QComboBox(self)
+        self.sort_combo_box.setGeometry(1060, 137, 200, 40)
+        self.sort_combo_box.addItems(["По умолчанию", "Сортировать по названию", "Сортировать по тегу"])
+        self.sort_combo_box.currentIndexChanged.connect(self.update_task_layout)
+        self.sort_combo_box.setStyleSheet(sort_combo_box_style())
+        self.sort_combo_box.show()
 
         self.scroll_area.setWidget(tasks_widget)
         self.scroll_area.show()
@@ -741,12 +747,11 @@ class MainWin(QMainWindow):
         try:
             print("Вызван поиск")
 
-            # Ensure scroll_area is recreated if it was deleted
             if self.scroll_area is None:
                 self.scroll_area = self.recreate_task_scroll_area()
 
             if hasattr(self, 'results_list') and self.results_list is not None:
-                self.results_list.clear()  # Clear previous results
+                self.results_list.clear()
 
             search_text = self.search_input.text().lower()
             if len(search_text.strip()) < 3:
@@ -796,7 +801,6 @@ class MainWin(QMainWindow):
             self.results_widget.deleteLater()
             self.results_widget = None
 
-        # Ensure scroll_area is not accessed if it has been deleted
         if hasattr(self, 'scroll_area') and self.scroll_area is not None:
             self.scroll_area.deleteLater()
             self.scroll_area = None
@@ -1255,7 +1259,6 @@ class MainWin(QMainWindow):
             6: "Воскресенье"
         }
 
-        # Check if scroll_area is initialized
         if self.scroll_area is None:
             print("Ошибка: scroll_area не инициализирована.")
             return
@@ -1301,7 +1304,6 @@ class MainWin(QMainWindow):
 
         for task_name, task in self.weekly_tasks_data.items():
             if 'name' not in task:
-                print(f"Пропускаем задачу без имени: {task}")
                 continue
 
             if 'start_date' in task and 'end_date' in task and 'days' in task:
@@ -1321,6 +1323,7 @@ class MainWin(QMainWindow):
                                 weekly_task = task.copy()
                                 weekly_task['date'] = current_date.strftime('%d.%m.%Y')
                                 weekly_task['weekly'] = True
+                                weekly_task['completed'] = task.get('completed', False)
                                 week_tasks[current_date].append(weekly_task)
                         current_date += datetime.timedelta(days=1)
 
@@ -1338,13 +1341,24 @@ class MainWin(QMainWindow):
                                 if self.current_week_start <= task_date_obj <= self.current_week_end:
                                     regular_task = task.copy()
                                     regular_task['regular'] = True
+                                    regular_task['completed'] = task.get('completed', False)
                                     week_tasks[task_date_obj].append(regular_task)
                             except ValueError:
                                 print(f"Некорректный формат даты для задачи: {task_date}")
 
+        sort_by = self.sort_combo_box.currentText()
+
         for i in range(7):
             day_date = self.current_week_start + datetime.timedelta(days=i)
             day_tasks = week_tasks[day_date]
+
+            if sort_by == "По умолчанию":
+                pass
+            elif sort_by == "Сортировать по названию":
+                day_tasks.sort(key=lambda x: x['name'].lower())
+            elif sort_by == "Сортировать по тегу":
+                day_tasks.sort(key=lambda x: (x.get('tag', '').lower(), x['name'].lower()))
+
             day_label = QLabel(day_of_week_mapping[i], self)
             layout.addWidget(day_label)
 

@@ -1,5 +1,5 @@
 {
-    "completed_tasks_count": 49,
+    "completed_tasks_count": 59,
     "completed_tasks_history": [
         {
             "name": "Подготовка отчета",
@@ -195,16 +195,34 @@
         },
         {
             "name": "Погулять с собакой утром",
-            "completed_date": "23.09.2024",
+            "completed_date": "24.09.2024",
             "tag": "Личное🎸",
             "type": "daily"
         },
         {
-            "name": "Погулять с собакой утром",
-            "completed_date": "24.09.2024",
-            "tag": "Личное🎸",
+            "name": "Сходить в зал",
+            "completed_date": "23.09.2024",
+            "tag": "Без тэга",
+            "type": "weekly"
+        },
+        {
+            "name": "Сходить в зал",
+            "completed_date": "25.09.2024",
+            "tag": "Без тэга",
+            "type": "weekly"
+        },
+        {
+            "name": "пааритпарпамр",
+            "completed_date": "06.10.2024",
+            "tag": "тоиьтиь",
             "type": "daily"
+        },
+        {
+            "name": "Позвонить маме",
+            "completed_date": "06.10.2024",
+            "tag": "",
+            "type": "weekly"
         }
     ],
-    "default_task_days": 365
+    "default_task_days": 30
 }

@@ -41,7 +41,6 @@ class AddTaskDialog(QDialog):
         self.button_box.accepted.connect(self.accept)
         self.button_box.rejected.connect(self.reject)
 
-        # Установка текста кнопок на русском языке
         self.button_box.button(QDialogButtonBox.Ok).setText('ОК')
         self.button_box.button(QDialogButtonBox.Cancel).setText('Отменить')
 
